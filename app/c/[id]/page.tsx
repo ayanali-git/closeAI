@@ -610,7 +610,7 @@ export default function ActiveChatPage() {
                     onMouseEnter={() => setIsSidebarBtnHovered(true)}
                     onMouseLeave={() => setIsSidebarBtnHovered(false)}
                     onBlur={() => setIsSidebarBtnHovered(false)}
-                    className="lg:hidden w-8 h-8 rounded-xl bg-background  flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors cursor-pointer outline-none focus:outline-none"
+                    className="lg:hidden w-9 h-9 rounded-xl bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/50 dark:border-neutral-700/50 text-neutral-700 dark:text-neutral-200 hover:text-foreground dark:hover:text-foreground hover:bg-background dark:hover:bg-background flex items-center justify-center transition-colors cursor-pointer outline-none focus:outline-none"
                     aria-label="Open sidebar"
                   >
                       <PanelRight className="w-4 h-4 text-foreground" />
@@ -632,7 +632,7 @@ export default function ActiveChatPage() {
                     navigator.clipboard.writeText(window.location.href);
                     toast.success("Chat link copied");
                   }}
-                  className="h-8 px-2.5 sm:px-3.5 rounded-xl bg-background border-0 text-xs sm:text-sm font-medium text-foreground hover:bg-secondary cursor-pointer flex items-center gap-1.5 transition-colors outline-none focus:outline-none"
+                  className="lg:hidden w-9 h-9 rounded-xl bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/50 dark:border-neutral-700/50 text-neutral-700 dark:text-neutral-200 hover:text-foreground dark:hover:text-foreground hover:bg-background dark:hover:bg-background flex items-center justify-center transition-colors cursor-pointer outline-none focus:outline-none"
                 >
                   <Upload className="w-4 h-4" />
                   <span className="hidden min-[400px]:inline">Share</span>
@@ -649,7 +649,7 @@ export default function ActiveChatPage() {
                 <TooltipTrigger asChild>
                   <DropdownMenuTrigger asChild>
                     <button
-                      className="w-8 h-8 rounded-xl flex items-center justify-center text-muted-foreground hover:text-foreground bg-background border-0 hover:bg-secondary transition-colors cursor-pointer outline-none focus:outline-none"
+                      className="lg:hidden w-9 h-9 rounded-xl bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/50 dark:border-neutral-700/50 text-neutral-700 dark:text-neutral-200 hover:text-foreground dark:hover:text-foreground hover:bg-background dark:hover:bg-background flex items-center justify-center transition-colors cursor-pointer outline-none focus:outline-none"
                       aria-label="Chat options"
                     >
                       <MoreHorizontal className="w-4 h-4" />
@@ -790,10 +790,10 @@ export default function ActiveChatPage() {
                                 isAutoScrollPinnedRef.current = true;
                                 scrollToBottom("smooth");
                               }}
-                              className="w-9 h-9 rounded-full bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/50 dark:border-neutral-700/50 flex items-center justify-center text-neutral-700 dark:text-neutral-200 hover:text-foreground dark:hover:text-foreground hover:bg-background dark:hover:bg-background transition-all cursor-pointer"
+                              className="w-10 h-10 rounded-full bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/50 dark:border-neutral-700/50 text-neutral-700 dark:text-neutral-200 hover:text-foreground dark:hover:text-foreground hover:bg-background dark:hover:bg-background flex items-center justify-center transition-all cursor-pointer"
                               aria-label="Scroll to bottom"
                             >
-                              <ArrowDown className="w-4 h-4" />
+                              <ArrowDown className="w-5 h-5" />
                             </button>
                           </TooltipTrigger>
                           <TooltipContent side="top" sideOffset={8} className="text-md">

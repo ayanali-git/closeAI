@@ -322,7 +322,7 @@ export function Sidebar({
           </div>
           <div className="flex items-center justify-between px-3 py-2 rounded-xl bg-secondary/50">
             <div className="flex items-center gap-2.5 min-w-0">
-              <Avatar className="w-6 h-6 rounded-full border border-border shrink-0">
+              <Avatar className="w-7 h-7 rounded-full border border-border shrink-0">
                 <AvatarImage src={avatarUrl} />
                 <AvatarFallback className="text-[14px] font-semibold">
                   {displayName.charAt(0).toUpperCase()}
@@ -357,7 +357,7 @@ export function Sidebar({
             }}
             className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-xl [@media(hover:hover)]:hover:bg-secondary active:bg-secondary/80 text-left transition-colors cursor-pointer outline-none focus:outline-none focus:bg-transparent focus-visible:outline-none"
           >
-            <Avatar className="w-8 h-8 rounded-full border border-border shrink-0">
+            <Avatar className="w-9 h-9 rounded-full border border-border shrink-0">
               <AvatarImage src={avatarUrl} />
               <AvatarFallback className="text-md font-semibold bg-secondary text-foreground">
                 {displayName.charAt(0).toUpperCase()}
@@ -372,7 +372,7 @@ export function Sidebar({
         ) : (
           <DropdownMenuSub>
             <DropdownMenuSubTrigger className="flex items-center gap-2.5 px-2.5 py-2 text-md rounded-xl cursor-pointer">
-              <Avatar className="w-8 h-8 rounded-full border border-border shrink-0">
+              <Avatar className="w-9 h-9 rounded-full border border-border shrink-0">
                 <AvatarImage src={avatarUrl} />
                 <AvatarFallback className="text-md font-semibold bg-secondary text-foreground">
                   {displayName.charAt(0).toUpperCase()}
@@ -383,14 +383,14 @@ export function Sidebar({
                 <p className="text-md text-muted-foreground leading-tight">{planDisplay}</p>
               </div>
             </DropdownMenuSubTrigger>
-            <DropdownMenuSubContent sideOffset={2} alignOffset={-80} className="w-64 rounded-2xl p-1.5 bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/50 dark:border-neutral-700/50">
+            <DropdownMenuSubContent sideOffset={2} alignOffset={-97} className="w-64 rounded-2xl p-1.5 bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/50 dark:border-neutral-700/50">
               <div className="flex items-center gap-2 px-3 py-2 text-md text-muted-foreground select-none">
                 <UserIcon className="w-4 h-4 shrink-0" />
                 <span className="truncate">{userEmail}</span>
               </div>
               <DropdownMenuItem className="flex items-center justify-between px-3 py-2 rounded-xl cursor-pointer">
                 <div className="flex items-center gap-2.5 min-w-0">
-                  <Avatar className="w-6 h-6 rounded-full border border-border shrink-0">
+                  <Avatar className="w-7 h-7 rounded-full border border-border shrink-0">
                     <AvatarImage src={avatarUrl} />
                     <AvatarFallback className="text-[14px] font-semibold">
                       {displayName.charAt(0).toUpperCase()}
@@ -483,7 +483,7 @@ export function Sidebar({
               <Moon className="w-4 h-4 hidden dark:block text-muted-foreground" />
               <span>Theme</span>
             </DropdownMenuSubTrigger>
-            <DropdownMenuSubContent sideOffset={2} alignOffset={-85} className="w-40 rounded-2xl p-1.5 bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/50 dark:border-neutral-700/50">
+            <DropdownMenuSubContent sideOffset={2} alignOffset={-89} className="w-40 rounded-2xl p-1.5 bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/50 dark:border-neutral-700/50">
               <DropdownMenuRadioGroup value={theme} onValueChange={setTheme}>
                 <DropdownMenuRadioItem value="light">Light</DropdownMenuRadioItem>
                 <DropdownMenuRadioItem value="dark">Dark</DropdownMenuRadioItem>
@@ -515,7 +515,7 @@ export function Sidebar({
               <LifeBuoy className="w-4 h-4 text-muted-foreground" />
               <span>Help</span>
             </DropdownMenuSubTrigger>
-            <DropdownMenuSubContent sideOffset={2} alignOffset={-260} className="w-56 rounded-2xl p-1.5 bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/50 dark:border-neutral-700/50">
+            <DropdownMenuSubContent sideOffset={2} alignOffset={-261} className="w-56 rounded-2xl p-1.5 bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/50 dark:border-neutral-700/50">
               <DropdownMenuItem asChild>
                 <Link href="/support/help" className="flex items-center gap-2.5 px-3 py-2 cursor-pointer rounded-xl text-md">
                   <HelpCircle className="w-4 h-4 text-muted-foreground" />
@@ -866,14 +866,14 @@ export function Sidebar({
 
                           {/* Pinned status indicator when not hovered */}
                           {chat.starred && !isHovered && (
-                            <PinOff className="w-4 h-4 text-muted-foreground/60 shrink-0 ml-1.5" />
+                            <PinOff className="w-4 h-4 text-muted-foreground/60 shrink-0 ml-1.5 md:block hidden" />
                           )}
 
-                          {/* Hover Actions with Smooth Fade */}
+                          {/* Hover Actions with Smooth Fade (Always visible on mobile/small screens) */}
                           <div
                             className={cn(
                               'absolute right-1 top-1/2 -translate-y-1/2 flex items-center gap-0.5 bg-gradient-to-l from-secondary via-secondary from-25% to-transparent pl-8 pr-1.5 py-1 rounded-r-xl transition-opacity duration-150 z-10',
-                              isHovered ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+                              isHovered ? 'opacity-100 pointer-events-auto' : 'max-md:opacity-100 max-md:pointer-events-auto opacity-0 pointer-events-none'
                             )}
                           >
                             <Tooltip>

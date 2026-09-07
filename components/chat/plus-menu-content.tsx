@@ -1013,7 +1013,7 @@ export function PlusMenuContent({
           {/* Submenu 1: Models Menu */}
           <DropdownMenuSubContent
             sideOffset={4}
-            alignOffset={-130}
+            alignOffset={-133}
             avoidCollisions={true}
             collisionPadding={12}
             className="w-[241px] max-w-[calc(100vw-24px)] rounded-2xl p-1.5 bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/50 dark:border-neutral-700/50 select-none outline-none"
@@ -1034,7 +1034,7 @@ export function PlusMenuContent({
               </DropdownMenuSubTrigger>
               <DropdownMenuSubContent
                 sideOffset={4}
-                alignOffset={-125}
+                alignOffset={-133}
                 avoidCollisions={true}
                 collisionPadding={12}
                 className="w-[241px] max-w-[calc(100vw-24px)] rounded-2xl p-1.5 bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/50 dark:border-neutral-700/50 select-none outline-none"
@@ -1094,7 +1094,7 @@ export function PlusMenuContent({
 
               <DropdownMenuSubContent
                 sideOffset={4}
-                alignOffset={-150}
+                alignOffset={-161}
                 avoidCollisions={true}
                 collisionPadding={12}
                 className="w-[241px] max-w-[calc(100vw-24px)] rounded-2xl p-1.5 bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/50 dark:border-neutral-700/50 select-none outline-none"
@@ -1136,7 +1136,7 @@ export function PlusMenuContent({
               </DropdownMenuSubTrigger>
               <DropdownMenuSubContent
                 sideOffset={4}
-                alignOffset={-80}
+                alignOffset={-84}
                 avoidCollisions={true}
                 collisionPadding={12}
                 className="w-[241px] max-w-[calc(100vw-24px)] rounded-2xl p-1.5 bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/50 dark:border-neutral-700/50 select-none outline-none"
@@ -1172,7 +1172,7 @@ export function PlusMenuContent({
               </DropdownMenuSubTrigger>
               <DropdownMenuSubContent
                 sideOffset={4}
-                alignOffset={-50}
+                alignOffset={-48}
                 avoidCollisions={true}
                 collisionPadding={12}
                 className="w-[241px] max-w-[calc(100vw-24px)] rounded-2xl p-3 bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/50 dark:border-neutral-700/50 select-none outline-none"

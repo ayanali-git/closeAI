@@ -436,7 +436,7 @@ export function MessageList({
                   </div>
 
                   {/* User Hover Actions Toolbar */}
-                  <div className="flex items-center gap-1 mt-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="flex items-center gap-1 mt-1.5 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <button

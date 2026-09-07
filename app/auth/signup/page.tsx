@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Eye, EyeOff } from 'lucide-react';
 import { CloseAIIcon } from '@/components/brand/logo';
@@ -102,7 +103,7 @@ export default function SignupPage() {
       <div className="max-w-[520px] w-full bg-card text-card-foreground p-8 rounded-3xl border border-border">
         {/* Header */}
         <div className="text-center mb-7 flex flex-col items-center">
-          <div className="w-12 h-12 rounded-2xl bg-secondary flex items-center justify-center mb-4 border border-border/80">
+          <div className="w-12 h-12 rounded-2xl bg-secondary flex items-center justify-center mb-4 border border-border/80 dark:border-none">
             <CloseAIIcon size={26} />
           </div>
           <h1 className="text-2xl font-bold tracking-tight text-foreground mb-1">Create your account</h1>
@@ -177,7 +178,7 @@ export default function SignupPage() {
               onChange={(e) => setName(e.target.value)}
               placeholder="Enter your name"
               required 
-              className="h-10 rounded-xl border-border text-foreground placeholder:text-muted-foreground/60 focus-visible:ring-1 focus-visible:ring-foreground"
+              className="h-10 rounded-xl border-border text-foreground placeholder:text-muted-foreground focus:placeholder:text-foreground transition-colors"
             />
           </div>
           <div className="space-y-1.5">
@@ -191,7 +192,7 @@ export default function SignupPage() {
               onChange={(e) => setEmail(e.target.value)}
               placeholder="Enter your email"
               required 
-              className="h-10 rounded-xl border-border text-foreground placeholder:text-muted-foreground/60 focus-visible:ring-1 focus-visible:ring-foreground"
+              className="h-10 rounded-xl border-border text-foreground placeholder:text-muted-foreground focus:placeholder:text-foreground transition-colors"
             />
           </div>
           <div className="space-y-1.5">
@@ -206,15 +207,8 @@ export default function SignupPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Enter your password"
                 required 
-                className="h-10 rounded-xl border-border text-foreground placeholder:text-muted-foreground/60 focus-visible:ring-1 focus-visible:ring-foreground"
+                className="h-10 rounded-xl border-border text-foreground placeholder:text-muted-foreground focus:placeholder:text-foreground transition-colors"
               />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors p-1"
-                aria-label={showPassword ? 'Hide password' : 'Show password'}
-              >
-              </button>
             </div>
           </div>
           <div className="space-y-1.5">
@@ -228,20 +222,19 @@ export default function SignupPage() {
               onChange={(e) => setConfirmPassword(e.target.value)}
               placeholder="Enter your password again"
               required 
-              className="h-10 rounded-xl border-border text-foreground placeholder:text-muted-foreground/60 focus-visible:ring-1 focus-visible:ring-foreground"
+              className="h-10 rounded-xl border-border text-foreground placeholder:text-muted-foreground focus:placeholder:text-foreground transition-colors"
             />
           </div>
           
           <div className="flex items-start space-x-2.5 pt-1">
-            <Input
-              type="checkbox" 
+            <Checkbox
               id="terms" 
               checked={agreed}
-              onChange={(e) => setAgreed(e.target.checked)}
-              className="h-4 w-4 mt-0.5 rounded cursor-pointer accent-foreground"
+              onCheckedChange={(checked) => setAgreed(checked === true)}
+              className="mt-0.5"
             />
             <label htmlFor="terms" className="text-md text-muted-foreground leading-snug cursor-pointer select-none">
-              I agree to the <Link href="/support/terms" className="text-foreground hover:underline font-medium">Terms of uses</Link> and <Link href="/support/privacy" className="text-foreground hover:underline font-medium">Privacy policy</Link>
+              I agree to the <Link href="/support/terms" className="text-muted-foreground hover:text-foreground font-medium">Terms of uses</Link> and <Link href="/support/privacy" className="text-muted-foreground hover:text-foreground font-medium">Privacy policy</Link>
             </label>
           </div>
 
@@ -257,7 +250,7 @@ export default function SignupPage() {
         {/* Footer */}
         <p className="text-center text-md text-muted-foreground mt-6">
           Already have an account?{' '}
-          <Link href="/auth/login" className="text-foreground font-semibold hover:underline">
+          <Link href="/auth/login" className="font-semibold text-muted-foreground hover:text-foreground">
             Log in
           </Link>
         </p>

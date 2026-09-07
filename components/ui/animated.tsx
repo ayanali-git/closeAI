@@ -16,15 +16,37 @@ export function AnimatedArrow({ className, size = 16, style, ...props }: Animate
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
-    const parentGroup = el.closest('.group') || el;
+
+    const parentGroup =
+      el.closest('.group') ||
+      el.closest('button') ||
+      el.closest('a') ||
+      el.closest('[role="button"]') ||
+      el;
+
     const onEnter = () => setHovered(true);
     const onLeave = () => setHovered(false);
 
+    try {
+      if (typeof window !== 'undefined' && parentGroup.matches(':hover')) {
+        setHovered(true);
+      }
+    } catch (e) {}
+
     parentGroup.addEventListener('mouseenter', onEnter);
     parentGroup.addEventListener('mouseleave', onLeave);
+    if (parentGroup !== el) {
+      el.addEventListener('mouseenter', onEnter);
+      el.addEventListener('mouseleave', onLeave);
+    }
+
     return () => {
       parentGroup.removeEventListener('mouseenter', onEnter);
       parentGroup.removeEventListener('mouseleave', onLeave);
+      if (parentGroup !== el) {
+        el.removeEventListener('mouseenter', onEnter);
+        el.removeEventListener('mouseleave', onLeave);
+      }
     };
   }, []);
 
@@ -41,7 +63,6 @@ export function AnimatedArrow({ className, size = 16, style, ...props }: Animate
   const m = useTransform(spring, [0, 0.08, 1], [0, 0.8, 1]);
 
   // Top arm of chevron: goes from (9, 6) to (15, 12) at rest -> (13, 6) to (19, 12) on hover
-  // (Identical to Lucide ChevronRight at rest and Lucide ArrowRight on hover)
   const f = useTransform(spring, [0, 1], [9, 13]);
   const y = useTransform(spring, [0, 1], [15, 19]);
 
@@ -54,7 +75,7 @@ export function AnimatedArrow({ className, size = 16, style, ...props }: Animate
       ref={ref}
       aria-hidden="true"
       className={cn(
-        'inline-flex items-center justify-center shrink-0 ml-1 select-none pointer-events-none',
+        'inline-flex items-center justify-center shrink-0 ml-1.5 select-none pointer-events-none align-middle translate-y-[-0.5px]',
         className
       )}
       style={{ width: size, height: size, ...style }}
@@ -79,6 +100,8 @@ export function AnimatedArrow({ className, size = 16, style, ...props }: Animate
 
 export interface AnimatedChevronProps extends React.SVGAttributes<SVGSVGElement> {
   open?: boolean;
+  disableHover?: boolean;
+  orientation?: 'up-down' | 'right-down';
   className?: string;
   size?: number;
   strokeWidth?: number;
@@ -86,6 +109,8 @@ export interface AnimatedChevronProps extends React.SVGAttributes<SVGSVGElement>
 
 export function AnimatedChevron({
   open,
+  disableHover = false,
+  orientation = 'up-down',
   className,
   size = 18,
   strokeWidth = 1.5,
@@ -96,6 +121,7 @@ export function AnimatedChevron({
   const [hovered, setHovered] = useState(false);
 
   useEffect(() => {
+    if (disableHover) return;
     const el = ref.current;
     if (!el) return;
     const parentGroup = el.closest('.group') || el.closest('button') || el.closest('a') || el;
@@ -108,9 +134,9 @@ export function AnimatedChevron({
       parentGroup.removeEventListener('mouseenter', onEnter);
       parentGroup.removeEventListener('mouseleave', onLeave);
     };
-  }, []);
+  }, [disableHover]);
 
-  const isActive = Boolean(open || hovered);
+  const isActive = disableHover ? Boolean(open) : Boolean(open || hovered);
   const motionVal = useMotionValue(+!!isActive);
   const spring = useSpring(motionVal, { stiffness: 400, damping: 30 });
 
@@ -118,12 +144,27 @@ export function AnimatedChevron({
     motionVal.set(+!!isActive);
   }, [isActive, motionVal]);
 
-  const vertexY = useTransform(spring, [0, 1], [10, 6]);
-  const armsY = useTransform(spring, [0, 1], [6, 10]);
-  const points = useTransform(
-    [armsY, vertexY],
+  const upDownVertexY = useTransform(spring, [0, 1], [10, 6]);
+  const upDownArmsY = useTransform(spring, [0, 1], [6, 10]);
+
+  const rdStartX = useTransform(spring, [0, 1], [6, 4]);
+  const rdStartY = useTransform(spring, [0, 1], [4, 6]);
+  const rdVertexX = useTransform(spring, [0, 1], [10, 8]);
+  const rdVertexY = useTransform(spring, [0, 1], [8, 10]);
+  const rdEndX = useTransform(spring, [0, 1], [6, 12]);
+  const rdEndY = useTransform(spring, [0, 1], [12, 6]);
+
+  const pointsUpDown = useTransform(
+    [upDownArmsY, upDownVertexY],
     ([arms, vertex]) => `4,${arms} 8,${vertex} 12,${arms}`
   );
+
+  const pointsRightDown = useTransform(
+    [rdStartX, rdStartY, rdVertexX, rdVertexY, rdEndX, rdEndY],
+    ([sx, sy, vx, vy, ex, ey]) => `${sx},${sy} ${vx},${vy} ${ex},${ey}`
+  );
+
+  const points = orientation === 'right-down' ? pointsRightDown : pointsUpDown;
 
   return (
     <svg
@@ -156,12 +197,6 @@ export interface AnimatedSearchCloseProps extends React.HTMLAttributes<HTMLSpanE
   strokeWidth?: number;
 }
 
-/**
- * Animated Search to Close Toggle Icon (OpenAI-style)
- *
- * Uses a single stroked SVG so the search handle becomes one close arm while
- * the lens retracts and the second close arm draws into place.
- */
 export function AnimatedSearchClose({
   open,
   isOpen,
@@ -228,6 +263,154 @@ export function AnimatedSearchClose({
 
 export { AnimatedSearchClose as AnimatedSearchIcon };
 
+export interface AnimatedComingSoonTextProps {
+  label: string;
+  comingSoonText?: string;
+  align?: 'start' | 'center';
+  className?: string;
+}
+
+export function AnimatedComingSoonText({
+  label = 'API Platform',
+  comingSoonText = 'Coming soon',
+  align = 'start',
+  className,
+}: AnimatedComingSoonTextProps) {
+  const ref = useRef<HTMLSpanElement>(null);
+  const [hovered, setHovered] = useState(false);
+  const [clicked, setClicked] = useState(false);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const parent =
+      el.closest('button') ||
+      el.closest('[role="button"]') ||
+      el.closest('a') ||
+      el.parentElement ||
+      el;
+
+    const onEnter = () => {
+      if (typeof window !== 'undefined' && window.matchMedia('(hover: hover)').matches) {
+        setHovered(true);
+      }
+    };
+    const onLeave = () => {
+      if (typeof window !== 'undefined' && window.matchMedia('(hover: hover)').matches) {
+        setHovered(false);
+        setClicked(false);
+      }
+    };
+
+    const onClick = () => {
+      setClicked(true);
+    };
+
+    parent.addEventListener('mouseenter', onEnter);
+    parent.addEventListener('mouseleave', onLeave);
+    parent.addEventListener('click', onClick);
+
+    return () => {
+      parent.removeEventListener('mouseenter', onEnter);
+      parent.removeEventListener('mouseleave', onLeave);
+      parent.removeEventListener('click', onClick);
+    };
+  }, []);
+
+  // Listen for clicks on any other side (outside parent) to revert state
+  useEffect(() => {
+    if (!clicked) return;
+
+    const handleOutsideClick = (e: MouseEvent | TouchEvent) => {
+      const el = ref.current;
+      if (!el) return;
+      const target = e.target as Node | null;
+      if (!target) return;
+
+      const parent =
+        el.closest('button') ||
+        el.closest('[role="button"]') ||
+        el.closest('a') ||
+        el.parentElement ||
+        el;
+
+      if (!parent.contains(target)) {
+        setClicked(false);
+      }
+    };
+
+    const timer = setTimeout(() => {
+      document.addEventListener('click', handleOutsideClick, true);
+      document.addEventListener('touchstart', handleOutsideClick, true);
+    }, 50);
+
+    return () => {
+      clearTimeout(timer);
+      document.removeEventListener('click', handleOutsideClick, true);
+      document.removeEventListener('touchstart', handleOutsideClick, true);
+    };
+  }, [clicked]);
+
+  const isActive = hovered || clicked;
+  const motionVal = useMotionValue(+!!isActive);
+  const spring = useSpring(motionVal, { stiffness: 450, damping: 28 });
+
+  useEffect(() => {
+    motionVal.set(+!!isActive);
+  }, [isActive, motionVal]);
+
+  const labelY = useTransform(spring, [0, 1], ['0%', '-120%']);
+  const labelOpacity = useTransform(spring, [0, 0.6, 1], [1, 0.2, 0]);
+
+  const comingY = useTransform(spring, [0, 1], ['120%', '0%']);
+  const comingOpacity = useTransform(spring, [0, 0.4, 1], [0, 0.8, 1]);
+
+  return (
+    <span
+      ref={ref}
+      className={cn(
+        'relative inline-grid grid-cols-1 grid-rows-1 overflow-hidden select-none align-middle py-0.5',
+        align === 'center' ? 'px-1' : 'pl-0 pr-1',
+        className
+      )}
+    >
+      {/* Invisible sizers: guarantees container is wide & tall enough for whichever text is larger */}
+      <span
+        className="col-start-1 row-start-1 invisible pointer-events-none select-none whitespace-nowrap"
+        aria-hidden="true"
+      >
+        {label}
+      </span>
+      <span
+        className="col-start-1 row-start-1 invisible pointer-events-none select-none whitespace-nowrap font-medium"
+        aria-hidden="true"
+      >
+        {comingSoonText}
+      </span>
+
+      {/* Label layer */}
+      <motion.span
+        style={{ y: labelY, opacity: labelOpacity }}
+        className={cn(
+          'col-start-1 row-start-1 flex items-center whitespace-nowrap',
+          align === 'center' ? 'justify-center' : 'justify-start'
+        )}
+      >
+        {label}
+      </motion.span>
+
+      {/* Coming soon layer */}
+      <motion.span
+        style={{ y: comingY, opacity: comingOpacity }}
+        className={cn(
+          'col-start-1 row-start-1 flex items-center whitespace-nowrap text-muted-foreground/90 font-medium',
+          align === 'center' ? 'justify-center' : 'justify-start'
+        )}
+      >
+        {comingSoonText}
+      </motion.span>
+    </span>
+  );
+}
+
 export default AnimatedArrow;
-
-

@@ -12,23 +12,23 @@ export default function HelpPage() {
           <input 
             type="text" 
             placeholder="Search for articles, guides, and FAQs..." 
-            className="w-full pl-12 pr-4 py-3.5 sm:py-4 bg-card rounded-full text-base sm:text-lg focus:outline-none text-foreground placeholder:text-muted-foreground focus:placeholder:text-foreground transition-colors"
+            className="w-full pl-12 pr-4 py-3.5 sm:py-4 bg-card border border-border/80 dark:border-none rounded-full text-base sm:text-lg focus:outline-none text-foreground placeholder:text-muted-foreground focus:placeholder:text-foreground transition-colors"
           />
         </div>
       </header>
 
       <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-3 mb-12 sm:mb-16">
-        <div className="p-5 sm:p-6 bg-card border border-border rounded-2xl cursor-pointer hover:bg-secondary/50 transition-colors">
+        <div className="p-5 sm:p-6 bg-card border border-border/80 dark:border-none rounded-2xl cursor-pointer hover:bg-secondary/50 transition-colors">
           <HelpCircle className="h-6 w-6 sm:h-8 sm:w-8 mb-3 sm:mb-4 text-foreground" />
           <h3 className="text-base sm:text-lg font-medium mb-1 sm:mb-2">Getting Started</h3>
           <p className="text-base sm:text-base text-muted-foreground">Basics of using our web interface and features.</p>
         </div>
-        <div className="p-5 sm:p-6 bg-card border border-border rounded-2xl cursor-pointer hover:bg-secondary/50 transition-colors">
+        <div className="p-5 sm:p-6 bg-card border border-border/80 dark:border-none rounded-2xl cursor-pointer hover:bg-secondary/50 transition-colors">
           <Settings className="h-6 w-6 sm:h-8 sm:w-8 mb-3 sm:mb-4 text-foreground" />
           <h3 className="text-base sm:text-lg font-medium mb-1 sm:mb-2">Account & Billing</h3>
           <p className="text-base sm:text-base text-muted-foreground">Manage subscriptions, usage limits, and invoices.</p>
         </div>
-        <div className="p-5 sm:p-6 bg-card border border-border rounded-2xl cursor-pointer hover:bg-secondary/50 transition-colors">
+        <div className="p-5 sm:p-6 bg-card border border-border/80 dark:border-none rounded-2xl cursor-pointer hover:bg-secondary/50 transition-colors">
           <FileText className="h-6 w-6 sm:h-8 sm:w-8 mb-3 sm:mb-4 text-foreground" />
           <h3 className="text-base sm:text-lg font-medium mb-1 sm:mb-2">Troubleshooting</h3>
           <p className="text-base sm:text-base text-muted-foreground">Solutions for common errors and technical issues.</p>

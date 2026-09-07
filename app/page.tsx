@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { MarketingHeader } from "@/components/marketing/header";
 import { Footer } from "@/components/ui/footer";
-import { AnimatedArrow } from "@/components/ui/animated-icons";
+import { AnimatedArrow, AnimatedComingSoonText } from "@/components/ui/animated";
 import { ArrowUpRight, ArrowRight, Sparkles, ArrowUp, Search, Loader } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -36,7 +36,7 @@ export default function LandingPage() {
     { label: "Research", prompt: "Summarize recent breakthrough papers in AI alignment and safety" },
     { label: "Talk with CloseAI", prompt: "Explain the latest frontier AI models and reasoning capabilities" },
     { label: "Stories", prompt: "Showcase customer success stories and real-world applications" },
-    { label: "API Platform", prompt: "How do I get started with the API and developer platform?" },
+    { label: "API Platform", prompt: "How do I get started with the API and developer platform?", disabled: true, hoverText: "Coming soon" },
     { label: "More", prompt: "Explore all closeAI features, enterprise solutions, and tools" },
   ];
 
@@ -57,7 +57,7 @@ export default function LandingPage() {
           <form onSubmit={handleHeroSubmit} className="relative w-full max-w-3xl mx-auto mb-6">
             <div 
               onClick={() => textareaRef.current?.focus({ preventScroll: true })}
-              className="relative w-full rounded-3xl bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm p-4 min-h-[100px] flex flex-col justify-between transition-all focus-within:border-neutral-500/80 cursor-text"
+              className="relative w-full rounded-3xl bg-white/50 dark:bg-[#212121]/50 border border-border/80 dark:border-none backdrop-blur-sm p-4 min-h-[100px] flex flex-col justify-between transition-all cursor-text"
             >
               <textarea
                 ref={textareaRef}
@@ -72,7 +72,7 @@ export default function LandingPage() {
                 placeholder="Ask about anything"
                 rows={3}
                 disabled={isSubmitting}
-                className="w-full bg-transparent resize-none text-[17px] text-foreground placeholder:text-muted-foreground focus:placeholder:text-foreground transition-colors outline-none border-none ring-0 leading-relaxed"
+                className="w-full bg-transparent resize-none text-[17px] font-normal text-foreground placeholder:text-muted-foreground focus:placeholder:text-foreground transition-colors outline-none border-none ring-0 leading-relaxed"
               />
               <div className="flex items-center justify-end pt-3" onClick={(e) => e.stopPropagation()}>
                 <button
@@ -82,7 +82,7 @@ export default function LandingPage() {
                     "w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-all shrink-0",
                     heroPrompt.trim().length > 0 && !isSubmitting
                       ? "bg-foreground text-background cursor-pointer hover:opacity-90 active:scale-95"
-                      : "bg-white/50 dark:bg-[#212121]/50 text-foreground cursor-not-allowed opacity-60"
+                      : "bg-white/50 dark:bg-[#212121]/50 text-foreground border border-border/80 dark:border-none cursor-not-allowed opacity-60"
                   )}
                   aria-label="Send prompt"
                 >
@@ -99,20 +99,34 @@ export default function LandingPage() {
           {/* Suggestion Pills */}
           <div className="flex flex-wrap items-center justify-center gap-2 max-w-2xl mx-auto">
             {quickPills.map((pill, i) => {
-              const isSelected = heroPrompt.trim() === pill.prompt;
+              const isSelected = !pill.disabled && heroPrompt.trim() === pill.prompt;
               return (
                 <button
                   key={i}
                   type="button"
-                  onClick={() => handlePillClick(pill.prompt)}
+                  onClick={() => {
+                    if (pill.disabled) return;
+                    handlePillClick(pill.prompt);
+                  }}
                   className={cn(
-                    "px-4 py-3 rounded-full text-md sm:text-[15px] transition-all cursor-pointer",
+                    "px-4 py-3 rounded-full text-md sm:text-[15px] transition-all outline-none focus:outline-none focus-visible:outline-none focus:ring-0 focus-visible:ring-0 ring-0",
+                    pill.disabled
+                      ? "cursor-not-allowed select-none bg-white/50 dark:bg-[#212121]/50 border border-border/80 dark:border-none backdrop-blur-sm text-muted-foreground hover:text-foreground group/pill"
+                      : "cursor-pointer",
                     isSelected
-                      ? "bg-secondary text-foreground"
-                      : "bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm hover:bg-secondary text-muted-foreground hover:text-foreground"
+                      ? "bg-secondary text-foreground border border-border/80 dark:border-none"
+                      : !pill.disabled && "bg-white/50 dark:bg-[#212121]/50 border border-border/80 dark:border-none backdrop-blur-sm hover:bg-secondary text-muted-foreground hover:text-foreground"
                   )}
                 >
-                  {pill.label}
+                  {pill.disabled ? (
+                    <AnimatedComingSoonText
+                      label={pill.label}
+                      comingSoonText={pill.hoverText || "Coming soon"}
+                      align="center"
+                    />
+                  ) : (
+                    pill.label
+                  )}
                 </button>
               );
             })}
@@ -130,7 +144,7 @@ export default function LandingPage() {
               <div className="lg:sticky lg:top-24">
                 <Link href="/research/overview" className="group block">
                 {/* Big Cosmic Image Card with GPT 5.6 */}
-                <div className="relative w-full aspect-[16/10] rounded-3xl overflow-hidden bg-black border border-border/40 transition-all duration-300">
+                <div className="relative w-full aspect-[16/10] rounded-3xl overflow-hidden bg-black transition-all duration-300">
                   {/* Space Planet, Earth Crescent & Cosmic Sun Flare Background */}
                   <div
                     className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105"
@@ -160,7 +174,7 @@ export default function LandingPage() {
 
                 {/* Left Title & Tag Below Card */}
                 <div className="mt-4 flex flex-col justify-between h-[92px] max-w-2xl">
-                  <h2 className="text-xl sm:text-2xl md:text-3xl font-bold tracking-tight text-foreground group-hover:underline leading-snug">
+                  <h2 className="text-xl sm:text-2xl md:text-3xl font-bold tracking-tight text-muted-foreground group-hover:text-foreground leading-snug">
                     GPT-5.6: Frontier intelligence that scales with your ambition
                   </h2>
                   <div className="flex items-center gap-2 text-md text-muted-foreground">
@@ -179,7 +193,7 @@ export default function LandingPage() {
             <div className="w-full lg:w-[38%] flex flex-col gap-8 lg:gap-10">
               {/* Item 1: Expanding Daybreak Horizon */}
               <Link href="/company/blog" className="group block">
-                <div className="relative w-full aspect-[4/3] rounded-2xl overflow-hidden bg-black border border-border/40">
+                <div className="relative w-full aspect-[4/3] rounded-2xl overflow-hidden bg-black">
                   <div
                     className="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-105"
                     style={{
@@ -191,7 +205,7 @@ export default function LandingPage() {
                   <div className="absolute bottom-0 inset-x-0 h-1/2 bg-gradient-to-t from-amber-600/30 via-orange-500/10 to-transparent" />
                 </div>
                 <div className="mt-4 flex flex-col justify-between h-[92px]">
-                  <h3 className="text-base sm:text-lg font-semibold text-foreground group-hover:underline leading-snug">
+                  <h3 className="text-base sm:text-lg font-semibold text-muted-foreground group-hover:text-foreground leading-snug">
                     Expanding Daybreak as the Cyber Defense Window Narrows
                   </h3>
                   <div className="flex items-center gap-2 text-md text-muted-foreground">
@@ -206,7 +220,7 @@ export default function LandingPage() {
 
               {/* Item 2: Mobile Interface Sol */}
               <Link href="/product/features" className="group block">
-                <div className="relative w-full aspect-[4/3] rounded-2xl overflow-hidden bg-[#0a0a0f] border border-border/40 flex items-center justify-center p-4">
+                <div className="relative w-full aspect-[4/3] rounded-2xl overflow-hidden bg-[#0a0a0f] flex items-center justify-center p-4">
                   <div
                     className="absolute inset-0 bg-cover bg-center opacity-30 transition-transform duration-500 group-hover:scale-105"
                     style={{
@@ -233,7 +247,7 @@ export default function LandingPage() {
                   </div>
                 </div>
                 <div className="mt-4 flex flex-col justify-between h-[92px]">
-                  <h3 className="text-base sm:text-lg font-semibold text-foreground group-hover:underline leading-snug">
+                  <h3 className="text-base sm:text-lg font-semibold text-muted-foreground group-hover:text-foreground leading-snug">
                     Improving GPT-5.6 Sol in CloseAI — and expanding access to GPT-5.6 Luna for free users
                   </h3>
                   <div className="flex items-center gap-2 text-md text-muted-foreground">
@@ -248,7 +262,7 @@ export default function LandingPage() {
 
               {/* Item 3: Health in CloseAI (White Squircle + Red Flower Heart Badge matching Image 3) */}
               <Link href="/product/features" className="group block">
-                <div className="relative w-full aspect-[4/3] rounded-2xl overflow-hidden bg-gradient-to-br from-[#fed1d8] via-[#fee5d4] to-[#fbcfe0] dark:from-[#32161d] dark:via-[#261612] dark:to-[#221019] border border-border/40 flex items-center justify-center p-6">
+                <div className="relative w-full aspect-[4/3] rounded-2xl overflow-hidden bg-gradient-to-br from-[#fed1d8] via-[#fee5d4] to-[#fbcfe0] dark:from-[#32161d] dark:via-[#261612] dark:to-[#221019] flex items-center justify-center p-6">
                   {/* Soft Warm Blurred Background Glow */}
                   <div className="absolute inset-0 bg-gradient-to-tr from-pink-300/30 via-amber-200/20 to-rose-300/30 blur-xl pointer-events-none" />
 
@@ -274,7 +288,7 @@ export default function LandingPage() {
                   </div>
                 </div>
                 <div className="mt-4 flex flex-col justify-between h-[92px]">
-                  <h3 className="text-base sm:text-lg font-semibold text-foreground group-hover:underline leading-snug">
+                  <h3 className="text-base sm:text-lg font-semibold text-muted-foreground group-hover:text-foreground leading-snug">
                     Launching Health in CloseAI
                   </h3>
                   <div className="flex items-center gap-2 text-md text-muted-foreground">
@@ -294,8 +308,8 @@ export default function LandingPage() {
         {/* ---------------------------------------------------------------- */}
         {/* LATEST NEWS & UPDATES */}
         {/* ---------------------------------------------------------------- */}
-        <section className="px-6 sm:px-8 max-w-[1400px] mx-auto py-12 border-t border-border/40">
-          <div className="flex items-center justify-between mb-8">
+        <section className="px-6 sm:px-8 max-w-[1400px] mx-auto py-12 border-t border-border/80">
+          <div className="flex items-center justify-between mb-8 ">
             <h2 className="text-xl sm:text-2xl font-semibold tracking-tight text-foreground">
               Latest News
             </h2>
@@ -350,7 +364,7 @@ export default function LandingPage() {
               <Link
                 key={i}
                 href="/company/blog"
-                className="group flex flex-col rounded-2xl overflow-hidden border border-border/50 bg-card hover:border-border transition-all"
+                className="group flex flex-col rounded-2xl overflow-hidden bg-card border border-border/80 dark:border-none hover:border-border transition-all"
               >
                 {/* Visual Thumbnail */}
                 <div className={`h-40 w-full bg-gradient-to-br ${news.color} opacity-85 group-hover:opacity-100 transition-opacity flex items-end p-4`}>
@@ -359,7 +373,7 @@ export default function LandingPage() {
                   </span>
                 </div>
                 <div className="p-5 flex-1 flex flex-col justify-between">
-                  <h3 className="text-base font-medium text-foreground group-hover:underline leading-snug mb-3">
+                  <h3 className="text-base font-medium text-muted-foreground group-hover:text-foreground leading-snug mb-3">
                     {news.title}
                   </h3>
                   <p className="text-md text-muted-foreground">{news.date}</p>
@@ -372,7 +386,7 @@ export default function LandingPage() {
         {/* ---------------------------------------------------------------- */}
         {/* STORIES & REAL-WORLD IMPACT */}
         {/* ---------------------------------------------------------------- */}
-        <section className="px-6 sm:px-8 max-w-[1400px] mx-auto py-12 border-t border-border/40">
+        <section className="px-6 sm:px-8 max-w-[1400px] mx-auto py-12 border-t border-border/80">
           <div className="flex items-center justify-between mb-8">
             <h2 className="text-xl sm:text-2xl font-semibold tracking-tight text-foreground">
               Stories
@@ -407,7 +421,7 @@ export default function LandingPage() {
               <Link
                 key={i}
                 href="/company/blog"
-                className="group rounded-3xl overflow-hidden border border-border/50 bg-[#0f0f11] text-white flex flex-col justify-between min-h-[360px] p-7 relative transition-all hover:border-border"
+                className="group rounded-3xl overflow-hidden bg-[#0f0f11] text-white border border-border/80 dark:border-none flex flex-col justify-between min-h-[360px] p-7 relative transition-all hover:border-border"
               >
                 <div className={`absolute inset-0 bg-gradient-to-b ${story.gradient} opacity-90 z-0`} />
                 <div className="relative z-10 flex items-center justify-between">
@@ -417,7 +431,7 @@ export default function LandingPage() {
                   <ArrowUpRight className="w-4 h-4 text-neutral-400 group-hover:text-white" />
                 </div>
                 <div className="relative z-10">
-                  <h3 className="text-xl font-semibold text-white group-hover:underline leading-snug mb-2">
+                  <h3 className="text-xl font-semibold text-muted-foreground group-hover:text-foreground leading-snug mb-2">
                     {story.title}
                   </h3>
                   <p className="text-md text-neutral-400">Individual Articles</p>
@@ -430,7 +444,7 @@ export default function LandingPage() {
         {/* ---------------------------------------------------------------- */}
         {/* FRONTIER RESEARCH SHOWCASE                                       */}
         {/* ---------------------------------------------------------------- */}
-        <section className="px-6 sm:px-8 max-w-[1400px] mx-auto py-12 border-t border-border/40">
+        <section className="px-6 sm:px-8 max-w-[1400px] mx-auto py-12 border-t border-border/80">
           <div className="flex items-center justify-between mb-8">
             <h2 className="text-xl sm:text-2xl font-semibold tracking-tight text-foreground">
               Frontier Research
@@ -447,10 +461,10 @@ export default function LandingPage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <Link
               href="/research/overview"
-              className="group rounded-3xl p-7 border border-border/50 bg-[#0e1118] text-white flex flex-col justify-end min-h-[300px] hover:border-border transition-all"
+              className="group rounded-3xl p-7 bg-[#0e1118] text-white border border-border/80 dark:border-none flex flex-col justify-end min-h-[300px] hover:border-border transition-all"
             >
               <div>
-                <h3 className="text-lg font-semibold text-white group-hover:underline leading-snug mb-2">
+                <h3 className="text-lg font-semibold text-muted-foreground group-hover:text-foreground leading-snug mb-2">
                   The next generation model architecture and self-verifying chains
                 </h3>
                 <p className="text-md text-neutral-400">Research Paper</p>
@@ -459,10 +473,10 @@ export default function LandingPage() {
 
             <Link
               href="/research/overview"
-              className="group rounded-3xl p-7 border border-border/50 bg-[#16140e] text-white flex flex-col justify-end min-h-[300px] hover:border-border transition-all"
+              className="group rounded-3xl p-7 bg-[#16140e] text-white border border-border/80 dark:border-none flex flex-col justify-end min-h-[300px] hover:border-border transition-all"
             >
               <div>
-                <h3 className="text-lg font-semibold text-white group-hover:underline leading-snug mb-2">
+                <h3 className="text-lg font-semibold text-muted-foreground group-hover:text-foreground leading-snug mb-2">
                   Unit Distance Problem & Discrete Mathematics Optimization
                 </h3>
                 <p className="text-md text-neutral-400">Research Paper</p>
@@ -471,10 +485,10 @@ export default function LandingPage() {
 
             <Link
               href="/research/overview"
-              className="group rounded-3xl p-7 border border-border/50 bg-[#0e1713] text-white flex flex-col justify-end min-h-[300px] hover:border-border transition-all"
+              className="group rounded-3xl p-7 bg-[#0e1713] text-white border border-border/80 dark:border-none flex flex-col justify-end min-h-[300px] hover:border-border transition-all"
             >
               <div>
-                <h3 className="text-lg font-semibold text-white group-hover:underline leading-snug mb-2">
+                <h3 className="text-lg font-semibold text-muted-foreground group-hover:text-foreground leading-snug mb-2">
                   Introducing closeAI-Rosalind for Molecular Biology & Therapeutics
                 </h3>
                 <p className="text-md text-neutral-400">Research Paper</p>
@@ -486,7 +500,7 @@ export default function LandingPage() {
         {/* ---------------------------------------------------------------- */}
         {/* BUSINESS & ENTERPRISE PARTNERS */}
         {/* ---------------------------------------------------------------- */}
-        <section className="px-6 sm:px-8 max-w-[1400px] mx-auto py-12 border-t border-border/40">
+        <section className="px-6 sm:px-8 max-w-[1400px] mx-auto py-12 border-t border-border/80">
           <div className="flex items-center justify-between mb-8">
             <h2 className="text-xl sm:text-2xl font-semibold tracking-tight text-foreground">
               closeAI for Business
@@ -503,10 +517,10 @@ export default function LandingPage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <Link
               href="/business/enterprise"
-              className="group rounded-3xl p-8 border border-border/50 bg-gradient-to-br from-[#7a6438] via-[#4d3d1f] to-[#1e1709] text-white flex flex-col justify-end min-h-[280px] transition-all"
+              className="group rounded-3xl p-8 bg-gradient-to-br from-[#7a6438] via-[#4d3d1f] to-[#1e1709] text-white border border-border/80 dark:border-none flex flex-col justify-end min-h-[280px] transition-all"
             >
               <div>
-                <p className="text-md font-medium text-neutral-200 group-hover:underline mb-1">
+                <p className="text-md font-medium text-muted-foreground group-hover:text-foreground mb-1">
                   Accelerating deep learning experimentation with closeAI infrastructure
                 </p>
                 <p className="text-md text-neutral-300">Case study</p>
@@ -515,10 +529,10 @@ export default function LandingPage() {
 
             <Link
               href="/business/enterprise"
-              className="group rounded-3xl p-8 border border-border/50 bg-gradient-to-br from-[#2e333d] via-[#1a1d24] to-[#0c0e12] text-white flex flex-col justify-end min-h-[280px] transition-all"
+              className="group rounded-3xl p-8 bg-gradient-to-br from-[#2e333d] via-[#1a1d24] to-[#0c0e12] text-white border border-border/80 dark:border-none flex flex-col justify-end min-h-[280px] transition-all"
             >
               <div>
-                <p className="text-md font-medium text-neutral-200 group-hover:underline mb-1">
+                <p className="text-md font-medium text-muted-foreground group-hover:text-foreground mb-1">
                   Scaling private institutional financial analysis with frontier security
                 </p>
                 <p className="text-md text-neutral-300">Case study</p>
@@ -527,10 +541,10 @@ export default function LandingPage() {
 
             <Link
               href="/business/enterprise"
-              className="group rounded-3xl p-8 border border-border/50 bg-gradient-to-br from-[#d95d1e] via-[#8c350a] to-[#2b0f02] text-white flex flex-col justify-end min-h-[280px] transition-all"
+              className="group rounded-3xl p-8 bg-gradient-to-br from-[#d95d1e] via-[#8c350a] to-[#2b0f02] text-white border border-border/80 dark:border-none flex flex-col justify-end min-h-[280px] transition-all"
             >
               <div>
-                <p className="text-md font-medium text-neutral-200 group-hover:underline mb-1">
+                <p className="text-md font-medium text-muted-foreground group-hover:text-foreground mb-1">
                   Empowering millions with autonomous multi-agent task execution
                 </p>
                 <p className="text-md text-neutral-300">Case study</p>
@@ -543,7 +557,7 @@ export default function LandingPage() {
         {/* BOTTOM CALL TO ACTION BANNER */}
         {/* ---------------------------------------------------------------- */}
         <section className="px-6 sm:px-8 max-w-[1400px] mx-auto py-16">
-          <div className="rounded-3xl border border-border/60 bg-card p-12 sm:p-16 text-center flex flex-col items-center justify-center space-y-6">
+          <div className="rounded-3xl bg-card border border-border/80 dark:border-none p-12 sm:p-16 text-center flex flex-col items-center justify-center space-y-6">
             <h2 className="text-3xl sm:text-5xl font-semibold tracking-tight text-foreground">
               Get started with closeAI
             </h2>
@@ -557,7 +571,7 @@ export default function LandingPage() {
                 className="group rounded-full px-8 h-12 text-md font-medium bg-foreground text-background hover:opacity-90 transition-opacity cursor-pointer"
               >
                 <Link href="/c" className="flex items-center">
-                  <span>Start chatting</span>
+                  <span>Explore Now</span>
                   <AnimatedArrow size={15} />
                 </Link>
               </Button>

@@ -4,6 +4,7 @@ export interface Chat {
   id: string;
   title: string;
   starred: boolean;
+  archived?: boolean;
   createdAt: string;
   updatedAt: string;
   userId: string;
@@ -30,10 +31,19 @@ export const chatService = {
 
     if (error) throw error;
 
+    let cookieArchivedSet = new Set<string>();
+    if (typeof document !== 'undefined') {
+      const match = document.cookie.match(/(?:^|; )archived_chats=([^;]*)/);
+      if (match && match[1]) {
+        match[1].split(',').filter(Boolean).forEach(id => cookieArchivedSet.add(id));
+      }
+    }
+
     return data.map((chat: any) => ({
       id: chat.id,
       title: chat.title,
       starred: chat.starred || false,
+      archived: chat.archived === true || cookieArchivedSet.has(chat.id),
       createdAt: chat.created_at,
       updatedAt: chat.updated_at,
       userId: chat.user_id,
@@ -44,13 +54,33 @@ export const chatService = {
   // Fetch full details (messages) for a single chat
   async getChatDetails(supabase: SupabaseClient, chatId: string): Promise<Chat | null> {
     // 1. Get Chat Metadata
-    const { data: chat, error: chatError } = await supabase
+    let { data: chat, error: chatError } = await supabase
       .from('chats')
       .select('*')
       .eq('id', chatId)
       .single();
 
-    if (chatError) throw chatError;
+    if (chatError) {
+      // Fallback for public shared chats opened at /c/[id]
+      try {
+        const res = await fetch(`/api/share/${chatId}`);
+        if (res.ok) {
+          const sharedData = await res.json();
+          return {
+            id: sharedData.chat.id,
+            title: sharedData.chat.title,
+            starred: false,
+            createdAt: sharedData.chat.createdAt,
+            updatedAt: sharedData.chat.updatedAt,
+            userId: '',
+            messages: sharedData.messages || []
+          };
+        }
+      } catch (e) {
+        console.error('Fallback shared chat fetch failed:', e);
+      }
+      throw chatError;
+    }
 
     // 2. Get Messages for this chat
     const { data: messages, error: msgError } = await supabase
@@ -97,5 +127,38 @@ export const chatService = {
       .eq('id', chatId);
 
     if (error) throw error;
+  },
+
+  async toggleChatArchive(supabase: SupabaseClient, chatId: string, archived: boolean) {
+    // 1. Synchronize cookie state as fallback/persisted state (no localStorage used)
+    if (typeof document !== 'undefined') {
+      let currentIds: string[] = [];
+      const match = document.cookie.match(/(?:^|; )archived_chats=([^;]*)/);
+      if (match && match[1]) {
+        currentIds = match[1].split(',').filter(Boolean);
+      }
+      const updatedSet = new Set(currentIds);
+      if (archived) {
+        updatedSet.add(chatId);
+      } else {
+        updatedSet.delete(chatId);
+      }
+      const cookieValue = Array.from(updatedSet).join(',');
+      document.cookie = `archived_chats=${cookieValue}; path=/; max-age=31536000; SameSite=Lax`;
+    }
+
+    // 2. Try DB update if column exists in Supabase schema
+    try {
+      const { error } = await supabase
+        .from('chats')
+        .update({ archived })
+        .eq('id', chatId);
+
+      if (error && error.code !== 'PGRST204') {
+        console.warn('DB archive update warning:', error.message);
+      }
+    } catch (e) {
+      // Safely ignore PGRST204 (missing column in Supabase schema)
+    }
   }
 };

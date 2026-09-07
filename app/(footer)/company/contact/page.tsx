@@ -1,6 +1,7 @@
 'use client';
 
 import { Mail, MapPin } from 'lucide-react';
+import { AnimatedArrow } from '@/components/ui/animated';
 
 export default function ContactPage() {
   return (
@@ -18,18 +19,19 @@ export default function ContactPage() {
           <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
             <div>
               <label className="block text-base font-medium mb-1" htmlFor="name">Name</label>
-              <input id="name" type="text" className="w-full p-3 bg-card border border-border rounded-xl focus:outline-none focus:ring-1 focus:ring-primary text-base" placeholder="Your name" />
+              <input id="name" type="text" className="w-full p-3 bg-card rounded-xl focus:outline-none text-base" placeholder="Your name" />
             </div>
             <div>
               <label className="block text-base font-medium mb-1" htmlFor="email">Email</label>
-              <input id="email" type="email" className="w-full p-3 bg-card border border-border rounded-xl focus:outline-none focus:ring-1 focus:ring-primary text-base" placeholder="your@email.com" />
+              <input id="email" type="email" className="w-full p-3 bg-card rounded-xl focus:outline-none text-base" placeholder="your@email.com" />
             </div>
             <div>
               <label className="block text-base font-medium mb-1" htmlFor="message">Message</label>
-              <textarea id="message" rows={5} className="w-full p-3 bg-card border border-border rounded-xl focus:outline-none focus:ring-1 focus:ring-primary text-base" placeholder="How can we help?"></textarea>
+              <textarea id="message" rows={5} className="w-full p-3 bg-card rounded-xl focus:outline-none text-base" placeholder="How can we help?"></textarea>
             </div>
-            <button type="submit" className="px-6 py-3 bg-foreground text-background font-medium rounded-full hover:opacity-90 transition-opacity text-base">
-              Send Message
+            <button type="submit" className="inline-flex items-center justify-center px-6 py-3 bg-foreground text-background font-medium rounded-full hover:opacity-90 transition-opacity text-base group cursor-pointer">
+              <span>Send Message</span>
+              <AnimatedArrow size={18} />
             </button>
           </form>
         </div>

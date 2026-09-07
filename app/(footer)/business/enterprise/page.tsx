@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { AnimatedArrow } from '@/components/ui/animated-icons';
+import { AnimatedArrow } from '@/components/ui/animated';
 import { Building2, ShieldCheck, Zap, Users, BarChart3, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -44,11 +44,14 @@ export default function EnterprisePage() {
           Empower your teams with industry-leading intelligence, enterprise security, and administrative governance designed for global scale.
         </p>
         <div className="flex flex-wrap items-center gap-4">
-          <Button asChild size="lg" className="rounded-full px-8 bg-foreground text-background hover:opacity-90">
-            <Link href="/company/contact">Contact Sales</Link>
-          </Button>
           <Button asChild variant="outline" size="lg" className="rounded-full px-8 border-border hover:bg-secondary">
-            <Link href="/product/pricing">View Pricing Plans</Link>
+            <Link href="/product/pricing">View Pricing</Link>
+          </Button>
+          <Button asChild size="lg" className="group rounded-full px-8 bg-foreground text-background hover:opacity-90">
+            <Link href="/company/contact" className="inline-flex items-center justify-center">
+              <span>Contact Sales</span>
+              <AnimatedArrow size={18} />
+            </Link>
           </Button>
         </div>
       </div>
@@ -84,7 +87,7 @@ export default function EnterprisePage() {
         </p>
         <Button asChild className="group rounded-full px-8 h-12 bg-foreground text-background hover:opacity-90">
           <Link href="/company/contact" className="flex items-center">
-            <span>Schedule an Enterprise Demo</span>
+            <span>Schedule Demo</span>
             <AnimatedArrow size={18} />
           </Link>
         </Button>

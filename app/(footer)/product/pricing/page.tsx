@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { AnimatedArrow } from '@/components/ui/animated-icons';
+import { AnimatedArrow } from '@/components/ui/animated';
 import { Check, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 

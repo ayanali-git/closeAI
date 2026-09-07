@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { AnimatedArrow } from '@/components/ui/animated-icons';
+import { AnimatedArrow } from '@/components/ui/animated';
 import { Globe, HeartHandshake, GraduationCap, Award } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 

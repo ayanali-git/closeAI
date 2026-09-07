@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { AnimatedArrow } from '@/components/ui/animated-icons';
+import { AnimatedArrow } from '@/components/ui/animated';
 import { Sparkles, Brain, Cpu, ArrowUpRight, ShieldCheck } from 'lucide-react';
 
 export default function ResearchOverviewPage() {
@@ -70,14 +70,14 @@ export default function ResearchOverviewPage() {
           href="/c"
           className="group inline-flex items-center text-md font-semibold uppercase tracking-wider text-foreground"
         >
-          <span>Try in closeAI Chat</span>
+          <span>Try in CloseAI Chat</span>
           <AnimatedArrow size={18} />
         </Link>
       </div>
 
       {/* Publications Index */}
       <div className="space-y-6">
-        <div className="flex items-center justify-between pb-4 border-b border-border/40">
+        <div className="flex items-center justify-between pb-4 border-b border-border/80">
           <h2 className="text-2xl font-semibold tracking-tight text-foreground">
             Selected Publications
           </h2>
@@ -96,7 +96,7 @@ export default function ResearchOverviewPage() {
                 </span>
                 <span className="text-md text-muted-foreground">{paper.date}</span>
               </div>
-              <h3 className="text-xl font-semibold text-foreground group-hover:underline mb-2">
+              <h3 className="text-xl font-semibold text-muted-foreground group-hover:text-foreground mb-2">
                 {paper.title}
               </h3>
               <p className="text-md text-muted-foreground mb-4 leading-relaxed">

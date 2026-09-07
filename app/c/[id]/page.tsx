@@ -19,6 +19,7 @@ import {
   Pin,
   PinOff,
   Archive,
+  ArchiveX,
   Trash2,
   Loader,
   ArrowDown,
@@ -56,12 +57,14 @@ export default function ActiveChatPage() {
   const [chats, setChats] = useState<Chat[]>([]);
   const [isChatsLoading, setIsChatsLoading] = useState(true);
   const [isChatLoading, setIsChatLoading] = useState(true);
+  const [currentChatTitle, setCurrentChatTitle] = useState<string>("");
   const [messages, setMessages] = useState<Message[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [inputValue, setInputValue] = useState("");
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
   const [isTyping, setIsTyping] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [isSharing, setIsSharing] = useState(false);
   const [pendingMessage, setPendingMessage] = useState<{
     content: string;
     files: File[];
@@ -154,6 +157,7 @@ export default function ActiveChatPage() {
   useEffect(() => {
     setIsChatLoading(true);
     setMessages([]);
+    setCurrentChatTitle("");
   }, [chatId]);
 
   useEffect(() => {
@@ -164,8 +168,6 @@ export default function ActiveChatPage() {
       loadChats();
     }
   }, [user, loading, chatId, router]);
-
-
 
   const loadChats = async () => {
     if (!user) return;
@@ -179,6 +181,15 @@ export default function ActiveChatPage() {
     }
   };
 
+  const handleToggleArchive = async (id: string, archived: boolean) => {
+    if (archived) {
+      await chatService.toggleChatStar(supabase, id, false);
+    }
+    await chatService.toggleChatArchive(supabase, id, archived);
+    await loadChats();
+    toast.success(archived ? "Chat archived" : "Chat unarchived");
+  };
+
   const loadChat = async () => {
     if (!user || !chatId) return;
     try {
@@ -187,21 +198,28 @@ export default function ActiveChatPage() {
         router.push("/c");
         return;
       }
-      // Deduplicate consecutive identical user messages (in case past legacy chats had duplicates)
-      const rawMessages = details.messages || [];
-      const cleanMessages = rawMessages.filter((msg, idx, arr) => {
-        if (idx === 0) return true;
-        const prevMsg = arr[idx - 1];
-        if (
-          msg.role === "user" &&
-          prevMsg.role === "user" &&
-          msg.content.trim() === prevMsg.content.trim()
-        ) {
-          return false;
-        }
-        return true;
-      });
-      setMessages(cleanMessages);
+      setCurrentChatTitle(details.title || "");
+      setMessages(details.messages || []);
+
+      // Auto-heal truncated titles for existing chats
+      const firstMsg = details.messages?.find((m: any) => m.role === "user")?.content?.trim();
+      if (
+        firstMsg &&
+        details.title !== firstMsg &&
+        (details.title?.endsWith("...") ||
+          details.title?.endsWith("…") ||
+          details.title?.length < firstMsg.length)
+      ) {
+        supabase
+          .from("chats")
+          .update({ title: firstMsg })
+          .eq("id", chatId)
+          .then(() => {});
+        setCurrentChatTitle(firstMsg);
+        setChats((prev) =>
+          prev.map((c) => (c.id === chatId ? { ...c, title: firstMsg } : c))
+        );
+      }
 
       // Check if this chat was just created with a pending auto-send prompt
       if (typeof window !== "undefined" && !autoSendTriggeredRef.current) {
@@ -568,8 +586,33 @@ export default function ActiveChatPage() {
     }
   };
 
+  // Dynamic document title: "CloseAI — <chat full message>"
+  const firstUserMsg = messages.find((m) => m.role === "user")?.content?.trim();
+  const rawTitle =
+    firstUserMsg ||
+    pendingMessage?.content?.trim() ||
+    currentChatTitle ||
+    chats.find((c) => c.id === chatId)?.title ||
+    "";
+  const cleanTitle = rawTitle
+    .replace(/(\.\.\.|\u2026)\s*$/, "")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  useEffect(() => {
+    if (cleanTitle) {
+      document.title = `CloseAI \u2014 ${cleanTitle}`;
+    } else {
+      document.title = "CloseAI";
+    }
+    return () => {
+      document.title = "CloseAI";
+    };
+  }, [cleanTitle]);
+
   return (
     <div className="flex h-full w-full bg-background text-foreground overflow-hidden">
+      <title>{cleanTitle ? `CloseAI \u2014 ${cleanTitle}` : "CloseAI"}</title>
       {/* Sidebar */}
       <Sidebar
         user={user}
@@ -583,9 +626,14 @@ export default function ActiveChatPage() {
           else loadChats();
         }}
         onToggleStar={async (id, starred) => {
+          if (starred) {
+            await chatService.toggleChatArchive(supabase, id, false);
+          }
           await chatService.toggleChatStar(supabase, id, starred);
           loadChats();
+          toast.success(starred ? "Chat pinned" : "Chat unpinned");
         }}
+        onToggleArchive={handleToggleArchive}
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
         isOpen={sidebarOpen}
@@ -610,7 +658,7 @@ export default function ActiveChatPage() {
                     onMouseEnter={() => setIsSidebarBtnHovered(true)}
                     onMouseLeave={() => setIsSidebarBtnHovered(false)}
                     onBlur={() => setIsSidebarBtnHovered(false)}
-                    className="lg:hidden w-9 h-9 rounded-xl bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/50 dark:border-neutral-700/50 text-neutral-700 dark:text-neutral-200 hover:text-foreground dark:hover:text-foreground hover:bg-background dark:hover:bg-background flex items-center justify-center transition-colors cursor-pointer outline-none focus:outline-none"
+                    className="xl:hidden w-9 h-9 rounded-xl bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/50 dark:border-neutral-700/50 text-neutral-700 dark:text-neutral-200 hover:text-foreground dark:hover:text-foreground hover:bg-background dark:hover:bg-background flex items-center justify-center transition-colors cursor-pointer outline-none focus:outline-none"
                     aria-label="Open sidebar"
                   >
                       <PanelRight className="w-4 h-4 text-foreground" />
@@ -628,14 +676,29 @@ export default function ActiveChatPage() {
               <TooltipTrigger asChild>
                 <button
                   type="button"
-                  onClick={() => {
-                    navigator.clipboard.writeText(window.location.href);
-                    toast.success("Chat link copied");
+                  disabled={isSharing}
+                  onClick={async () => {
+                    setIsSharing(true);
+                    try {
+                      const shareUrl = `${window.location.origin}/share/${chatId}`;
+                      await navigator.clipboard.writeText(shareUrl);
+                      toast.success("Public link copied to your clipboard", {
+                        description: "Anyone with this link can see this conversation",
+                      });
+                    } catch (e) {
+                      toast.error("Failed to copy link");
+                    } finally {
+                      setTimeout(() => setIsSharing(false), 300);
+                    }
                   }}
-                  className="lg:hidden w-9 h-9 rounded-xl bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/50 dark:border-neutral-700/50 text-neutral-700 dark:text-neutral-200 hover:text-foreground dark:hover:text-foreground hover:bg-background dark:hover:bg-background flex items-center justify-center transition-colors cursor-pointer outline-none focus:outline-none"
+                  className="h-9 px-2.5 sm:px-3 gap-1.5 rounded-xl bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/50 dark:border-neutral-700/50 text-neutral-700 dark:text-neutral-200 hover:text-foreground dark:hover:text-foreground hover:bg-background dark:hover:bg-background flex items-center justify-center text-base font-medium transition-colors cursor-pointer outline-none focus:outline-none disabled:opacity-70 disabled:pointer-events-auto disabled:cursor-not-allowed"
                 >
-                  <Upload className="w-4 h-4" />
-                  <span className="hidden min-[400px]:inline">Share</span>
+                  {isSharing ? (
+                    <Loader className="w-4 h-4 shrink-0 animate-spin text-foreground" />
+                  ) : (
+                    <Upload className="w-4 h-4 shrink-0 text-foreground" />
+                  )}
+                  <span className="inline">Share</span>
                 </button>
               </TooltipTrigger>
               <TooltipContent side="bottom" sideOffset={6} className="text-md">
@@ -649,15 +712,15 @@ export default function ActiveChatPage() {
                 <TooltipTrigger asChild>
                   <DropdownMenuTrigger asChild>
                     <button
-                      className="lg:hidden w-9 h-9 rounded-xl bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/50 dark:border-neutral-700/50 text-neutral-700 dark:text-neutral-200 hover:text-foreground dark:hover:text-foreground hover:bg-background dark:hover:bg-background flex items-center justify-center transition-colors cursor-pointer outline-none focus:outline-none"
+                      className="w-9 h-9 rounded-xl bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/50 dark:border-neutral-700/50 text-neutral-700 dark:text-neutral-200 hover:text-foreground dark:hover:text-foreground hover:bg-background dark:hover:bg-background flex items-center justify-center transition-colors cursor-pointer outline-none focus:outline-none"
                       aria-label="Chat options"
                     >
-                      <MoreHorizontal className="w-4 h-4" />
+                      <MoreHorizontal className="w-4 h-4 text-foreground" />
                     </button>
                   </DropdownMenuTrigger>
                 </TooltipTrigger>
                 <TooltipContent side="bottom" align="end" sideOffset={6} className="text-md">
-                  More options
+                  More
                 </TooltipContent>
               </Tooltip>
 
@@ -670,14 +733,17 @@ export default function ActiveChatPage() {
                   onClick={() => toast("No files attached to this chat")}
                   className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-[15px] font-normal cursor-pointer text-foreground hover:bg-secondary dark:hover:bg-[#2f2f2f] transition-colors"
                 >
-                  <Folder className="w-4 h-4 text-muted-foreground" />
+                  <Folder className="w-4 h-4 text-foreground" />
                   <span>View files in chat</span>
                 </DropdownMenuItem>
 
                 <DropdownMenuItem
                   onClick={async () => {
                     const currentChat = chats.find((c) => c.id === chatId);
-                    const isStarred = currentChat?.starred;
+                    const isStarred = !!currentChat?.starred;
+                    if (!isStarred) {
+                      await chatService.toggleChatArchive(supabase, chatId, false);
+                    }
                     await chatService.toggleChatStar(
                       supabase,
                       chatId,
@@ -690,23 +756,35 @@ export default function ActiveChatPage() {
                 >
                   {chats.find((c) => c.id === chatId)?.starred ? (
                     <>
-                      <PinOff className="w-4 h-4 text-muted-foreground" />
-                      <span>Unpin chat</span>
+                      <PinOff className="w-4 h-4 text-foreground" />
+                      <span>Unpin</span>
                     </>
                   ) : (
                     <>
-                      <Pin className="w-4 h-4 text-muted-foreground" />
-                      <span>Pin chat</span>
+                      <Pin className="w-4 h-4 text-foreground" />
+                      <span>Pin</span>
                     </>
                   )}
                 </DropdownMenuItem>
 
                 <DropdownMenuItem
-                  onClick={() => toast.success("Chat archived")}
+                  onClick={async () => {
+                    const currentChat = chats.find((c) => c.id === chatId);
+                    const isArchived = !!currentChat?.archived;
+                    await handleToggleArchive(chatId, !isArchived);
+                  }}
                   className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-[15px] font-normal cursor-pointer text-foreground hover:bg-secondary dark:hover:bg-[#2f2f2f] transition-colors"
                 >
-                  <Archive className="w-4 h-4 text-muted-foreground" />
-                  <span>Archive</span>
+                  {chats.find((c) => c.id === chatId)?.archived ? (
+                    <ArchiveX className="w-4 h-4 text-foreground" />
+                  ) : (
+                    <Archive className="w-4 h-4 text-foreground" />
+                  )}
+                  <span>
+                    {chats.find((c) => c.id === chatId)?.archived
+                      ? "Unarchive"
+                      : "Archive"}
+                  </span>
                 </DropdownMenuItem>
 
                 <DropdownMenuItem
@@ -729,15 +807,15 @@ export default function ActiveChatPage() {
           ref={scrollContainerRef}
           onScroll={handleScroll}
           className={cn(
-            "flex-1 w-full overflow-x-hidden relative no-overscroll flex flex-col pt-14",
+            "flex-1 w-full overflow-x-hidden relative no-overscroll flex flex-col pt-14 scroll-smooth",
             isChatLoading ? "overflow-y-hidden" : "overflow-y-auto"
           )}
         >
           <div className="flex-1 flex flex-col min-h-full">
             {/* Messages Container or Loader */}
             {isChatLoading ? (
-              <div className="flex-1 w-full h-full flex flex-col items-center justify-center pb-16 text-muted-foreground animate-in fade-in-0 duration-150">
-                <Loader className="w-6 h-6 animate-spin text-foreground/80" />
+              <div className="flex-1 w-full h-full flex flex-col items-center justify-center pb-16 text-muted-foreground">
+                <Loader className="w-6 h-6 animate-spin text-muted-foreground" />
               </div>
             ) : (
               <div className="flex-1 pb-4 sm:pb-6">

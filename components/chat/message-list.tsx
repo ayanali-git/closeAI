@@ -29,11 +29,13 @@ import {
   Check,
   ThumbsUp,
   ThumbsDown,
-  RotateCcw,
+  RefreshCw,
   Share2,
   Paperclip,
   ArrowDown,
   Volume2,
+  VolumeX,
+  Loader,
   MoreHorizontal,
   Pencil
 } from 'lucide-react';
@@ -177,22 +179,22 @@ function CodeBlock({ language, code }: { language: string; code: string }) {
     <div className="relative my-4 rounded-xl overflow-hidden border border-neutral-200/90 dark:border-neutral-700/60 bg-neutral-50 dark:bg-[#141414] text-left">
       {/* Header bar: language + copy button */}
       <div className="flex items-center justify-between px-4 py-2 bg-neutral-100 dark:bg-[#1f1f1f] text-xs font-sans text-neutral-600 dark:text-neutral-300 select-none border-b border-neutral-200/80 dark:border-neutral-700/60">
-        <span className="font-mono text-xs lowercase font-medium tracking-wide">
+        <span className="font-mono text-base lowercase font-medium tracking-wide text-foreground">
           {displayLang}
         </span>
         <button
           type="button"
           onClick={handleCopy}
-          className="flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs text-neutral-600 hover:text-neutral-900 hover:bg-neutral-200/70 dark:text-neutral-300 dark:hover:text-white dark:hover:bg-white/10 transition-colors cursor-pointer outline-none"
+          className="flex items-center gap-1.5 px-2 py-2 rounded-sm text-base text-neutral-600 hover:text-neutral-900 hover:bg-neutral-200/70 dark:text-neutral-300 dark:hover:text-white dark:hover:bg-white/10 transition-colors cursor-pointer outline-none"
         >
           {copied ? (
             <>
-              <Check className="w-3.5 h-3.5" />
+              <Check className="w-4 h-4" />
               <span className="font-medium">Copied!</span>
             </>
           ) : (
             <>
-              <Copy className="w-3.5 h-3.5" />
+              <Copy className="w-4 h-4" />
               <span className="font-medium">Copy</span>
             </>
           )}
@@ -284,6 +286,44 @@ function MessageAttachmentItem({ file }: { file: any }) {
   );
 }
 
+function getFeedbackCookie(): Record<string, 'up' | 'down'> {
+  if (typeof document === 'undefined') return {};
+  try {
+    const cookies = document.cookie.split('; ');
+    const feedbackCookie = cookies.find(row => row.trim().startsWith('feedback_response='));
+    if (feedbackCookie) {
+      const rawVal = feedbackCookie.split('=')[1] || '';
+      if (!rawVal) return {};
+      const res: Record<string, 'up' | 'down'> = {};
+      rawVal.split(',').forEach(pair => {
+        const [id, type] = pair.split(':');
+        if (id && (type === 'up' || type === 'down')) {
+          res[id] = type;
+        }
+      });
+      return res;
+    }
+  } catch (e) {
+    console.error('Error reading feedback cookie:', e);
+  }
+  return {};
+}
+
+function setFeedbackCookie(data: Record<string, 'up' | 'down'>) {
+  if (typeof document === 'undefined') return;
+  try {
+    const entries = Object.entries(data).filter(([_, type]) => type === 'up' || type === 'down');
+    if (entries.length === 0) {
+      document.cookie = 'feedback_response=; path=/; max-age=0';
+      return;
+    }
+    const val = entries.map(([id, type]) => `${id}:${type}`).join(',');
+    document.cookie = `feedback_response=${val}; path=/; max-age=31536000; SameSite=Lax`;
+  } catch (e) {
+    console.error('Error writing feedback cookie:', e);
+  }
+}
+
 export function MessageList({
   messages,
   user,
@@ -298,9 +338,85 @@ export function MessageList({
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [showScrollBottom, setShowScrollBottom] = useState(false);
   const [feedback, setFeedback] = useState<Record<string, 'up' | 'down'>>({});
+  const [loadingFeedbackId, setLoadingFeedbackId] = useState<string | null>(null);
+  const [loadingSpeechId, setLoadingSpeechId] = useState<string | null>(null);
+  const [speakingMessageId, setSpeakingMessageId] = useState<string | null>(null);
   const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
   const [editDraftText, setEditDraftText] = useState<string>('');
   const editTextareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Sync feedback state from cookie on mount
+  useEffect(() => {
+    const initialFeedback = getFeedbackCookie();
+    setFeedback(initialFeedback);
+  }, []);
+
+  // Stop speech synthesis on component unmount
+  useEffect(() => {
+    return () => {
+      if (typeof window !== 'undefined' && window.speechSynthesis) {
+        window.speechSynthesis.cancel();
+      }
+    };
+  }, []);
+
+  const handleReadAloud = (msgId: string, content: string) => {
+    if (typeof window === 'undefined' || !window.speechSynthesis) {
+      toast.error('Text-to-speech is not supported in this browser');
+      return;
+    }
+
+    if (speakingMessageId === msgId) {
+      window.speechSynthesis.cancel();
+      setSpeakingMessageId(null);
+      setLoadingSpeechId(null);
+      return;
+    }
+
+    window.speechSynthesis.cancel();
+    setLoadingSpeechId(msgId);
+
+    const plainText = content
+      .replace(/```[\s\S]*?```/g, 'Code block.')
+      .replace(/`([^`]+)`/g, '$1')
+      .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+      .replace(/[#*_-]/g, '')
+      .trim();
+
+    if (!plainText) {
+      setLoadingSpeechId(null);
+      return;
+    }
+
+    const utterance = new SpeechSynthesisUtterance(plainText);
+
+    utterance.onstart = () => {
+      setLoadingSpeechId(null);
+      setSpeakingMessageId(msgId);
+    };
+
+    utterance.onend = () => {
+      setSpeakingMessageId(null);
+      setLoadingSpeechId(null);
+    };
+
+    utterance.onerror = () => {
+      setSpeakingMessageId(null);
+      setLoadingSpeechId(null);
+    };
+
+    try {
+      window.speechSynthesis.speak(utterance);
+      // Fallback timer if browser speech engine doesn't fire onstart callback immediately
+      setTimeout(() => {
+        setLoadingSpeechId((prev) => (prev === msgId ? null : prev));
+        setSpeakingMessageId((prev) => (prev ? prev : msgId));
+      }, 400);
+    } catch (e) {
+      setLoadingSpeechId(null);
+      setSpeakingMessageId(null);
+    }
+  };
 
   // Auto-focus and resize textarea when entering edit mode
   useEffect(() => {
@@ -350,8 +466,34 @@ export function MessageList({
   };
 
   const handleFeedback = (id: string, type: 'up' | 'down') => {
-    setFeedback(prev => ({ ...prev, [id]: prev[id] === type ? undefined! : type }));
-    toast.success(type === 'up' ? 'Feedback submitted' : 'Feedback recorded');
+    const isCurrentlyActive = feedback[id] === type;
+
+    // Clicking active feedback button again to remove feedback — no loader
+    if (isCurrentlyActive) {
+      setFeedback(prev => {
+        const next = { ...prev };
+        delete next[id];
+        setFeedbackCookie(next);
+        return next;
+      });
+      return;
+    }
+
+    // Submitting new feedback — show loader
+    const key = `${id}-${type}`;
+    setLoadingFeedbackId(key);
+
+    setTimeout(() => {
+      setFeedback(prev => {
+        const next = { ...prev };
+        next[id] = type;
+        setFeedbackCookie(next);
+        return next;
+      });
+
+      setLoadingFeedbackId(null);
+      toast.success(type === 'up' ? 'Feedback submitted' : 'Feedback recorded');
+    }, 200);
   };
 
   let userMessageCounter = 0;
@@ -363,7 +505,7 @@ export function MessageList({
         const userMsgIndex = isUser ? userMessageCounter++ : null;
         const msgId = msg.id || `msg-${index}`;
         const isCopied = copiedId === msgId;
-        const targetDomId = msg.id ? `msg-user-${msg.id}` : `message-${userMsgIndex}`;
+        const targetDomId = msg.id ? `msg-${msg.id}` : `message-${userMsgIndex}`;
 
         if (isUser) {
           const isEditing = editingMessageId === msgId;
@@ -384,7 +526,7 @@ export function MessageList({
 
               {isEditing ? (
                 /* Inline Editor */
-                <div className="w-full bg-secondary dark:bg-[#2F2F2F] rounded-2xl sm:rounded-3xl p-3 sm:p-4 border border-border/60 dark:border-neutral-700/60 animate-in fade-in-0 duration-150">
+                <div className="w-full bg-secondary dark:bg-[#2F2F2F] rounded-2xl sm:rounded-3xl p-3 sm:p-4 border border-border/60 dark:border-neutral-700/60">
                   <textarea
                     ref={editTextareaRef}
                     value={editDraftText}
@@ -441,7 +583,7 @@ export function MessageList({
                       <TooltipTrigger asChild>
                         <button
                           onClick={() => copyToClipboard(msg.content, msgId)}
-                          className="p-1.5 rounded-lg hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors"
+                          className="p-1.5 rounded-sm hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors"
                           aria-label="Copy prompt"
                         >
                           {isCopied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
@@ -455,7 +597,7 @@ export function MessageList({
                         <TooltipTrigger asChild>
                           <button
                             onClick={() => startEditing(msgId, msg.content)}
-                            className="p-1.5 rounded-lg hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors"
+                            className="p-1.5 rounded-sm hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors"
                             aria-label="Edit message"
                           >
                             <Pencil className="w-4 h-4" />
@@ -507,7 +649,7 @@ export function MessageList({
                     },
                     td({ children }: any) {
                       return (
-                        <td className="px-4 py-2.5 border-t border-border/40 text-foreground/90 text-sm align-top leading-relaxed">
+                        <td className="px-4 py-2.5 border-t border-border/80 text-foreground/90 text-sm align-top leading-relaxed">
                           {children}
                         </td>
                       );
@@ -593,12 +735,12 @@ export function MessageList({
 
               {/* Assistant Action Toolbar — revealed when typing completes */}
               {(!isTyping || index !== messages.length - 1) && (
-                <div className="flex items-center gap-1.5 pt-1 text-muted-foreground animate-in fade-in-0 duration-200">
+                <div className="flex items-center gap-1.5 pt-1 text-muted-foreground">
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <button
                         onClick={() => copyToClipboard(msg.content, msgId)}
-                        className="p-1.5 rounded-lg hover:bg-secondary hover:text-foreground transition-colors"
+                        className="p-1.5 rounded-sm hover:bg-secondary hover:text-foreground transition-colors"
                         aria-label="Copy response"
                       >
                         {isCopied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
@@ -611,12 +753,25 @@ export function MessageList({
                     <TooltipTrigger asChild>
                       <button
                         onClick={() => handleFeedback(msgId, 'up')}
-                        className={`p-1.5 rounded-lg hover:bg-secondary hover:text-foreground transition-colors ${
-                          feedback[msgId] === 'up' ? 'text-primary bg-secondary' : ''
-                        }`}
+                        disabled={loadingFeedbackId === `${msgId}-up`}
+                        className={cn(
+                          "p-1.5 rounded-sm transition-colors cursor-pointer disabled:opacity-70 disabled:pointer-events-auto disabled:cursor-not-allowed",
+                          feedback[msgId] === 'up'
+                            ? "text-foreground"
+                            : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+                        )}
                         aria-label="Good response"
                       >
-                        <ThumbsUp className="w-4 h-4" />
+                        {loadingFeedbackId === `${msgId}-up` ? (
+                          <Loader className="w-4 h-4 animate-spin text-foreground shrink-0" />
+                        ) : (
+                          <ThumbsUp
+                            className={cn(
+                              "w-4 h-4 transition-all",
+                              feedback[msgId] === 'up' && "fill-current"
+                            )}
+                          />
+                        )}
                       </button>
                     </TooltipTrigger>
                     <TooltipContent side="bottom" sideOffset={4} className="text-md">Good response</TooltipContent>
@@ -626,12 +781,25 @@ export function MessageList({
                     <TooltipTrigger asChild>
                       <button
                         onClick={() => handleFeedback(msgId, 'down')}
-                        className={`p-1.5 rounded-lg hover:bg-secondary hover:text-foreground transition-colors ${
-                          feedback[msgId] === 'down' ? 'text-primary bg-secondary' : ''
-                        }`}
+                        disabled={loadingFeedbackId === `${msgId}-down`}
+                        className={cn(
+                          "p-1.5 rounded-sm transition-colors cursor-pointer disabled:opacity-70 disabled:pointer-events-auto disabled:cursor-not-allowed",
+                          feedback[msgId] === 'down'
+                            ? "text-foreground"
+                            : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+                        )}
                         aria-label="Bad response"
                       >
-                        <ThumbsDown className="w-4 h-4" />
+                        {loadingFeedbackId === `${msgId}-down` ? (
+                          <Loader className="w-4 h-4 animate-spin text-foreground shrink-0" />
+                        ) : (
+                          <ThumbsDown
+                            className={cn(
+                              "w-4 h-4 transition-all",
+                              feedback[msgId] === 'down' && "fill-current"
+                            )}
+                          />
+                        )}
                       </button>
                     </TooltipTrigger>
                     <TooltipContent side="bottom" sideOffset={4} className="text-md">Bad response</TooltipContent>
@@ -640,17 +808,28 @@ export function MessageList({
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <button
-                        onClick={() => {
-                          const utterance = new SpeechSynthesisUtterance(msg.content);
-                          window.speechSynthesis.speak(utterance);
-                        }}
-                        className="p-1.5 rounded-lg hover:bg-secondary hover:text-foreground transition-colors"
-                        aria-label="Read aloud"
+                        onClick={() => handleReadAloud(msgId, msg.content)}
+                        disabled={loadingSpeechId === msgId}
+                        className={cn(
+                          "p-1.5 rounded-sm transition-colors cursor-pointer disabled:opacity-70 disabled:pointer-events-auto disabled:cursor-not-allowed",
+                          speakingMessageId === msgId
+                            ? "text-foreground"
+                            : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+                        )}
+                        aria-label={speakingMessageId === msgId ? "Stop reading" : "Read aloud"}
                       >
-                        <Volume2 className="w-4 h-4" />
+                        {loadingSpeechId === msgId ? (
+                          <Loader className="w-4 h-4 animate-spin text-foreground shrink-0" />
+                        ) : speakingMessageId === msgId ? (
+                          <VolumeX className="w-4 h-4 text-foreground" />
+                        ) : (
+                          <Volume2 className="w-4 h-4" />
+                        )}
                       </button>
                     </TooltipTrigger>
-                    <TooltipContent side="bottom" sideOffset={4} className="text-md">Read aloud</TooltipContent>
+                    <TooltipContent side="bottom" sideOffset={4} className="text-md">
+                      {loadingSpeechId === msgId ? "Loading..." : speakingMessageId === msgId ? "Stop" : "Read aloud"}
+                    </TooltipContent>
                   </Tooltip>
 
                   {onRegenerate && (
@@ -659,10 +838,10 @@ export function MessageList({
                         <button
                           onClick={() => onRegenerate(msg, index)}
                           disabled={isTyping}
-                          className="p-1.5 rounded-lg hover:bg-secondary hover:text-foreground transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                          className="p-1.5 rounded-sm hover:bg-secondary hover:text-foreground transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                           aria-label="Regenerate response"
                         >
-                          <RotateCcw className="w-4 h-4" />
+                          <RefreshCw className="w-4 h-4" />
                         </button>
                       </TooltipTrigger>
                       <TooltipContent side="bottom" sideOffset={4} className="text-md">Regenerate</TooltipContent>
@@ -677,7 +856,7 @@ export function MessageList({
 
       {/* Optimistic Pending User Message */}
       {pendingMessage && (
-        <div className="flex flex-col items-end opacity-85 animate-in fade-in-0 duration-150">
+        <div className="flex flex-col items-end opacity-85">
           {pendingMessage.files.length > 0 && (
             <div className="flex flex-wrap gap-2.5 mb-2.5 justify-end items-end">
               {pendingMessage.files.map((file, i) => (
@@ -698,7 +877,7 @@ export function MessageList({
           messages[messages.length - 1]?.role === "user" ||
           (messages[messages.length - 1]?.role === "assistant" &&
             !messages[messages.length - 1]?.content)) && (
-          <div className="flex gap-2.5 sm:gap-3 items-center py-2 animate-in fade-in-0 duration-150 select-none">
+          <div className="flex gap-2.5 sm:gap-3 items-center py-2 select-none">
             <span className="text-[14px] sm:text-[14.5px] font-medium text-muted-foreground animate-pulse">
               Thinking...
             </span>

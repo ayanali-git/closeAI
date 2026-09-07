@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
         }
 
         let currentChatId = chatId;
-        let chatTitle = message.substring(0, 50) + (message.length > 50 ? '...' : '');
+        let chatTitle = message.trim().replace(/\s+/g, ' ');
 
         // If no chatId, create a new chat
         if (!currentChatId) {

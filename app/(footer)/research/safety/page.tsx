@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { AnimatedArrow } from '@/components/ui/animated-icons';
+import { AnimatedArrow } from '@/components/ui/animated';
 import { Shield, Lock, Eye, CheckCircle2, AlertTriangle, FileText } from 'lucide-react';
 
 export default function SafetyPage() {
@@ -83,7 +83,7 @@ export default function SafetyPage() {
         </p>
         <Link
           href="/research/overview"
-          className="group inline-flex items-center text-md font-semibold uppercase tracking-wider text-foreground hover:underline"
+          className="group inline-flex items-center text-md font-semibold uppercase tracking-wider text-foreground"
         >
           <span>Explore system cards</span>
           <AnimatedArrow size={18} />

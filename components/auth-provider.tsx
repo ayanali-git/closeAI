@@ -3,6 +3,7 @@
 import React, { createContext, useEffect, useState, useCallback, useRef } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
+import { AUTH_COOKIE_NAME } from '@/lib/auth-cookie';
 import { useRouter } from 'next/navigation';
 
 export interface AuthContextType {
@@ -23,12 +24,54 @@ export const AuthContext = createContext<AuthContextType>({
   refreshSession: async () => null,
 });
 
-export function AuthProvider({ children }: { children: React.ReactNode }) {
+function hasActiveAuthCookie(): boolean {
+  if (typeof document === 'undefined') return false;
+  try {
+    const cookies = document.cookie.split(';');
+    for (let i = 0; i < cookies.length; i++) {
+      const part = cookies[i].trim();
+      const eqIdx = part.indexOf('=');
+      if (eqIdx === -1) continue;
+      const name = part.substring(0, eqIdx).trim();
+      const val = part.substring(eqIdx + 1).trim();
+
+      // Exclude PKCE code verifier, csrf, etc.
+      if (name.includes('code-verifier') || name.includes('csrf') || name.includes('state')) {
+        continue;
+      }
+
+      // Check if it's the closeai-access or sb-* auth cookie
+      const isAuthCookie =
+        name === AUTH_COOKIE_NAME ||
+        name.startsWith(`${AUTH_COOKIE_NAME}.`) ||
+        (name.startsWith('sb-') && name.endsWith('-auth-token'));
+
+      if (isAuthCookie) {
+        // An active Supabase auth token session string is always > 30 characters
+        if (val && val.length > 30 && val !== 'deleted') {
+          return true;
+        }
+      }
+    }
+  } catch (e) {
+    return false;
+  }
+  return false;
+}
+
+export function AuthProvider({
+  children,
+  initialHasAuth = false,
+}: {
+  children: React.ReactNode;
+  initialHasAuth?: boolean;
+}) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(initialHasAuth);
   const router = useRouter();
   const profileCheckedRef = useRef<string | null>(null);
+  const isSigningOutRef = useRef(false);
 
   const ensureProfile = useCallback(async (currentUser: User) => {
     if (!currentUser?.id || profileCheckedRef.current === currentUser.id) return;
@@ -89,9 +132,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(initialSession.user);
         ensureProfile(initialSession.user);
       }
-      setLoading(false);
+      if (!isSigningOutRef.current) {
+        setLoading(false);
+      }
     }).catch(() => {
-      if (isMounted) setLoading(false);
+      if (isMounted && !isSigningOutRef.current) setLoading(false);
     });
 
     // Authoritative listener for auth state changes & token refreshes
@@ -102,7 +147,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const currentUser = newSession?.user ?? null;
         setSession(newSession);
         setUser(currentUser);
-        setLoading(false);
+        if (!isSigningOutRef.current) {
+          setLoading(false);
+        }
 
         if (currentUser && (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED' || event === 'INITIAL_SESSION')) {
           ensureProfile(currentUser);
@@ -112,6 +159,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           profileCheckedRef.current = null;
           setUser(null);
           setSession(null);
+          setLoading(false);
         }
       }
     );
@@ -123,17 +171,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [ensureProfile]);
 
   const signOut = async () => {
+    isSigningOutRef.current = true;
+    setUser(null);
+    setSession(null);
+    setLoading(false);
+    profileCheckedRef.current = null;
+    if (typeof document !== 'undefined') {
+      document.cookie = 'user_plan=deleted; path=/; max-age=0; SameSite=Lax';
+      const cookies = document.cookie.split(';');
+      for (let i = 0; i < cookies.length; i++) {
+        const c = cookies[i].trim();
+        const eqIdx = c.indexOf('=');
+        const name = eqIdx > -1 ? c.substring(0, eqIdx).trim() : c;
+        if (name.includes('closeai') || name.startsWith('sb-') || name.includes('auth')) {
+          document.cookie = `${name}=deleted; path=/; max-age=0; SameSite=Lax`;
+          document.cookie = `${name}=deleted; path=/; domain=${window.location.hostname}; max-age=0; SameSite=Lax`;
+        }
+      }
+    }
     try {
-      profileCheckedRef.current = null;
       await supabase.auth.signOut();
     } catch (error) {
       console.error('Sign out error:', error);
     }
     setUser(null);
     setSession(null);
-    if (typeof document !== 'undefined') {
-      document.cookie = 'user_plan=; path=/; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 GMT';
-    }
+    setLoading(false);
     if (typeof window !== 'undefined') {
       window.location.href = '/';
     } else {
@@ -155,4 +218,4 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       {children}
     </AuthContext.Provider>
   );
-}
+}

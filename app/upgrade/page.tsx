@@ -203,7 +203,7 @@ export default function UpgradePage() {
             onClick={() => router.push('/c')}
           >
             <ChevronLeft className="w-4 h-4 mr-1" />
-            Back to Chat
+            Back
           </Button>
         </div>
       </div>
@@ -238,7 +238,7 @@ export default function UpgradePage() {
               <Button
                 variant="outline"
                 size="sm"
-                className="rounded-full cursor-pointer"
+                className="rounded-full cursor-pointer disabled:opacity-70 disabled:pointer-events-auto disabled:cursor-not-allowed cursor-not-allowed"
                 onClick={handleManageSubscription}
                 disabled={loading === 'manage'}
               >
@@ -323,9 +323,10 @@ export default function UpgradePage() {
                   {isCurrentPlan ? (
                     <Button
                       variant="outline"
-                      className="w-full h-11 rounded-full text-foreground font-medium border-neutral-300 dark:border-neutral-700 bg-neutral-100 dark:bg-[#252525] disabled:opacity-100 disabled:pointer-events-auto disabled:cursor-not-allowed cursor-not-allowed"
+                      className="w-full h-11 rounded-full text-neutral-500 dark:text-neutral-400 font-medium border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-[#181818] disabled:opacity-100 disabled:pointer-events-auto disabled:cursor-not-allowed cursor-not-allowed"
                       disabled
-                    > Current Plan
+                    >
+                      Current Plan
                     </Button>
                   ) : currentPlan === 'ultra' && plan.id === 'pro' && (!isYearly || currentInterval === 'yearly') ? (
                     <Button
@@ -349,7 +350,7 @@ export default function UpgradePage() {
                         plan.popular
                           ? "bg-foreground text-background hover:opacity-90"
                           : "bg-secondary text-foreground hover:bg-secondary/80 border border-border"
-                      }`}
+                      } ${loading !== null ? 'disabled:opacity-70 disabled:pointer-events-auto disabled:cursor-not-allowed cursor-not-allowed' : ''}`}
                       onClick={() => handleUpgrade(plan.id)}
                       disabled={loading !== null}
                     >

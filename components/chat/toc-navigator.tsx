@@ -337,12 +337,16 @@ export interface TocNavigatorProps {
   messages?: Message[];
   containerRef?: React.RefObject<HTMLDivElement>;
   customHeadings?: Heading[];
+  minHeadings?: number;
+  minMessages?: number;
 }
 
 export function TocNavigator({
   messages,
   containerRef,
   customHeadings,
+  minHeadings = 3,
+  minMessages,
 }: TocNavigatorProps) {
   const [headings, setHeadings] = useState<Heading[]>([]);
   const [scrollActiveSectionId, setScrollActiveSectionId] =
@@ -384,9 +388,15 @@ export function TocNavigator({
         });
       setHeadings(userPrompts);
       parsedHeadingsRef.current = userPrompts;
-      if (userPrompts.length > 0) {
-        setScrollActiveSectionId(userPrompts[0].id);
-      }
+      setScrollActiveSectionId((prev) => {
+        if (!prev && userPrompts.length > 0) {
+          return userPrompts[0].id;
+        }
+        if (prev && userPrompts.some((h) => h.id === prev)) {
+          return prev;
+        }
+        return userPrompts.length > 0 ? userPrompts[userPrompts.length - 1].id : "";
+      });
       return;
     }
 
@@ -411,9 +421,15 @@ export function TocNavigator({
       });
       setHeadings(parsed);
       parsedHeadingsRef.current = parsed;
-      if (parsed.length > 0) {
-        setScrollActiveSectionId(parsed[0].id);
-      }
+      setScrollActiveSectionId((prev) => {
+        if (!prev && parsed.length > 0) {
+          return parsed[0].id;
+        }
+        if (prev && parsed.some((h) => h.id === prev)) {
+          return prev;
+        }
+        return parsed.length > 0 ? parsed[0].id : "";
+      });
     }
   }, [messages, customHeadings]);
 
@@ -424,6 +440,12 @@ export function TocNavigator({
     const syncScrollState = () => {
       if (userClickedSectionIdRef.current) {
         setScrollActiveSectionId(userClickedSectionIdRef.current);
+        if (clickLockTimerRef.current) {
+          window.clearTimeout(clickLockTimerRef.current);
+        }
+        clickLockTimerRef.current = window.setTimeout(() => {
+          userClickedSectionIdRef.current = null;
+        }, 250);
         return;
       }
 
@@ -431,9 +453,9 @@ export function TocNavigator({
         const container = containerRef.current;
         const containerRect = container.getBoundingClientRect();
 
-        // Pin the bottom tail when at the container end
+        // Pin the bottom tail when at/near the container end
         const isAtBottom =
-          container.scrollHeight - container.scrollTop - container.clientHeight <= 48;
+          container.scrollHeight - container.scrollTop - container.clientHeight <= 100;
         if (isAtBottom && headings.length > 0) {
           setScrollActiveSectionId(headings[headings.length - 1].id);
           return;
@@ -475,12 +497,22 @@ export function TocNavigator({
     };
   }, [headings, containerRef]);
 
-  if (headings.length < 2) return null;
+  if (headings.length === 0) return null;
 
   const handleLinkClick = (e: MouseEvent<HTMLAnchorElement>, id: string) => {
     e.preventDefault();
     const elem = document.getElementById(id);
     if (!elem) return;
+
+    userClickedSectionIdRef.current = id;
+    setScrollActiveSectionId(id);
+
+    if (clickLockTimerRef.current) {
+      window.clearTimeout(clickLockTimerRef.current);
+    }
+    clickLockTimerRef.current = window.setTimeout(() => {
+      userClickedSectionIdRef.current = null;
+    }, 1200);
 
     if (containerRef?.current) {
       const container = containerRef.current;
@@ -488,8 +520,11 @@ export function TocNavigator({
       const elemRect = elem.getBoundingClientRect();
       const targetScrollTop =
         container.scrollTop + (elemRect.top - containerRect.top) - 24;
+      const maxScroll = container.scrollHeight - container.clientHeight;
+      const boundedTarget = Math.min(maxScroll, Math.max(0, targetScrollTop));
+
       container.scrollTo({
-        top: Math.max(0, targetScrollTop),
+        top: boundedTarget,
         behavior: "smooth",
       });
     } else {
@@ -501,28 +536,26 @@ export function TocNavigator({
       window.scrollTo({ top: y, behavior: "smooth" });
     }
 
-    setScrollActiveSectionId(id);
-
-    userClickedSectionIdRef.current = id;
-    if (clickLockTimerRef.current)
-      window.clearTimeout(clickLockTimerRef.current);
-    clickLockTimerRef.current = window.setTimeout(() => {
-      userClickedSectionIdRef.current = null;
-    }, 400);
-
     window.history.pushState(null, "", `#${id}`);
   };
 
+  // Only show TOC when there are at least minHeadings (default 3) headings / prompts
+  if (headings.length < minHeadings) {
+    return null;
+  }
+
+  if (minMessages !== undefined && (messages?.length ?? 0) < minMessages) {
+    return null;
+  }
+
   return (
-    <aside className="pointer-events-none fixed top-1/2 right-5 z-30 hidden h-[min(460px,70vh)] w-fit -translate-y-1/2 select-none md:block">
-      <div className="animate-in fade-in-0 duration-200">
+    <aside className="pointer-events-none fixed top-1/2 right-5 z-30 hidden h-[min(460px,70vh)] w-fit -translate-y-1/2 select-none xl:block">
         <PreviewRail
           headings={headings}
           scrollActiveSectionId={scrollActiveSectionId}
           onNavigate={handleLinkClick}
           className="h-[min(460px,70vh)]"
         />
-      </div>
     </aside>
   );
 }

@@ -149,7 +149,7 @@ function FilePreviewCard({ file, onRemove }: { file: File; onRemove: () => void 
   const typeLabel = getFileTypeLabel(file);
 
   return (
-    <div className="relative group flex items-center gap-2.5 bg-neutral-100 dark:bg-[#262626] border border-neutral-200/90 dark:border-white/10 rounded-2xl p-2 pr-4 text-foreground min-w-0 animate-in fade-in-0 duration-150">
+    <div className="relative group flex items-center gap-2.5 bg-neutral-100 dark:bg-[#262626] border border-neutral-200/90 dark:border-white/10 rounded-2xl p-2 pr-4 text-foreground min-w-0">
       {/* File type icon or Image preview */}
       <div className="w-10 h-10 rounded-xl overflow-hidden bg-white dark:bg-neutral-800 border border-neutral-200/80 dark:border-white/5 flex items-center justify-center shrink-0">
         {imageUrl ? (
@@ -304,12 +304,21 @@ export const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(function Cha
     return () => window.removeEventListener("resize", adjustHeight);
   }, [adjustHeight]);
 
+  // Keep focus on textarea when layout expands/collapses on paste or edit
+  useEffect(() => {
+    if (isExpandedLayout) {
+      setTimeout(() => {
+        textareaRef.current?.focus();
+      }, 0);
+    }
+  }, [isExpandedLayout]);
+
   // Calculate dynamic menu sideOffset & alignOffset so it is ALWAYS positioned above the chat input pill
   const updateMenuPosition = useCallback(() => {
     if (plusButtonRef.current && pillRef.current) {
       const buttonRect = plusButtonRef.current.getBoundingClientRect();
       const pillRect = pillRef.current.getBoundingClientRect();
-      const isMobile = window.innerWidth < 768;
+      const isMobile = window.innerWidth < 1024;
 
       // Distance from top of the + button to the top of the chat input pill:
       const distToPillTop = Math.max(0, buttonRect.top - pillRect.top);
@@ -493,6 +502,11 @@ export const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(function Cha
           : `${filesToAdd.length} images attached from clipboard`
       );
     }
+
+    // Always preserve focus on text paste
+    setTimeout(() => {
+      textareaRef.current?.focus();
+    }, 0);
   };
 
   const removeFile = (index: number) => {
@@ -803,7 +817,7 @@ export const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(function Cha
       {/* Responsive Disclaimer */}
       {showDisclaimer && (
         <div className="text-center pt-2 pb-0.5 px-3 select-none">
-          <p className="text-[15px] sm:text-base text-muted-foreground/60 font-normal tracking-tight leading-tight">
+          <p className="text-[13px] sm:text-base text-muted-foreground font-normal tracking-tight leading-tight">
             CloseAI can make mistakes. Verify important info.
           </p>
         </div>

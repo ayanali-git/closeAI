@@ -33,9 +33,10 @@ import {
   LifeBuoy,
   ChevronRight,
   ChevronLeft,
+  Archive,
+  ArchiveX,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
@@ -54,6 +55,7 @@ import {
 import { useTheme } from 'next-themes';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
+import { AnimatedChevron } from '@/components/ui/animated';
 
 interface SidebarProps {
   user: User | null;
@@ -63,6 +65,7 @@ interface SidebarProps {
   onNewChat: () => void;
   onDeleteChat: (chatId: string) => void;
   onToggleStar: (chatId: string, starred: boolean) => void;
+  onToggleArchive?: (chatId: string, archived: boolean) => void;
   searchQuery: string;
   onSearchChange: (query: string) => void;
   isOpen: boolean;
@@ -106,6 +109,7 @@ function ChatTitleMarquee({ title, isHovered }: { title: string; isHovered: bool
 const groupChatsByDate = (chats: Chat[]) => {
   const groups: Record<string, Chat[]> = {
     'Pinned': [],
+    'Archived': [],
     'Today': [],
     'Yesterday': [],
     'Previous 7 Days': [],
@@ -127,6 +131,10 @@ const groupChatsByDate = (chats: Chat[]) => {
       groups['Pinned'].push(chat);
       return;
     }
+    if (chat.archived) {
+      groups['Archived'].push(chat);
+      return;
+    }
     const chatDate = new Date(chat.updatedAt || chat.createdAt);
     if (chatDate >= today) groups['Today'].push(chat);
     else if (chatDate >= yesterday) groups['Yesterday'].push(chat);
@@ -146,6 +154,7 @@ export function Sidebar({
   onNewChat,
   onDeleteChat,
   onToggleStar,
+  onToggleArchive,
   searchQuery,
   onSearchChange,
   isOpen,
@@ -159,6 +168,14 @@ export function Sidebar({
   const [hoveredChatId, setHoveredChatId] = useState<string | null>(null);
   const [isLogoHovered, setIsLogoHovered] = useState(false);
   const [isCloseBtnHovered, setIsCloseBtnHovered] = useState(false);
+  const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({});
+
+  const toggleSection = (group: string) => {
+    setCollapsedSections((prev) => ({
+      ...prev,
+      [group]: !prev[group],
+    }));
+  };
 
   const filteredChats = chats.filter(chat =>
     chat.title?.toLowerCase().includes(searchQuery.toLowerCase())
@@ -168,7 +185,7 @@ export function Sidebar({
   const displayName = user?.user_metadata?.full_name || 
                       user?.user_metadata?.name || 
                       user?.email?.split('@')[0] || 
-                      (user ? 'User' : 'Guest');
+                      'User';
   const planDisplay = userPlan === 'ultra' ? 'Ultra Pro' : userPlan === 'pro' ? 'Pro' : 'Free';
   const userEmail = user?.email || (user ? '' : 'Not signed in');
   const avatarUrl = user?.user_metadata?.avatar_url || user?.user_metadata?.picture;
@@ -180,7 +197,7 @@ export function Sidebar({
   useEffect(() => {
     setMounted(true);
     const checkMobile = () => {
-      setIsMobileScreen(window.innerWidth < 768);
+      setIsMobileScreen(window.innerWidth <= 1024);
     };
     checkMobile();
     window.addEventListener('resize', checkMobile);
@@ -582,7 +599,7 @@ export function Sidebar({
   // ----------------------------------------------------
   if (!isOpen) {
     return (
-      <div className="hidden md:flex w-[65px] h-[100dvh] bg-sidebar border-r border-border flex-col items-center justify-between shrink-0 select-none z-30 relative group/rail">
+      <div className="hidden xl:flex w-[65px] h-[100dvh] bg-sidebar border-r border-border flex-col items-center justify-between shrink-0 select-none z-30 relative group/rail">
         {/* Full-height border resize/toggle handle */}
         <div
           onClick={onToggle}
@@ -616,22 +633,6 @@ export function Sidebar({
             </TooltipContent>
           </Tooltip>
 
-          {/* New Chat */}
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <button
-                onClick={onNewChat}
-                className="w-10 h-10 rounded-xl flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors cursor-pointer"
-                aria-label="New chat"
-              >
-                <Plus className="w-4 h-4" />
-              </button>
-            </TooltipTrigger>
-            <TooltipContent side="right" className="text-md">
-              New chat
-            </TooltipContent>
-          </Tooltip>
-
           {/* Search */}
           <Tooltip>
             <TooltipTrigger asChild>
@@ -648,6 +649,22 @@ export function Sidebar({
             </TooltipTrigger>
             <TooltipContent side="right" className="text-md">
               Search chats
+            </TooltipContent>
+          </Tooltip>
+
+          {/* New Chat */}
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                onClick={onNewChat}
+                className="w-10 h-10 rounded-xl flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors cursor-pointer"
+                aria-label="New chat"
+              >
+                <Plus className="w-4 h-4" />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent side="right" className="text-md">
+              New chat
             </TooltipContent>
           </Tooltip>
 
@@ -670,7 +687,7 @@ export function Sidebar({
 
         {/* Bottom User Profile Dock (Matching Open Sidebar Position) */}
         <div className="w-full p-2 pb-[max(env(safe-area-inset-bottom),0.75rem)] border-t border-border/80 mt-auto flex items-center justify-center relative z-20">
-          {isLoading ? (
+          {isLoading || !user ? (
             <div className="w-full flex items-center justify-center p-2 rounded-xl select-none">
               <div className="w-9 h-9 rounded-full bg-secondary/80 dark:bg-neutral-800/80 animate-pulse shrink-0" />
             </div>
@@ -697,9 +714,11 @@ export function Sidebar({
               </Tooltip>
 
               <DropdownMenuContent
-                side="right"
-                align="end"
-                className="w-64 rounded-2xl p-1.5 bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/50 dark:border-neutral-700/50"
+                side="top"
+                align="start"
+                alignOffset={-4}
+                sideOffset={6}
+                className="w-64 rounded-2xl p-1.5 bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/50 dark:border-neutral-700/50 outline-none focus:outline-none ring-0"
               >
                 {renderAccountMenuItems()}
               </DropdownMenuContent>
@@ -717,11 +736,11 @@ export function Sidebar({
     <>
       {/* Mobile overlay */}
       <div
-        className="fixed inset-0 z-40 bg-black/60 backdrop-blur-xs md:hidden animate-in fade-in-0 duration-200"
+        className="fixed inset-0 z-40 bg-black/60 backdrop-blur-xs xl:hidden"
         onClick={onToggle}
       />
 
-      <aside className="fixed md:static inset-y-0 left-0 z-50 w-[280px] sm:w-[260px] h-[100dvh] max-h-[100dvh] bg-sidebar border-r border-border/80 flex flex-col shrink-0 select-none group/sidebar animate-in slide-in-from-left-full md:animate-none duration-200">
+      <aside className="fixed xl:static inset-y-0 left-0 z-50 w-[280px] sm:w-[260px] h-[100dvh] max-h-[100dvh] bg-sidebar border-r border-border/80 flex flex-col shrink-0 select-none group/sidebar animate-in slide-in-from-left-full xl:animate-none duration-200">
         {/* Full-height border resize/toggle handle */}
         <div
           onClick={onToggle}
@@ -783,7 +802,7 @@ export function Sidebar({
             onClick={() => {
               onNewChat();
             }}
-            className="w-full flex items-center justify-between h-10 px-3 rounded-xl hover:bg-secondary text-foreground text-md font-medium group cursor-pointer transition-all duration-150"
+            className="w-full flex items-center justify-between h-10 px-3 rounded-xl hover:bg-secondary text-muted-foreground hover:text-foreground text-md font-medium group cursor-pointer transition-all duration-150"
           >
             <div className="flex items-center gap-2.5">
               <Plus className="w-4 h-4 text-muted-foreground group-hover:text-foreground" />
@@ -793,13 +812,14 @@ export function Sidebar({
 
           {/* Collapsible Search input */}
           {showSearch && (
-            <div className="relative animate-in fade-in-0 slide-in-from-top-1 duration-150">
-              <Search className="w-4 h-4 absolute left-3 top-2.5 text-muted-foreground" />
-              <Input
-                placeholder="Search chats..."
+            <div className="relative group">
+              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-foreground transition-colors pointer-events-none" />
+              <input
+                type="text"
+                placeholder="Search anything"
                 value={searchQuery}
                 onChange={(e) => onSearchChange(e.target.value)}
-                className="pl-8 h-8 text-md bg-secondary border-border rounded-lg"
+                className="w-full pl-9 pr-3 h-10 text-md bg-secondary rounded-xl text-foreground placeholder:text-muted-foreground focus:placeholder:text-foreground focus:outline-none focus-visible:outline-none focus:ring-0 focus-visible:ring-0 border-0 transition-colors"
                 autoFocus
               />
             </div>
@@ -809,112 +829,194 @@ export function Sidebar({
         {/* Chat History Stream */}
         <ScrollArea className="flex-1 px-2">
           {isLoading ? (
-            <div className="space-y-4 py-3 px-1">
+            <div className="space-y-5 py-3 px-1 select-none">
+              {/* PINNED Skeleton Group */}
               <div className="space-y-2">
-                <div className="h-3 w-16 bg-muted-foreground/20 rounded animate-pulse ml-2" />
-                <div className="space-y-1.5">
-                  <div className="h-8 w-full bg-secondary/80 dark:bg-neutral-800/60 rounded-xl animate-pulse" />
-                  <div className="h-8 w-[85%] bg-secondary/70 dark:bg-neutral-800/50 rounded-xl animate-pulse" />
-                  <div className="h-8 w-[92%] bg-secondary/70 dark:bg-neutral-800/50 rounded-xl animate-pulse" />
-                </div>
-              </div>
-              <div className="space-y-2 pt-2">
                 <div className="h-3 w-20 bg-muted-foreground/20 rounded animate-pulse ml-2" />
                 <div className="space-y-1.5">
-                  <div className="h-8 w-[90%] bg-secondary/70 dark:bg-neutral-800/50 rounded-xl animate-pulse" />
-                  <div className="h-8 w-[78%] bg-secondary/70 dark:bg-neutral-800/50 rounded-xl animate-pulse" />
-                  <div className="h-8 w-[84%] bg-secondary/70 dark:bg-neutral-800/50 rounded-xl animate-pulse" />
+                  <div className="h-8 w-full bg-secondary/80 dark:bg-neutral-800/60 rounded-xl animate-pulse" />
+                </div>
+              </div>
+
+              {/* ARCHIVED Skeleton Group */}
+              <div className="space-y-2 pt-1">
+                <div className="h-3 w-24 bg-muted-foreground/20 rounded animate-pulse ml-2" />
+                <div className="space-y-1.5">
+                  <div className="h-8 w-full bg-secondary/70 dark:bg-neutral-800/50 rounded-xl animate-pulse" />
+                </div>
+              </div>
+
+              {/* TODAY Skeleton Group */}
+              <div className="space-y-2 pt-1">
+                <div className="h-3 w-16 bg-muted-foreground/20 rounded animate-pulse ml-2" />
+                <div className="space-y-1.5">
+                  <div className="h-8 w-full bg-secondary/70 dark:bg-neutral-800/50 rounded-xl animate-pulse" />
+                  <div className="h-8 w-full bg-secondary/70 dark:bg-neutral-800/50 rounded-xl animate-pulse" />
                 </div>
               </div>
             </div>
           ) : (
             <div className="space-y-4 py-2">
               {Object.entries(groupedChats).map(([group, groupChats]) => {
-                if (groupChats.length === 0) return null;
+                const isPinnedGroup = group === 'Pinned';
+                const isArchiveGroup = group === 'Archived';
+                const isCollapsibleGroup = isPinnedGroup || isArchiveGroup;
+
+                if (!isPinnedGroup && !isArchiveGroup && groupChats.length === 0) {
+                  return null;
+                }
+
+                const isCollapsed = isCollapsibleGroup && !!collapsedSections[group];
+
                 return (
                   <div key={group} className="space-y-0.5">
-                    <div className="px-3 py-1 text-[15px] font-semibold tracking-wider text-muted-foreground/80 uppercase">
-                      {group}
-                    </div>
-                    {groupChats.map((chat) => {
-                      const isHovered = hoveredChatId === chat.id;
-                      const isSelected = currentChatId === chat.id;
+                    {isCollapsibleGroup ? (
+                      <button
+                        type="button"
+                        onClick={() => toggleSection(group)}
+                        className="w-full flex items-center justify-between px-3 py-1 text-[15px] font-semibold tracking-wider text-muted-foreground/80 hover:text-foreground uppercase select-none cursor-pointer transition-colors group/section text-left"
+                      >
+                        <span>{group}</span>
+                        <AnimatedChevron
+                          open={!isCollapsed}
+                          disableHover
+                          orientation="right-down"
+                          size={16}
+                          className="text-muted-foreground/70 group-hover/section:text-foreground shrink-0"
+                        />
+                      </button>
+                    ) : (
+                      <div className="px-3 py-1 text-[15px] font-semibold tracking-wider text-muted-foreground/80 uppercase select-none">
+                        {group}
+                      </div>
+                    )}
 
-                      return (
-                        <div
-                          key={chat.id}
-                          onClick={() => {
-                            onChatSelect(chat.id);
-                            if (typeof window !== 'undefined' && window.innerWidth < 768) {
-                              onToggle();
-                            }
-                          }}
-                          onMouseEnter={() => setHoveredChatId(chat.id)}
-                          onMouseLeave={() => setHoveredChatId(null)}
-                          className={cn(
-                            'group relative flex items-center justify-between px-3 py-2 rounded-xl text-md cursor-pointer transition-all duration-150',
-                            isSelected
-                              ? 'bg-secondary text-foreground font-medium'
-                              : 'text-muted-foreground hover:bg-secondary hover:text-foreground'
-                          )}
-                        >
-                          {/* Title with Smooth Marquee on Hover */}
-                          <ChatTitleMarquee
-                            title={chat.title || 'New chat'}
-                            isHovered={isHovered}
-                          />
-
-                          {/* Pinned status indicator when not hovered */}
-                          {chat.starred && !isHovered && (
-                            <PinOff className="w-4 h-4 text-muted-foreground/60 shrink-0 ml-1.5 md:block hidden" />
-                          )}
-
-                          {/* Hover Actions with Smooth Fade (Always visible on mobile/small screens) */}
-                          <div
-                            className={cn(
-                              'absolute right-1 top-1/2 -translate-y-1/2 flex items-center gap-0.5 bg-gradient-to-l from-secondary via-secondary from-25% to-transparent pl-8 pr-1.5 py-1 rounded-r-xl transition-opacity duration-150 z-10',
-                              isHovered ? 'opacity-100 pointer-events-auto' : 'max-md:opacity-100 max-md:pointer-events-auto opacity-0 pointer-events-none'
-                            )}
-                          >
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    onToggleStar(chat.id, !chat.starred);
-                                  }}
-                                  className="p-1 rounded-md text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
-                                >
-                                  {chat.starred ? (
-                                    <PinOff className="w-4 h-4 text-foreground" />
-                                  ) : (
-                                    <Pin className="w-4 h-4" />
-                                  )}
-                                </button>
-                              </TooltipTrigger>
-                              <TooltipContent className="text-md">
-                                {chat.starred ? 'Unpin' : 'Pin'}
-                              </TooltipContent>
-                            </Tooltip>
-
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    onDeleteChat(chat.id);
-                                  }}
-                                  className="p-1 rounded-md text-muted-foreground hover:text-red-500 transition-colors cursor-pointer"
-                                >
-                                  <Trash2 className="w-4 h-4" />
-                                </button>
-                              </TooltipTrigger>
-                              <TooltipContent className="text-md">Delete</TooltipContent>
-                            </Tooltip>
+                    {!isCollapsed && (
+                      <>
+                        {isPinnedGroup && groupChats.length === 0 && (
+                          <div className="px-3 py-1 text-[13.5px] text-muted-foreground/60 select-none font-normal">
+                            No pinned chats
                           </div>
-                        </div>
-                      );
-                    })}
+                        )}
+
+                        {isArchiveGroup && groupChats.length === 0 && (
+                          <div className="px-3 py-1 text-[13.5px] text-muted-foreground/60 select-none font-normal">
+                            No archived chats
+                          </div>
+                        )}
+
+                        {groupChats.map((chat) => {
+                          const isHovered = hoveredChatId === chat.id;
+                          const isSelected = currentChatId === chat.id;
+
+                          return (
+                            <div
+                              key={chat.id}
+                              onClick={() => {
+                                onChatSelect(chat.id);
+                                if (typeof window !== 'undefined' && window.innerWidth < 1024) {
+                                  onToggle();
+                                }
+                              }}
+                              onMouseEnter={() => setHoveredChatId(chat.id)}
+                              onMouseLeave={() => setHoveredChatId(null)}
+                              className={cn(
+                                'group relative flex items-center justify-between px-3 py-2 rounded-xl text-md cursor-pointer transition-all duration-150',
+                                isSelected
+                                  ? 'bg-secondary text-foreground font-medium'
+                                  : 'text-muted-foreground hover:bg-secondary hover:text-foreground'
+                              )}
+                            >
+                              {/* Title with Smooth Marquee on Hover */}
+                              <ChatTitleMarquee
+                                title={chat.title || 'New chat'}
+                                isHovered={isHovered}
+                              />
+
+                              {/* Status indicators when not hovered */}
+                              {chat.starred && !isHovered && (
+                                <PinOff className="w-4 h-4 text-muted-foreground/70 shrink-0 ml-1.5" />
+                              )}
+                              {chat.archived && !chat.starred && !isHovered && (
+                                <ArchiveX className="w-4 h-4 text-muted-foreground/70 shrink-0 ml-1.5" />
+                              )}
+
+                              {/* Hover Actions with Smooth Fade */}
+                              <div
+                                className={cn(
+                                  'absolute right-1 top-1/2 -translate-y-1/2 flex items-center gap-0.5 pl-8 pr-1.5 py-1 rounded-r-xl transition-all duration-150 z-10',
+                                  isSelected || isHovered
+                                    ? 'bg-gradient-to-l from-secondary via-secondary from-25% to-transparent'
+                                    : 'bg-gradient-to-l from-sidebar via-sidebar from-25% to-transparent',
+                                  isHovered
+                                    ? 'opacity-100 pointer-events-auto'
+                                    : 'max-md:opacity-100 max-md:pointer-events-auto opacity-0 pointer-events-none'
+                                )}
+                              >
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        onToggleStar(chat.id, !chat.starred);
+                                      }}
+                                      className="p-1 rounded-md text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                                    >
+                                      {chat.starred ? (
+                                        <PinOff className="w-4 h-4 text-foreground" />
+                                      ) : (
+                                        <Pin className="w-4 h-4" />
+                                      )}
+                                    </button>
+                                  </TooltipTrigger>
+                                  <TooltipContent className="text-md">
+                                    {chat.starred ? 'Unpin' : 'Pin'}
+                                  </TooltipContent>
+                                </Tooltip>
+
+                                {onToggleArchive && (
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          onToggleArchive(chat.id, !chat.archived);
+                                        }}
+                                        className="p-1 rounded-md text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                                      >
+                                        {chat.archived ? (
+                                          <ArchiveX className="w-4 h-4" />
+                                        ) : (
+                                          <Archive className="w-4 h-4" />
+                                        )}
+                                      </button>
+                                    </TooltipTrigger>
+                                    <TooltipContent className="text-md">
+                                      {chat.archived ? 'Unarchive' : 'Archive'}
+                                    </TooltipContent>
+                                  </Tooltip>
+                                )}
+
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        onDeleteChat(chat.id);
+                                      }}
+                                      className="p-1 rounded-md text-muted-foreground hover:text-red-500 transition-colors cursor-pointer"
+                                    >
+                                      <Trash2 className="w-4 h-4" />
+                                    </button>
+                                  </TooltipTrigger>
+                                  <TooltipContent className="text-md">Delete</TooltipContent>
+                                </Tooltip>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </>
+                    )}
                   </div>
                 );
               })}
@@ -924,7 +1026,7 @@ export function Sidebar({
 
         {/* Bottom User Profile Dock (Matching Screenshot 1, 2) */}
         <div className="p-2 pb-[max(env(safe-area-inset-bottom),0.75rem)] border-t border-border/80 mt-auto relative z-20">
-          {isLoading ? (
+          {isLoading || !user ? (
             <div className="w-full flex items-center gap-2.5 py-2 pl-[2px] pr-2 select-none">
               <div className="w-9 h-9 rounded-full bg-secondary/80 dark:bg-neutral-800/80 animate-pulse shrink-0" />
               <div className="flex-1 min-w-0 space-y-1.5">
@@ -957,11 +1059,10 @@ export function Sidebar({
 
               <DropdownMenuContent
                 side="top"
-                align="center"
-                sideOffset={8}
-                avoidCollisions={true}
-                collisionPadding={12}
-                className="w-[236px] max-w-[calc(100vw-24px)] max-h-[calc(100dvh-5rem)] overflow-y-auto rounded-2xl p-1.5 mb-1 bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/50 dark:border-neutral-700/50 outline-none focus:outline-none ring-0"
+                align="start"
+                alignOffset={0}
+                sideOffset={6}
+                className="w-[var(--radix-dropdown-menu-trigger-width)] min-w-[var(--radix-dropdown-menu-trigger-width)] max-w-[calc(100vw-24px)] max-h-[calc(100dvh-5rem)] overflow-y-auto rounded-2xl p-1.5 bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/50 dark:border-neutral-700/50 outline-none focus:outline-none ring-0"
               >
                 {renderAccountMenuItems()}
               </DropdownMenuContent>

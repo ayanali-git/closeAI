@@ -16,7 +16,8 @@ import {
   AnimatedArrow,
   AnimatedChevron,
   AnimatedSearchClose,
-} from "@/components/ui/animated-icons";
+  AnimatedComingSoonText,
+} from "@/components/ui/animated";
 import { useAuth } from "@/hooks/use-auth";
 import {
   DropdownMenu,
@@ -38,12 +39,321 @@ type MegaMenuCategory =
   | "account"
   | null;
 
+interface SiteSearchItem {
+  id: string;
+  category: string;
+  title: string;
+  description: string;
+  url: string;
+  date?: string;
+  keywords: string[];
+}
+
+const SITE_SEARCH_INDEX: SiteSearchItem[] = [
+  {
+    id: "res-56",
+    category: "Research",
+    title: "CloseAI-5.6 Frontier Model & Safety",
+    description:
+      "Our newest flagship model featuring enhanced multi-step reasoning, real-time multimodal processing, and breakthrough code synthesis capabilities.",
+    url: "/research/overview",
+    date: "Sep 2026",
+    keywords: [
+      "5.6",
+      "closeai-5.6",
+      "flagship",
+      "model",
+      "multimodal",
+      "reasoning",
+      "research",
+    ],
+  },
+  {
+    id: "res-55",
+    category: "Research",
+    title: "CloseAI-5.5 Deep Reasoning Architecture",
+    description:
+      "In-depth analysis of high-efficiency reasoning models with step-by-step chain of thought verification.",
+    url: "/research/overview",
+    date: "Aug 2026",
+    keywords: [
+      "5.5",
+      "reasoning",
+      "chain of thought",
+      "overview",
+      "benchmarks",
+    ],
+  },
+  {
+    id: "res-safety",
+    category: "Security",
+    title: "Safety Framework & Red Teaming",
+    description:
+      "Systematic evaluations, automated red teaming, and alignment protocols ensuring AI systems are safe, reliable, and beneficial.",
+    url: "/research/safety",
+    date: "Jul 2026",
+    keywords: [
+      "safety",
+      "security",
+      "red teaming",
+      "alignment",
+      "evaluations",
+      "policy",
+      "privacy",
+    ],
+  },
+  {
+    id: "res-residency",
+    category: "Research",
+    title: "Research Residency Program",
+    description:
+      "An intensive six-month program for researchers and engineers transitioning into frontier AI research.",
+    url: "/research/overview",
+    keywords: ["residency", "fellowship", "careers", "researchers", "program"],
+  },
+  {
+    id: "prod-chat",
+    category: "Products",
+    title: "CloseAI Chat",
+    description:
+      "Interactive AI assistant for conversation, coding, analysis, content creation, and creative problem solving.",
+    url: "/c",
+    keywords: [
+      "chat",
+      "closeai chat",
+      "assistant",
+      "ui",
+      "conversation",
+      "app",
+    ],
+  },
+  {
+    id: "prod-codex",
+    category: "Products",
+    title: "Codex & Canvas",
+    description:
+      "Collaborative interactive workspace and advanced code editor powered by CloseAI for pair programming and document editing.",
+    url: "/product/features",
+    keywords: [
+      "codex",
+      "canvas",
+      "features",
+      "editor",
+      "code",
+      "pair programming",
+      "workspace",
+    ],
+  },
+  {
+    id: "prod-pricing",
+    category: "Products",
+    title: "Pricing & Subscription Plans",
+    description:
+      "Flexible plans for individuals, teams, and enterprises including Free, Pro, and Ultra Pro tiers.",
+    url: "/product/pricing",
+    keywords: [
+      "pricing",
+      "pro",
+      "ultra",
+      "plans",
+      "subscription",
+      "cost",
+      "billing",
+      "upgrade",
+    ],
+  },
+  {
+    id: "prod-features",
+    category: "Products",
+    title: "Product Features & Capabilities",
+    description:
+      "Explore vision processing, real-time voice, code execution, web browsing, and custom instructions.",
+    url: "/product/features",
+    keywords: [
+      "features",
+      "capabilities",
+      "vision",
+      "voice",
+      "browsing",
+      "tools",
+    ],
+  },
+  {
+    id: "biz-enterprise",
+    category: "Business",
+    title: "Enterprise Solutions & Deployment",
+    description:
+      "Enterprise-grade AI with SOC 2 compliance, SAML SSO, dedicated infrastructure, and zero data retention guarantees.",
+    url: "/business/enterprise",
+    keywords: [
+      "enterprise",
+      "business",
+      "solutions",
+      "sso",
+      "security",
+      "teams",
+      "compliance",
+      "soc2",
+    ],
+  },
+  {
+    id: "biz-stories",
+    category: "Partner",
+    title: "Customer Stories & Case Studies",
+    description:
+      "See how leading global organizations transform workflows, engineering productivity, and customer support with CloseAI.",
+    url: "/business/enterprise",
+    keywords: [
+      "customer stories",
+      "case studies",
+      "stories",
+      "partners",
+      "enterprise",
+    ],
+  },
+  {
+    id: "dev-api",
+    category: "Developers",
+    title: "API Platform & Documentation",
+    description:
+      "Build next-generation applications with CloseAI APIs for text completion, chat, embeddings, and vision.",
+    url: "/product/api-docs",
+    keywords: [
+      "api",
+      "docs",
+      "documentation",
+      "developers",
+      "sdk",
+      "endpoints",
+      "integration",
+      "rest",
+    ],
+  },
+  {
+    id: "dev-apps",
+    category: "Page",
+    title: "Download Apps (Desktop & Mobile)",
+    description:
+      "Get native CloseAI apps for macOS, Windows, iOS, and Android for instant keyboard shortcuts and offline access.",
+    url: "/product/docs",
+    date: "Jun 2026",
+    keywords: [
+      "download",
+      "apps",
+      "desktop",
+      "mobile",
+      "mac",
+      "windows",
+      "ios",
+      "android",
+    ],
+  },
+  {
+    id: "comp-about",
+    category: "Company",
+    title: "About CloseAI",
+    description:
+      "Our mission is to build safe, beneficial artificial general intelligence that elevates human potential.",
+    url: "/company/about",
+    keywords: ["about", "company", "mission", "values", "team", "story"],
+  },
+  {
+    id: "comp-blog",
+    category: "Page",
+    title: "Release Notes & Blog",
+    description:
+      "Stay up to date with new features, model updates, research papers, and technical announcements.",
+    url: "/company/blog",
+    date: "Sep 2026",
+    keywords: [
+      "blog",
+      "release notes",
+      "news",
+      "announcements",
+      "updates",
+      "changelog",
+    ],
+  },
+  {
+    id: "comp-careers",
+    category: "Company",
+    title: "Careers & Open Positions",
+    description:
+      "Join our team of researchers, engineers, and designers building the future of artificial intelligence.",
+    url: "/company/careers",
+    keywords: ["careers", "jobs", "hiring", "positions", "join", "team"],
+  },
+  {
+    id: "comp-contact",
+    category: "Company",
+    title: "Contact Us & Bug Report",
+    description:
+      "Get in touch with sales, press, or submit technical bug reports and feature feedback.",
+    url: "/company/contact",
+    keywords: ["contact", "support", "bug", "report", "sales", "press"],
+  },
+  {
+    id: "foundation",
+    category: "Foundation",
+    title: "Foundation & Safety Initiatives",
+    description:
+      "Non-profit research initiatives promoting responsible AI deployment and global educational access.",
+    url: "/foundation",
+    keywords: [
+      "foundation",
+      "non-profit",
+      "safety",
+      "initiatives",
+      "grant",
+      "education",
+    ],
+  },
+  {
+    id: "supp-help",
+    category: "Support",
+    title: "Help Center & Support Guides",
+    description:
+      "Find guides, troubleshooting steps, account management FAQs, and standard operational answers.",
+    url: "/support/help",
+    keywords: [
+      "help",
+      "support",
+      "faqs",
+      "help center",
+      "articles",
+      "guides",
+      "troubleshooting",
+    ],
+  },
+  {
+    id: "supp-privacy",
+    category: "Page",
+    title: "Privacy Policy",
+    description:
+      "Learn how we handle user data, privacy protections, security practices, and data retention policies.",
+    url: "/support/privacy",
+    keywords: ["privacy", "policy", "data", "gdpr", "legal", "retention"],
+  },
+  {
+    id: "supp-terms",
+    category: "Page",
+    title: "Terms of Service",
+    description:
+      "Terms and conditions governing the use of CloseAI services, websites, APIs, and subscriptions.",
+    url: "/support/terms",
+    date: "Jun 2026",
+    keywords: ["terms", "service", "legal", "agreement", "conditions"],
+  },
+];
+
 export function MarketingHeader() {
-  const { user, signOut } = useAuth();
+  const { user, loading, signOut } = useAuth();
   const router = useRouter();
+  const [mounted, setMounted] = useState(false);
   const [activeMenu, setActiveMenu] = useState<MegaMenuCategory>(null);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [submittedQuery, setSubmittedQuery] = useState("");
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [mobileSubMenu, setMobileSubMenu] = useState<MegaMenuCategory>(null);
   const [accountMenuOpen, setAccountMenuOpen] = useState(false);
@@ -55,6 +365,20 @@ export function MarketingHeader() {
   const accountTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const loginTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const tryTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const searchResults = React.useMemo(() => {
+    const q = submittedQuery.trim().toLowerCase();
+    if (!q) return [];
+    return SITE_SEARCH_INDEX.filter((item) => {
+      const matchTitle = item.title.toLowerCase().includes(q);
+      const matchDesc = item.description.toLowerCase().includes(q);
+      const matchCategory = item.category.toLowerCase().includes(q);
+      const matchKeywords = item.keywords.some((k) =>
+        k.toLowerCase().includes(q)
+      );
+      return matchTitle || matchDesc || matchCategory || matchKeywords;
+    });
+  }, [submittedQuery]);
 
   const currentActiveNav = hoveredNav || activeMenu;
 
@@ -111,8 +435,30 @@ export function MarketingHeader() {
   };
 
   useEffect(() => {
-    if (isSearchOpen && searchInputRef.current) {
-      searchInputRef.current.focus();
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (isSearchOpen) {
+      if (searchInputRef.current) {
+        searchInputRef.current.focus();
+      }
+      const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+      const prevBodyOverflow = document.body.style.overflow;
+      const prevHtmlOverflow = document.documentElement.style.overflow;
+      const prevBodyPaddingRight = document.body.style.paddingRight;
+
+      document.body.style.overflow = "hidden";
+      document.documentElement.style.overflow = "hidden";
+      if (scrollbarWidth > 0) {
+        document.body.style.paddingRight = `${scrollbarWidth}px`;
+      }
+
+      return () => {
+        document.body.style.overflow = prevBodyOverflow;
+        document.documentElement.style.overflow = prevHtmlOverflow;
+        document.body.style.paddingRight = prevBodyPaddingRight;
+      };
     }
   }, [isSearchOpen]);
 
@@ -146,9 +492,7 @@ export function MarketingHeader() {
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!searchQuery.trim()) return;
-    router.push(`/c?q=${encodeURIComponent(searchQuery)}`);
-    setIsSearchOpen(false);
-    setSearchQuery("");
+    setSubmittedQuery(searchQuery.trim());
   };
 
   return (
@@ -162,50 +506,170 @@ export function MarketingHeader() {
         onClick={() => setActiveMenu(null)}
       />
 
-      {/* FULLSCREEN SEARCH OVERLAY */}
+      {/* FULLSCREEN SEARCH OVERLAY (OpenAI Style) */}
       {isSearchOpen && (
         <div
-          className="fixed inset-0 top-14 z-40 bg-background/98 backdrop-blur-2xl flex flex-col items-center pt-24 px-6 select-none"
+          className="fixed inset-0 top-14 z-40 bg-background/98 backdrop-blur-2xl overflow-y-auto px-6 sm:px-8 py-12 sm:py-16 select-none"
           onClick={(e) => {
             if (e.target === e.currentTarget) {
               setIsSearchOpen(false);
+              setSearchQuery("");
+              setSubmittedQuery("");
             }
           }}
         >
-          <form
-            onSubmit={handleSearchSubmit}
-            className="w-full max-w-2xl mx-auto"
-          >
-            <div className="w-full flex items-center justify-between border-b border-border pb-3">
-              <input
-                ref={searchInputRef}
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search anything"
-                className="w-full bg-transparent text-2xl sm:text-3xl text-foreground font-normal placeholder:text-muted-foreground outline-none border-none ring-0"
-              />
-              <div className="flex items-center gap-2 shrink-0 pl-4">
+          <div className="w-full max-w-3xl mx-auto space-y-10">
+            {/* Search Input Bar */}
+            <form onSubmit={handleSearchSubmit} className="w-full">
+              <div className="w-full flex items-center justify-between border-b border-border/80 pb-4">
+                <input
+                  ref={searchInputRef}
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => {
+                    setSearchQuery(e.target.value);
+                    if (!e.target.value) {
+                      setSubmittedQuery("");
+                    }
+                  }}
+                  placeholder="Search about anything"
+                  className="w-full bg-transparent text-2xl sm:text-4xl text-foreground font-normal placeholder:text-muted-foreground outline-none border-none ring-0 py-2 leading-normal sm:leading-relaxed"
+                />
                 <button
                   type="submit"
+                  disabled={!searchQuery.trim()}
                   className={cn(
-                    "w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-all shrink-0",
+                    "w-10 h-10 sm:w-11 sm:h-11 rounded-full flex items-center justify-center transition-all shrink-0 ml-4",
                     searchQuery.trim().length > 0
                       ? "bg-foreground text-background cursor-pointer hover:opacity-90 active:scale-95"
-                      : "bg-white/50 dark:bg-[#212121]/50 text-foreground cursor-not-allowed opacity-60"
+                      : "bg-white/50 dark:bg-[#212121]/50 border border-border/80 dark:border-none text-foreground cursor-not-allowed opacity-50"
                   )}
                   aria-label="Submit search"
                 >
-                  <ArrowUp className="w-5 h-5 stroke-[3]" />
+                  <ArrowUp className="w-5 h-5 sm:w-6 sm:h-6 stroke-[2.5]" />
                 </button>
               </div>
-            </div>
-          </form>
+            </form>
+
+            {/* Results Section (Shown ONLY when submitted via Enter or button click) */}
+            {submittedQuery.trim().length > 0 && (
+              <div className="space-y-10">
+                {/* Your search Query Heading */}
+                <div className="space-y-2 pb-6 border-b border-border/60">
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest">
+                    Your search
+                  </p>
+                  <p className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight break-words">
+                    {submittedQuery}
+                  </p>
+                </div>
+
+                {/* Our sources (Shown ONLY when results exist) */}
+                {searchResults.length > 0 && (
+                  <div className="space-y-4">
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest">
+                      Our sources
+                    </p>
+
+                    <div className="flex flex-col">
+                      {searchResults.map((item) => (
+                        <div
+                          key={item.id}
+                          onClick={() => {
+                            setIsSearchOpen(false);
+                            setSearchQuery("");
+                            setSubmittedQuery("");
+                            router.push(item.url);
+                          }}
+                          className="py-5 border-b border-border/80 hover:border-foreground/40 dark:hover:border-neutral-400 transition-colors group cursor-pointer"
+                        >
+                          <div className="flex items-center gap-2 text-xs font-semibold text-muted-foreground/80 uppercase tracking-wider mb-1">
+                            <span>{item.category}</span>
+                            {item.date && (
+                              <>
+                                <span>•</span>
+                                <span className="font-normal normal-case text-muted-foreground">
+                                  {item.date}
+                                </span>
+                              </>
+                            )}
+                          </div>
+
+                          <h3 className="text-xl sm:text-2xl font-semibold text-muted-foreground group-hover:text-foreground transition-colors">
+                            {item.title}
+                          </h3>
+
+                          <p className="text-base text-muted-foreground/80 group-hover:text-muted-foreground mt-1.5 leading-relaxed max-w-2xl transition-colors">
+                            {item.description}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* We suggest Section */}
+                <div
+                  className={cn(
+                    "pb-4 space-y-6",
+                    searchResults.length > 0
+                      ? "pt-8 border-t border-border/60"
+                      : "pt-2"
+                  )}
+                >
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest">
+                    We suggest
+                  </p>
+
+                  <div className="space-y-4 text-base sm:text-lg leading-relaxed max-w-3xl">
+                    <p className="text-foreground">
+                      It looks like your question goes beyond what we can assist
+                      with here. Advanced search is designed to help you find
+                      information on closeAI, such as our products, research,
+                      and updates.
+                    </p>
+                    <p className="text-muted-foreground">
+                      At this time, it may not cover all topics, including some
+                      closeAI-related ones we don't yet fully support. You can
+                      try asking a different question related to
+                      closeAI-specific content, or use closeAI chat for broader
+                      topics or creative prompts.
+                    </p>
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-4 pt-2">
+                    <Button
+                      asChild
+                      className="group rounded-full px-5 h-10 text-[15px] font-medium bg-white/50 dark:bg-[#212121]/50 hover:bg-secondary dark:hover:bg-[#2f2f2f] border border-border/80 dark:border-none text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                    >
+                      <Link
+                        href="/c"
+                        onClick={() => setIsSearchOpen(false)}
+                        className="flex items-center gap-1.5"
+                      >
+                        <span>Ask CloseAI</span>
+                        <ArrowUpRight className="w-4 h-4" />
+                      </Link>
+                    </Button>
+
+                    <Link
+                      href="/product/api-docs"
+                      onClick={() => setIsSearchOpen(false)}
+                      className="inline-flex items-center gap-1.5 text-md font-medium text-muted-foreground hover:text-foreground transition-colors px-2 py-1"
+                    >
+                      <span>API Docs</span>
+                      <ArrowUpRight className="w-4 h-4" />
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       )}
 
       <header
-        className="sticky top-0 z-50 w-full bg-background border-b border-border/40 select-none transition-colors duration-200"
+        className="sticky top-0 z-50 w-full bg-background select-none transition-colors duration-200"
         onMouseLeave={handleMouseLeave}
       >
         <div className="max-w-[1400px] mx-auto px-6 sm:px-8 h-14 flex items-center justify-between relative">
@@ -400,17 +864,20 @@ export function MarketingHeader() {
               setHoveredNav(null);
             }}
           >
-            {user ? (
+            {loading ? (
               <>
-                <div
-                  onMouseEnter={handleAccountEnter}
-                  onMouseLeave={handleAccountLeave}
-                  className="relative"
-                >
+                <div className="w-[111px] h-[38px] rounded-full bg-secondary/80 dark:bg-neutral-800/80 animate-pulse shrink-0 hidden sm:block" />
+                <div className="w-[121px] h-[36px] rounded-full bg-secondary/80 dark:bg-neutral-800/80 animate-pulse shrink-0 hidden sm:block" />
+              </>
+            ) : user ? (
+              <>
+                <div className="relative">
                   <button
                     type="button"
+                    onMouseEnter={handleAccountEnter}
+                    onMouseLeave={handleAccountLeave}
                     onClick={() => setAccountMenuOpen(!accountMenuOpen)}
-                    className="group flex rounded-full bg-white/50 dark:bg-[#212121]/50 hover:bg-secondary dark:hover:bg-[#2f2f2f] items-center gap-1.5 text-[15px] font-medium text-muted-foreground hover:text-foreground transition-colors px-4 py-2 cursor-pointer outline-none select-none"
+                    className="group flex rounded-full bg-white/50 dark:bg-[#212121]/50 hover:bg-secondary dark:hover:bg-[#2f2f2f] border border-border/80 dark:border-none items-center gap-1.5 text-[15px] font-medium text-muted-foreground hover:text-foreground transition-colors px-4 py-2 cursor-pointer outline-none select-none"
                   >
                     <span>Account</span>
                     <AnimatedChevron
@@ -427,7 +894,7 @@ export function MarketingHeader() {
                       onMouseLeave={handleAccountLeave}
                       className="absolute right-0 top-full pt-2 z-50"
                     >
-                      <div className="w-40 rounded-2xl p-1.5 bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm">
+                      <div className="w-40 rounded-2xl p-1.5 bg-white/50 dark:bg-[#212121]/50 border border-border/80 dark:border-none backdrop-blur-sm">
                         <Link
                           href="/c"
                           onClick={() => setAccountMenuOpen(false)}
@@ -451,7 +918,7 @@ export function MarketingHeader() {
                           }}
                           className="w-full flex items-center gap-2 px-4 py-2 text-md rounded-xl text-red-500 hover:bg-secondary dark:hover:bg-[#2f2f2f] transition-colors text-left cursor-pointer"
                         >
-                          Log out
+                          Log Out
                         </button>
                       </div>
                     </div>
@@ -463,24 +930,22 @@ export function MarketingHeader() {
                   className="group rounded-full px-4 h-9 text-[15px] font-medium bg-foreground text-background hover:opacity-90 transition-opacity cursor-pointer"
                 >
                   <Link href="/c" className="flex items-center gap-1">
-                    <span>Try now</span>
+                    <span>Chat Now</span>
                     <AnimatedArrow size={16} />
                   </Link>
                 </Button>
               </>
             ) : (
               <>
-                <div
-                  onMouseEnter={handleLoginEnter}
-                  onMouseLeave={handleLoginLeave}
-                  className="relative"
-                >
+                <div className="relative">
                   <button
                     type="button"
+                    onMouseEnter={handleLoginEnter}
+                    onMouseLeave={handleLoginLeave}
                     onClick={() => setLoginMenuOpen(!loginMenuOpen)}
-                    className="group flex rounded-full bg-white/50 dark:bg-[#212121]/50 hover:bg-secondary dark:hover:bg-[#2f2f2f] items-center gap-1.5 text-[15px] font-medium text-muted-foreground hover:text-foreground transition-colors px-4 py-2 cursor-pointer outline-none select-none"
+                    className="group flex rounded-full bg-white/50 dark:bg-[#212121]/50 hover:bg-secondary dark:hover:bg-[#2f2f2f] border border-border/80 dark:border-none items-center gap-1.5 text-[15px] font-medium text-muted-foreground hover:text-foreground transition-colors px-4 py-2 cursor-pointer outline-none select-none"
                   >
-                    <span>Log in</span>
+                    <span>Log In</span>
                     <AnimatedChevron
                       open={loginMenuOpen}
                       size={18}
@@ -495,21 +960,29 @@ export function MarketingHeader() {
                       onMouseLeave={handleLoginLeave}
                       className="absolute right-0 top-full pt-2 z-50"
                     >
-                      <div className="w-40 rounded-2xl p-1.5 bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm">
+                      <div className="w-48 rounded-2xl p-1.5 bg-white/50 dark:bg-[#212121]/50 border border-border/80 dark:border-none backdrop-blur-sm">
                         <Link
                           href="/auth/login"
                           onClick={() => setLoginMenuOpen(false)}
                           className="flex items-center gap-2 px-4 py-2 text-md rounded-xl text-foreground hover:bg-secondary dark:hover:bg-[#2f2f2f] transition-colors"
                         >
-                          CloseAI
+                          CloseAI Chat
                         </Link>
-                        <Link
-                          href="/auth/login?type=enterprise"
-                          onClick={() => setLoginMenuOpen(false)}
-                          className="flex items-center gap-2 px-4 py-2 text-md rounded-xl text-foreground hover:bg-secondary dark:hover:bg-[#2f2f2f] transition-colors"
+                        <div
+                          role="button"
+                          aria-disabled="true"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                          }}
+                          className="flex items-center gap-2 px-4 py-2 text-md rounded-xl text-muted-foreground hover:text-foreground hover:bg-secondary dark:hover:bg-[#2f2f2f] transition-colors cursor-not-allowed select-none"
                         >
-                          Enterprise
-                        </Link>
+                          <AnimatedComingSoonText
+                            label="API Platform"
+                            comingSoonText="Coming soon"
+                            align="start"
+                          />
+                        </div>
                       </div>
                     </div>
                   )}
@@ -525,7 +998,7 @@ export function MarketingHeader() {
                     rel="noopener noreferrer"
                     className="flex items-center gap-1"
                   >
-                    <span>Sign up</span>
+                    <span>Sign Up</span>
                     <ArrowUpRight className="w-4 h-4" />
                   </Link>
                 </Button>
@@ -569,7 +1042,7 @@ export function MarketingHeader() {
         {/* ---------------------------------------------------------------- */}
         {activeMenu && (
           <div
-            className="hidden lg:block absolute top-14 left-0 w-full border-b border-border bg-background z-50"
+            className="hidden lg:block absolute top-14 left-0 w-full bg-background z-50"
             onMouseEnter={() => {
               if (timeoutRef.current) clearTimeout(timeoutRef.current);
             }}
@@ -634,7 +1107,7 @@ export function MarketingHeader() {
                           onClick={() => setActiveMenu(null)}
                           className="hover:text-foreground transition-colors"
                         >
-                          closeAI-5.6
+                          CloseAI-5.6
                         </Link>
                       </li>
                       <li>
@@ -643,7 +1116,7 @@ export function MarketingHeader() {
                           onClick={() => setActiveMenu(null)}
                           className="hover:text-foreground transition-colors"
                         >
-                          closeAI-5.5
+                          CloseAI-5.5
                         </Link>
                       </li>
                       <li>
@@ -652,7 +1125,7 @@ export function MarketingHeader() {
                           onClick={() => setActiveMenu(null)}
                           className="hover:text-foreground transition-colors"
                         >
-                          closeAI-5.4
+                          CloseAI-5.4
                         </Link>
                       </li>
                       <li>
@@ -661,7 +1134,7 @@ export function MarketingHeader() {
                           onClick={() => setActiveMenu(null)}
                           className="hover:text-foreground transition-colors"
                         >
-                          closeAI-5.3 Instant
+                          CloseAI-5.3 Instant
                         </Link>
                       </li>
                       <li>
@@ -670,7 +1143,7 @@ export function MarketingHeader() {
                           onClick={() => setActiveMenu(null)}
                           className="hover:text-foreground transition-colors"
                         >
-                          closeAI-5.3-Codex
+                          CloseAI-5.3-Codex
                         </Link>
                       </li>
                     </ul>
@@ -689,10 +1162,12 @@ export function MarketingHeader() {
                       <li>
                         <Link
                           href="/c"
+                          target="_blank"
+                          rel="noopener noreferrer"
                           onClick={() => setActiveMenu(null)}
                           className="group inline-flex items-center text-2xl font-medium text-foreground hover:opacity-70 transition-opacity"
                         >
-                          <span>closeAI Chat</span>
+                          <span>CloseAI Chat</span>
                           <ArrowUpRight className="w-4 h-4 ml-1.5 text-foreground group-hover:text-foreground" />
                         </Link>
                       </li>
@@ -747,17 +1222,17 @@ export function MarketingHeader() {
 
               {/* BUSINESS MEGA MENU (Matching Screenshot 2) */}
               {activeMenu === "business" && (
-                <div className="grid grid-cols-3 gap-12">
+                <div className="grid grid-cols-2 gap-16">
                   <div>
                     <p className="text-md font-semibold text-muted-foreground tracking-wider uppercase mb-5">
                       Explore Business
                     </p>
-                    <ul className="space-y-3.5">
+                    <ul className="space-y-4">
                       <li>
                         <Link
                           href="/business/enterprise"
                           onClick={() => setActiveMenu(null)}
-                          className="text-xl font-medium text-foreground hover:opacity-70 transition-opacity"
+                          className="text-2xl font-medium text-foreground hover:opacity-70 transition-opacity"
                         >
                           Overview
                         </Link>
@@ -766,7 +1241,7 @@ export function MarketingHeader() {
                         <Link
                           href="/business/enterprise"
                           onClick={() => setActiveMenu(null)}
-                          className="text-xl font-medium text-foreground hover:opacity-70 transition-opacity"
+                          className="text-2xl font-medium text-foreground hover:opacity-70 transition-opacity"
                         >
                           Solutions
                         </Link>
@@ -775,7 +1250,7 @@ export function MarketingHeader() {
                         <Link
                           href="/business/enterprise"
                           onClick={() => setActiveMenu(null)}
-                          className="text-xl font-medium text-foreground hover:opacity-70 transition-opacity"
+                          className="text-2xl font-medium text-foreground hover:opacity-70 transition-opacity"
                         >
                           Resources
                         </Link>
@@ -784,7 +1259,7 @@ export function MarketingHeader() {
                         <Link
                           href="/business/enterprise"
                           onClick={() => setActiveMenu(null)}
-                          className="text-xl font-medium text-foreground hover:opacity-70 transition-opacity"
+                          className="text-2xl font-medium text-foreground hover:opacity-70 transition-opacity"
                         >
                           Customer Stories
                         </Link>
@@ -793,7 +1268,7 @@ export function MarketingHeader() {
                         <Link
                           href="/product/pricing"
                           onClick={() => setActiveMenu(null)}
-                          className="text-xl font-medium text-foreground hover:opacity-70 transition-opacity"
+                          className="text-2xl font-medium text-foreground hover:opacity-70 transition-opacity"
                         >
                           Pricing
                         </Link>
@@ -802,7 +1277,7 @@ export function MarketingHeader() {
                         <Link
                           href="/company/contact"
                           onClick={() => setActiveMenu(null)}
-                          className="text-xl font-medium text-foreground hover:opacity-70 transition-opacity"
+                          className="text-2xl font-medium text-foreground hover:opacity-70 transition-opacity"
                         >
                           Contact Sales
                         </Link>
@@ -821,7 +1296,7 @@ export function MarketingHeader() {
                           onClick={() => setActiveMenu(null)}
                           className="hover:text-foreground transition-colors"
                         >
-                          closeAI Work & Teams
+                          CloseAI Work & Teams
                         </Link>
                       </li>
                       <li>
@@ -848,7 +1323,7 @@ export function MarketingHeader() {
                           onClick={() => setActiveMenu(null)}
                           className="hover:text-foreground transition-colors"
                         >
-                          closeAI Frontier
+                          CloseAI Frontier
                         </Link>
                       </li>
                       <li>
@@ -857,7 +1332,7 @@ export function MarketingHeader() {
                           onClick={() => setActiveMenu(null)}
                           className="hover:text-foreground transition-colors"
                         >
-                          closeAI Presence
+                          CloseAI Presence
                         </Link>
                       </li>
                       <li>
@@ -867,68 +1342,6 @@ export function MarketingHeader() {
                           className="hover:text-foreground transition-colors"
                         >
                           Daybreak
-                        </Link>
-                      </li>
-                    </ul>
-                  </div>
-
-                  <div>
-                    <p className="text-md font-semibold text-muted-foreground tracking-wider uppercase mb-5">
-                      Solutions
-                    </p>
-                    <ul className="space-y-3 text-md text-muted-foreground">
-                      <li>
-                        <Link
-                          href="/business/enterprise"
-                          onClick={() => setActiveMenu(null)}
-                          className="hover:text-foreground transition-colors"
-                        >
-                          Finance & Banking
-                        </Link>
-                      </li>
-                      <li>
-                        <Link
-                          href="/business/enterprise"
-                          onClick={() => setActiveMenu(null)}
-                          className="hover:text-foreground transition-colors"
-                        >
-                          Data Analytics
-                        </Link>
-                      </li>
-                      <li>
-                        <Link
-                          href="/business/enterprise"
-                          onClick={() => setActiveMenu(null)}
-                          className="hover:text-foreground transition-colors"
-                        >
-                          Design & Creative
-                        </Link>
-                      </li>
-                      <li>
-                        <Link
-                          href="/business/enterprise"
-                          onClick={() => setActiveMenu(null)}
-                          className="hover:text-foreground transition-colors"
-                        >
-                          Life Sciences & Biotech
-                        </Link>
-                      </li>
-                      <li>
-                        <Link
-                          href="/business/enterprise"
-                          onClick={() => setActiveMenu(null)}
-                          className="hover:text-foreground transition-colors"
-                        >
-                          Cybersecurity
-                        </Link>
-                      </li>
-                      <li>
-                        <Link
-                          href="/business/enterprise"
-                          onClick={() => setActiveMenu(null)}
-                          className="hover:text-foreground transition-colors"
-                        >
-                          Education & Higher Ed
                         </Link>
                       </li>
                     </ul>
@@ -965,6 +1378,8 @@ export function MarketingHeader() {
                       <li>
                         <Link
                           href="/product/api-docs"
+                          target="_blank"
+                          rel="noopener noreferrer"
                           onClick={() => setActiveMenu(null)}
                           className="group inline-flex items-center text-2xl font-medium text-foreground hover:opacity-70 transition-opacity"
                         >
@@ -984,6 +1399,8 @@ export function MarketingHeader() {
                       <li>
                         <Link
                           href="/product/api-docs"
+                          target="_blank"
+                          rel="noopener noreferrer"
                           onClick={() => setActiveMenu(null)}
                           className="group inline-flex items-center text-2xl font-medium text-foreground hover:opacity-70 transition-opacity"
                         >
@@ -1006,7 +1423,6 @@ export function MarketingHeader() {
                           className="inline-flex items-center hover:text-foreground transition-colors"
                         >
                           <span>Docs</span>
-                          <ArrowUpRight className="w-4 h-4 ml-1" />
                         </Link>
                       </li>
                       <li>
@@ -1016,7 +1432,6 @@ export function MarketingHeader() {
                           className="inline-flex items-center hover:text-foreground transition-colors"
                         >
                           <span>Codex Use Cases</span>
-                          <ArrowUpRight className="w-4 h-4 ml-1" />
                         </Link>
                       </li>
                       <li>
@@ -1026,7 +1441,6 @@ export function MarketingHeader() {
                           className="inline-flex items-center hover:text-foreground transition-colors"
                         >
                           <span>Cookbook & Recipes</span>
-                          <ArrowUpRight className="w-4 h-4 ml-1" />
                         </Link>
                       </li>
                       <li>
@@ -1036,7 +1450,6 @@ export function MarketingHeader() {
                           className="inline-flex items-center hover:text-foreground transition-colors"
                         >
                           <span>Developer Showcase</span>
-                          <ArrowUpRight className="w-4 h-4 ml-1" />
                         </Link>
                       </li>
                       <li>
@@ -1046,7 +1459,6 @@ export function MarketingHeader() {
                           className="inline-flex items-center hover:text-foreground transition-colors"
                         >
                           <span>Developer Blog</span>
-                          <ArrowUpRight className="w-4 h-4 ml-1" />
                         </Link>
                       </li>
                       <li>
@@ -1056,7 +1468,6 @@ export function MarketingHeader() {
                           className="inline-flex items-center hover:text-foreground transition-colors"
                         >
                           <span>Community & Discord</span>
-                          <ArrowUpRight className="w-4 h-4 ml-1" />
                         </Link>
                       </li>
                     </ul>
@@ -1084,10 +1495,13 @@ export function MarketingHeader() {
                       <li>
                         <Link
                           href="/company/careers"
+                          target="_blank"
+                          rel="noopener noreferrer"
                           onClick={() => setActiveMenu(null)}
-                          className="text-2xl font-medium text-foreground hover:opacity-70 transition-opacity"
+                          className="group inline-flex items-center text-2xl font-medium text-foreground hover:opacity-70 transition-opacity"
                         >
-                          Careers
+                          <span>Careers</span>
+                          <ArrowUpRight className="w-4 h-4 ml-1.5 text-foreground group-hover:text-foreground" />
                         </Link>
                       </li>
                       <li>
@@ -1097,24 +1511,6 @@ export function MarketingHeader() {
                           className="text-2xl font-medium text-foreground hover:opacity-70 transition-opacity"
                         >
                           News
-                        </Link>
-                      </li>
-                      <li>
-                        <Link
-                          href="/company/blog"
-                          onClick={() => setActiveMenu(null)}
-                          className="text-2xl font-medium text-foreground hover:opacity-70 transition-opacity"
-                        >
-                          Stories
-                        </Link>
-                      </li>
-                      <li>
-                        <Link
-                          href="/company/about"
-                          onClick={() => setActiveMenu(null)}
-                          className="text-2xl font-medium text-foreground hover:opacity-70 transition-opacity"
-                        >
-                          Supply Co.
                         </Link>
                       </li>
                     </ul>
@@ -1232,7 +1628,7 @@ export function MarketingHeader() {
                         onClick={() => setMobileNavOpen(false)}
                         className="flex items-center gap-1.5 text-3xl sm:text-4xl font-medium tracking-tight text-foreground hover:opacity-80 transition-opacity py-1"
                       >
-                        <span>Try now</span>
+                        <span>Chat Now</span>
                         <AnimatedArrow size={26} />
                       </Link>
                     </>
@@ -1242,7 +1638,7 @@ export function MarketingHeader() {
                         onClick={() => setMobileSubMenu("login")}
                         className="block text-3xl sm:text-4xl font-medium text-foreground hover:text-muted-foreground transition-colors py-1 text-left w-full cursor-pointer"
                       >
-                        Login
+                        Log In
                       </button>
                       <Link
                         href="/auth/signup"
@@ -1251,7 +1647,7 @@ export function MarketingHeader() {
                         onClick={() => setMobileNavOpen(false)}
                         className="flex items-center gap-1.5 text-3xl sm:text-4xl font-medium tracking-tight text-foreground hover:opacity-80 transition-opacity py-1"
                       >
-                        <span>Sign up</span>
+                        <span>Sign Up</span>
                         <ArrowUpRight className="w-6 h-6 stroke-[2.5]" />
                       </Link>
                     </>
@@ -1308,7 +1704,7 @@ export function MarketingHeader() {
                         ))}
                       </div>
 
-                      <div className="pt-4 border-t border-border/40">
+                      <div className="pt-4 border-t border-border/80">
                         <div className="text-md uppercase tracking-wider text-muted-foreground font-semibold mb-3">
                           Latest Advancements
                         </div>
@@ -1344,7 +1740,7 @@ export function MarketingHeader() {
                     <div className="space-y-6">
                       <div className="space-y-3">
                         {[
-                          { label: "closeAI Web & Chat", href: "/c" },
+                          { label: "CloseAI Web & Chat", href: "/c" },
                           {
                             label: "Canvas & Studio",
                             href: "/product/features",
@@ -1369,7 +1765,7 @@ export function MarketingHeader() {
                         ))}
                       </div>
 
-                      <div className="pt-4 border-t border-border/40">
+                      <div className="pt-4 border-t border-border/80">
                         <div className="text-md uppercase tracking-wider text-muted-foreground font-semibold mb-3">
                           Platforms & Capabilities
                         </div>
@@ -1428,7 +1824,7 @@ export function MarketingHeader() {
                         ))}
                       </div>
 
-                      <div className="pt-4 border-t border-border/40">
+                      <div className="pt-4 border-t border-border/80">
                         <div className="text-md uppercase tracking-wider text-muted-foreground font-semibold mb-3">
                           Industry Solutions
                         </div>
@@ -1487,7 +1883,7 @@ export function MarketingHeader() {
                         ))}
                       </div>
 
-                      <div className="pt-4 border-t border-border/40">
+                      <div className="pt-4 border-t border-border/80">
                         <div className="text-md uppercase tracking-wider text-muted-foreground font-semibold mb-3">
                           Libraries & SDKs
                         </div>
@@ -1521,7 +1917,7 @@ export function MarketingHeader() {
                     <div className="space-y-6">
                       <div className="space-y-3">
                         {[
-                          { label: "About closeAI", href: "/company/about" },
+                          { label: "About CloseAI", href: "/company/about" },
                           { label: "News & Releases", href: "/company/blog" },
                           { label: "Careers", href: "/company/careers" },
                           { label: "Security", href: "/company/contact" },
@@ -1537,7 +1933,7 @@ export function MarketingHeader() {
                         ))}
                       </div>
 
-                      <div className="pt-4 border-t border-border/40">
+                      <div className="pt-4 border-t border-border/80">
                         <div className="text-md uppercase tracking-wider text-muted-foreground font-semibold mb-3">
                           Legal & Trust
                         </div>
@@ -1570,22 +1966,28 @@ export function MarketingHeader() {
                   {mobileSubMenu === "login" && (
                     <div className="space-y-6">
                       <div className="space-y-3">
-                        {[
-                          { label: "CloseAI", href: "/auth/login" },
-                          {
-                            label: "Enterprise",
-                            href: "/auth/login?type=enterprise",
-                          },
-                        ].map((item, i) => (
-                          <Link
-                            key={i}
-                            href={item.href}
-                            onClick={() => setMobileNavOpen(false)}
-                            className="block text-2xl sm:text-3xl font-medium tracking-tight text-foreground hover:opacity-80 transition-opacity py-1"
-                          >
-                            {item.label}
-                          </Link>
-                        ))}
+                        <Link
+                          href="/auth/login"
+                          onClick={() => setMobileNavOpen(false)}
+                          className="block text-2xl sm:text-3xl font-medium tracking-tight text-foreground hover:opacity-80 transition-opacity py-1"
+                        >
+                          CloseAI Chat
+                        </Link>
+                        <div
+                          role="button"
+                          aria-disabled="true"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                          }}
+                          className="block text-2xl sm:text-3xl font-medium tracking-tight text-muted-foreground py-1 cursor-not-allowed select-none"
+                        >
+                          <AnimatedComingSoonText
+                            label="API Platform"
+                            comingSoonText="Coming soon"
+                            align="start"
+                          />
+                        </div>
                       </div>
                     </div>
                   )}
@@ -1609,7 +2011,7 @@ export function MarketingHeader() {
                         ))}
                       </div>
 
-                      <div className="pt-4 border-t border-border/40">
+                      <div className="pt-4 border-t border-border/80">
                         <button
                           type="button"
                           onClick={() => {
@@ -1618,7 +2020,7 @@ export function MarketingHeader() {
                           }}
                           className="block text-xl font-medium text-red-500 hover:opacity-80 transition-opacity py-1 cursor-pointer"
                         >
-                          Log out
+                          Log Out
                         </button>
                       </div>
                     </div>

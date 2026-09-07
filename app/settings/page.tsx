@@ -265,7 +265,7 @@ export default function SettingsPage() {
                   <Input id="email" value={profile.email} disabled className="text-muted-foreground" />
                   <p className="text-md text-muted-foreground">Email cannot be changed</p>
                 </div>
-                <Button type="submit" className="w-full" disabled={saving}>
+                <Button type="submit" className="w-full disabled:pointer-events-auto disabled:cursor-not-allowed cursor-not-allowed" disabled={saving}>
                   {saving ? (
                     <><Loader className="w-4 h-4 mr-2 animate-spin" />Saving...</>
                   ) : (
@@ -296,7 +296,7 @@ export default function SettingsPage() {
                   size="sm"
                   onClick={() => router.push('/upgrade')}
                 >
-                  {userPlan === 'free' ? 'Upgrade' : 'Manage plan'}
+                  {userPlan === 'free' ? 'Upgrade' : 'Manage'}
                 </Button>
               </div>
             </div>

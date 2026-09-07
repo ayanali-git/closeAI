@@ -78,7 +78,7 @@ export default function LoginPage() {
       <div className="max-w-[520px] w-full bg-card text-card-foreground p-8 rounded-3xl border border-border">
         {/* Header */}
         <div className="text-center mb-8 flex flex-col items-center">
-          <div className="w-12 h-12 rounded-2xl bg-secondary flex items-center justify-center mb-4 border border-border/80">
+          <div className="w-12 h-12 rounded-2xl bg-secondary flex items-center justify-center mb-4 border border-border/80 dark:border-none">
             <CloseAIIcon size={26} />
           </div>
           <h1 className="text-2xl font-bold tracking-tight text-foreground mb-1">Welcome back</h1>
@@ -153,7 +153,7 @@ export default function LoginPage() {
               onChange={(e) => setEmail(e.target.value)}
               placeholder="Enter your email"
               required 
-              className="h-11 rounded-xl  border-border text-foreground placeholder:text-muted-foreground/60 focus-visible:ring-1 focus-visible:ring-foreground"
+              className="h-11 rounded-xl border-border text-foreground placeholder:text-muted-foreground focus:placeholder:text-foreground transition-colors"
             />
           </div>
           <div className="space-y-1.5">
@@ -170,22 +170,15 @@ export default function LoginPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Enter your password"
                 required 
-                className="h-11 rounded-xl  border-border text-foreground placeholder:text-muted-foreground/60 focus-visible:ring-1 focus-visible:ring-foreground"
+                className="h-11 rounded-xl border-border text-foreground placeholder:text-muted-foreground focus:placeholder:text-foreground transition-colors"
               />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors p-1"
-                aria-label={showPassword ? 'Hide password' : 'Show password'}
-              >
-              </button>
             </div>
           </div>
 
           <Button 
             type="submit" 
             disabled={loading} 
-            className="w-full h-11 bg-foreground text-background hover:bg-foreground/90 font-medium rounded-xl mt-3 transition-all cursor-pointer"
+            className="w-full h-11 bg-foreground text-background hover:bg-foreground/90 font-medium rounded-xl mt-3 transition-all cursor-pointer disabled:pointer-events-auto disabled:cursor-not-allowed cursor-not-allowed disabled:opacity-70"
           >
             {loading ? 'Signing in...' : 'Sign in'}
           </Button>
@@ -194,7 +187,7 @@ export default function LoginPage() {
         {/* Footer */}
         <p className="text-center text-md text-muted-foreground mt-6">
           Don't have an account?{' '}
-          <Link href="/auth/signup" className="text-foreground font-semibold hover:underline">
+          <Link href="/auth/signup" className="font-semibold text-muted-foreground hover:text-foreground">
             Sign up
           </Link>
         </p>

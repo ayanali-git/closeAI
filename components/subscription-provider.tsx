@@ -84,7 +84,7 @@ function getInitialPlan(): string {
 function persistPlanCookie(newPlan: string) {
     if (typeof document !== 'undefined') {
         if (!newPlan || newPlan === 'free') {
-            document.cookie = 'user_plan=; path=/; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+            document.cookie = 'user_plan=; path=/; max-age=0; SameSite=Lax';
         } else {
             document.cookie = `user_plan=${encodeURIComponent(newPlan)}; path=/; max-age=31536000; SameSite=Lax`;
         }
@@ -111,13 +111,6 @@ export function SubscriptionProvider({
     const [limits, setLimits] = useState<UsageLimits>(defaultLimits);
     const [usage, setUsage] = useState<UsageStats>(defaultUsage);
     const [loading, setLoading] = useState(true);
-
-    // Purge any legacy localStorage keys to ensure plan is strictly cookie-driven
-    useEffect(() => {
-        try {
-            localStorage.removeItem('user_plan');
-        } catch (e) {}
-    }, []);
 
     // Sync from cookie immediately on mount if initialPlan was free
     useEffect(() => {

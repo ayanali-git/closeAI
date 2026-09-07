@@ -28,15 +28,15 @@ export function SidebarProvider({
   useEffect(() => {
     // Clean up any old sidebar_open cookie from the browser
     if (typeof document !== 'undefined') {
-      document.cookie = 'sidebar_open=; path=/; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+      document.cookie = 'sidebar_open=; path=/; max-age=0; SameSite=Lax';
     }
     try {
       const stored = localStorage.getItem('sidebar_open');
       if (stored !== null) {
         setSidebarOpen(stored === 'true');
       } else {
-        // Default to open on desktop (>= 768px), closed on mobile
-        const isDesktop = window.innerWidth >= 768;
+        // Default to open on desktop (>= 1024px), closed on mobile
+        const isDesktop = window.innerWidth >= 1024;
         setSidebarOpen(isDesktop);
         localStorage.setItem('sidebar_open', String(isDesktop));
       }

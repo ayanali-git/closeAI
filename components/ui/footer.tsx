@@ -9,7 +9,7 @@ export function Footer() {
     <footer className="w-full bg-background text-foreground pt-10 pb-5 select-none">
       <div className="max-w-[1400px] mx-auto px-6 sm:px-10">
         {/* Multi-Tier 5-Column Links Grid matching */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-8 lg:gap-12 pb-16 border-b border-border/40">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-8 lg:gap-12 pb-16 border-b border-border/80">
           
           {/* Column 1: Research, Latest Advancements, Safety */}
           <div className="space-y-8">
@@ -98,23 +98,23 @@ export function Footer() {
               <ul className="space-y-2.5 text-md">
                 <li>
                   <Link href="/c" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors">
-                    <span>closeAI Chat</span>
+                    <span>CloseAI Chat</span>
                     <ArrowUpRight className="w-4 h-4 stroke-[2.5]" />
                   </Link>
                 </li>
                 <li>
                   <Link href="/business/enterprise" className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors">
-                    <span>closeAI Business</span>
+                    <span>CloseAI Business</span>
                   </Link>
                 </li>
                 <li>
                   <Link href="/business/enterprise" className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors">
-                    <span>closeAI Education</span>
+                    <span>CloseAI Education</span>
                   </Link>
                 </li>
                 <li>
                   <Link href="/business/enterprise" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors">
-                    <span>closeAI Enterprise</span>
+                    <span>CloseAI Enterprise</span>
                     <ArrowUpRight className="w-4 h-4 stroke-[2.5]" />
                   </Link>
                 </li>
@@ -288,13 +288,9 @@ export function Footer() {
                   </Link>
                 </li>
                 <li>
-                  <Link href="/foundation" className="text-muted-foreground hover:text-foreground transition-colors">
+                  <Link href="/foundation" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors">
                     Academy
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/c" className="text-muted-foreground hover:text-foreground transition-colors">
-                    Supply Co.
+                    <ArrowUpRight className="w-4 h-4 stroke-[2.5]" />
                   </Link>
                 </li>
                 <li>
@@ -305,11 +301,6 @@ export function Footer() {
                 <li>
                   <Link href="/company/blog" className="text-muted-foreground hover:text-foreground transition-colors">
                     Podcast
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/company/blog" className="text-muted-foreground hover:text-foreground transition-colors">
-                    RSS
                   </Link>
                 </li>
               </ul>

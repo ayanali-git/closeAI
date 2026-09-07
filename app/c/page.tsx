@@ -45,14 +45,13 @@ function NewChatContent() {
     if (!user) return;
     setIsAutoCreating(true);
     try {
+      const cleanPrompt = promptText.trim().replace(/\s+/g, " ");
       // 1. Create chat directly in Supabase
       const { data: newChat, error: chatError } = await supabase
         .from("chats")
         .insert({
           user_id: user.id,
-          title:
-            promptText.substring(0, 48) +
-            (promptText.length > 48 ? "..." : ""),
+          title: cleanPrompt,
           starred: false,
         })
         .select()
@@ -127,6 +126,20 @@ function NewChatContent() {
     }
   };
 
+  const handleToggleArchive = async (id: string, archived: boolean) => {
+    try {
+      if (archived) {
+        await chatService.toggleChatStar(supabase, id, false);
+      }
+      await chatService.toggleChatArchive(supabase, id, archived);
+      await loadChats();
+      toast.success(archived ? "Chat archived" : "Chat unarchived");
+    } catch (e) {
+      console.error("Error toggling archive:", e);
+      toast.error("Failed to update chat archive status");
+    }
+  };
+
   const handleSend = async () => {
     if (!message.trim() && uploadedFiles.length === 0) return;
     if (!user) {
@@ -142,14 +155,13 @@ function NewChatContent() {
     setIsTyping(true);
 
     try {
+      const cleanPrompt = messageText.trim().replace(/\s+/g, " ");
       // 1. Create chat directly in Supabase immediately (<80ms)
       const { data: newChat, error: chatError } = await supabase
         .from("chats")
         .insert({
           user_id: user.id,
-          title:
-            messageText.substring(0, 48) +
-            (messageText.length > 48 ? "..." : ""),
+          title: cleanPrompt,
           starred: false,
         })
         .select()
@@ -182,8 +194,13 @@ function NewChatContent() {
     }
   };
 
+  useEffect(() => {
+    document.title = "CloseAI";
+  }, []);
+
   return (
     <div className="flex h-full w-full bg-background text-foreground overflow-hidden">
+      <title>CloseAI</title>
       {/* Sidebar (Expanded or Mini Rail) */}
       <Sidebar
         user={user}
@@ -199,9 +216,14 @@ function NewChatContent() {
           loadChats();
         }}
         onToggleStar={async (id, starred) => {
+          if (starred) {
+            await chatService.toggleChatArchive(supabase, id, false);
+          }
           await chatService.toggleChatStar(supabase, id, starred);
           loadChats();
+          toast.success(starred ? "Chat pinned" : "Chat unpinned");
         }}
+        onToggleArchive={handleToggleArchive}
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
         isOpen={sidebarOpen}
@@ -226,7 +248,7 @@ function NewChatContent() {
                     onMouseEnter={() => setIsSidebarBtnHovered(true)}
                     onMouseLeave={() => setIsSidebarBtnHovered(false)}
                     onBlur={() => setIsSidebarBtnHovered(false)}
-                    className="lg:hidden w-9 h-9 rounded-xl bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/50 dark:border-neutral-700/50 text-neutral-700 dark:text-neutral-200 hover:text-foreground dark:hover:text-foreground hover:bg-background dark:hover:bg-background flex items-center justify-center transition-colors cursor-pointer outline-none focus:outline-none"
+                    className="xl:hidden w-9 h-9 rounded-xl bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/50 dark:border-neutral-700/50 text-neutral-700 dark:text-neutral-200 hover:text-foreground dark:hover:text-foreground hover:bg-background dark:hover:bg-background flex items-center justify-center transition-colors cursor-pointer outline-none focus:outline-none"
                     aria-label="Open sidebar"
                   >
                       <PanelRight className="w-4 h-4 text-foreground" />
@@ -243,9 +265,8 @@ function NewChatContent() {
         {/* Content Stream (Welcome Zero State) */}
         <div className="flex-1 flex flex-col justify-center overflow-y-auto px-2 sm:px-4 pb-[env(safe-area-inset-bottom,0px)] no-overscroll">
           {isAutoCreating || (queryPrompt && !autoCreateTriggeredRef.current) ? (
-            <div className="flex-1 w-full h-full flex flex-col items-center justify-center space-y-3 pb-12 text-muted-foreground animate-in fade-in-0 duration-200">
-              <Loader className="w-6 h-6 animate-spin text-foreground" />
-              <p className="text-[14px]">Starting your conversation...</p>
+            <div className="flex-1 w-full h-full flex flex-col items-center justify-center space-y-3 pb-12 text-muted-foreground">
+              <Loader className="w-6 h-6 animate-spin text-muted-foreground" />
             </div>
           ) : (
             <WelcomeScreen
@@ -280,7 +301,7 @@ function NewChatFallback() {
   return (
     <div className="flex h-full w-full bg-background text-foreground overflow-hidden">
       {sidebarOpen ? (
-        <div className="hidden md:flex w-[260px] h-full bg-sidebar border-r border-border/80 p-3 flex-col justify-between shrink-0">
+        <div className="hidden xl:flex w-[260px] h-full bg-sidebar border-r border-border/80 p-3 flex-col justify-between shrink-0">
           <div className="space-y-4 py-2">
             <div className="h-4 w-20 bg-muted-foreground/20 rounded animate-pulse ml-2" />
             <div className="space-y-2">
@@ -298,7 +319,7 @@ function NewChatFallback() {
           </div>
         </div>
       ) : (
-        <div className="hidden md:flex w-[56px] h-full bg-sidebar border-r border-border flex-col items-center justify-between p-2 shrink-0">
+        <div className="hidden xl:flex w-[56px] h-full bg-sidebar border-r border-border flex-col items-center justify-between p-2 shrink-0">
           <div className="w-9 h-9 rounded-xl bg-secondary/80 dark:bg-neutral-800/60 animate-pulse mt-2" />
           <div className="w-9 h-9 rounded-full bg-secondary/80 dark:bg-neutral-800/80 animate-pulse mb-2" />
         </div>

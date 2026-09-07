@@ -3,6 +3,7 @@ import 'katex/dist/katex.min.css';
 import 'goey-toast/styles.css';
 import type { Metadata } from 'next';
 import { cookies } from 'next/headers';
+import { AUTH_COOKIE_NAME } from '@/lib/auth-cookie';
 import { ToasterProvider } from '@/components/ui/toaster';
 import { AuthProvider } from '@/components/auth-provider';
 import { SubscriptionProvider } from '@/components/subscription-provider';
@@ -47,6 +48,18 @@ export default function RootLayout({
 }) {
   const cookieStore = cookies();
   const initialPlan = cookieStore.get('user_plan')?.value || 'free';
+  const initialHasAuth = cookieStore.getAll().some(
+    (c) =>
+      !c.name.includes('code-verifier') &&
+      !c.name.includes('csrf') &&
+      !c.name.includes('state') &&
+      (c.name === AUTH_COOKIE_NAME ||
+        c.name.startsWith(`${AUTH_COOKIE_NAME}.`) ||
+        (c.name.startsWith('sb-') && c.name.endsWith('-auth-token'))) &&
+      c.value &&
+      c.value.length > 30 &&
+      c.value !== 'deleted'
+  );
 
   return (
     <html lang="en" suppressHydrationWarning>
@@ -61,7 +74,7 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <TooltipProvider delayDuration={150}>
-            <AuthProvider>
+            <AuthProvider initialHasAuth={initialHasAuth}>
               <SubscriptionProvider initialPlan={initialPlan}>
                 {children}
                 <ToasterProvider />

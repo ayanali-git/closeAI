@@ -710,66 +710,220 @@ export function Sidebar({
   };
 
   // ----------------------------------------------------
-  // Collapsed Mini Sidebar (56px Rail on Desktop, Hidden on Mobile)
+  // Both Sidebar variants (Collapsed Rail + Expanded) are rendered from this
+  // single return so the Logout/Delete modals always mount, regardless of
+  // whether the sidebar itself is open or collapsed to the 65px rail.
+  // Previously the modals lived only after the expanded <aside>, so opening
+  // them from the collapsed rail's dropdown set state with nothing mounted
+  // to render it.
   // ----------------------------------------------------
-  if (!isOpen) {
-    return (
-      <div className="hidden xl:flex w-[65px] h-[100dvh] bg-sidebar border-r border-border flex-col items-center justify-between shrink-0 select-none z-30 relative group/rail">
-        {/* Full-height border resize/toggle handle */}
-        <div
-          onClick={onToggle}
-          style={{ cursor: 'ew-resize' }}
-          className="absolute -right-[3px] top-0 bottom-0 w-[6px] z-10 hover:bg-foreground/15 transition-colors cursor-ew-resize"
-        />
+  return (
+    <>
+      {!isOpen ? (
+        // ----------------------------------------------------
+        // Collapsed Mini Sidebar (56px Rail on Desktop, Hidden on Mobile)
+        // ----------------------------------------------------
+        <div className="hidden xl:flex w-[65px] h-[100dvh] bg-sidebar border-r border-border flex-col items-center justify-between shrink-0 select-none z-30 relative group/rail">
+          {/* Full-height border resize/toggle handle */}
+          <div
+            onClick={onToggle}
+            style={{ cursor: 'ew-resize' }}
+            className="absolute -right-[3px] top-0 bottom-0 w-[6px] z-10 hover:bg-foreground/15 transition-colors cursor-ew-resize"
+          />
 
-        <div className="flex flex-col items-center gap-2 pt-3.5 relative z-20">
-          {/* Brand Emblem / Expand (Open Sidebar Button) */}
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <button
-                type="button"
-                onClick={onToggle}
-                onMouseEnter={() => setIsLogoHovered(true)}
-                onMouseLeave={() => setIsLogoHovered(false)}
-                onBlur={() => setIsLogoHovered(false)}
-                style={{ cursor: 'ew-resize' }}
-                className="w-10 h-10 rounded-xl flex items-center justify-center text-foreground hover:bg-secondary transition-colors !cursor-ew-resize [&_*]:!cursor-ew-resize"
-                aria-label="Open sidebar"
-              >
-                {isLogoHovered ? (
-                  <PanelRight className="w-4 h-4 text-foreground pointer-events-none" />
-                ) : (
-                  <CloseAIIcon size={26} className="pointer-events-none" />
-                )}
-              </button>
-            </TooltipTrigger>
-            <TooltipContent side="right" sideOffset={8} className="text-md">
-              Open sidebar
-            </TooltipContent>
-          </Tooltip>
+          <div className="flex flex-col items-center gap-2 pt-3.5 relative z-20">
+            {/* Brand Emblem / Expand (Open Sidebar Button) */}
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  type="button"
+                  onClick={onToggle}
+                  onMouseEnter={() => setIsLogoHovered(true)}
+                  onMouseLeave={() => setIsLogoHovered(false)}
+                  onBlur={() => setIsLogoHovered(false)}
+                  style={{ cursor: 'ew-resize' }}
+                  className="w-10 h-10 rounded-xl flex items-center justify-center text-foreground hover:bg-secondary transition-colors !cursor-ew-resize [&_*]:!cursor-ew-resize"
+                  aria-label="Open sidebar"
+                >
+                  {isLogoHovered ? (
+                    <PanelRight className="w-4 h-4 text-foreground pointer-events-none" />
+                  ) : (
+                    <CloseAIIcon size={26} className="pointer-events-none" />
+                  )}
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="right" sideOffset={8} className="text-md">
+                Open sidebar
+              </TooltipContent>
+            </Tooltip>
 
-          {/* Search */}
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <button
-                onClick={() => {
-                  onToggle();
-                  setShowSearch(true);
-                }}
-                className="w-10 h-10 rounded-xl flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors cursor-pointer"
-                aria-label="Search chats"
-              >
-                <Search className="w-4 h-4" />
-              </button>
-            </TooltipTrigger>
-            <TooltipContent side="right" className="text-md">
-              Search chats
-            </TooltipContent>
-          </Tooltip>
+            {/* Search */}
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  onClick={() => {
+                    onToggle();
+                    setShowSearch(true);
+                  }}
+                  className="w-10 h-10 rounded-xl flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors cursor-pointer"
+                  aria-label="Search chats"
+                >
+                  <Search className="w-4 h-4" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="right" className="text-md">
+                Search chats
+              </TooltipContent>
+            </Tooltip>
 
-          {/* New Chat */}
-          <Tooltip>
-            <TooltipTrigger asChild>
+            {/* New Chat */}
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  onClick={() => {
+                    onNewChat();
+                    if (typeof window !== 'undefined' && window.innerWidth < 1280) {
+                      onToggle();
+                    }
+                  }}
+                  className="w-10 h-10 rounded-xl flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors cursor-pointer"
+                  aria-label="New chat"
+                >
+                  <Plus className="w-4 h-4" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="right" className="text-md">
+                New chat
+              </TooltipContent>
+            </Tooltip>
+
+            {/* Pinned Shortcut */}
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  onClick={onToggle}
+                  className="w-10 h-10 rounded-xl flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors cursor-pointer"
+                  aria-label="Pinned chats"
+                >
+                  <Pin className="w-4 h-4" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="right" className="text-md">
+                Pinned chats
+              </TooltipContent>
+            </Tooltip>
+          </div>
+
+          {/* Bottom User Profile Dock (Matching Open Sidebar Position) */}
+          <div className="w-full p-2 pb-[max(env(safe-area-inset-bottom),0.75rem)] border-t border-border/80 mt-auto flex items-center justify-center relative z-20">
+            {isLoading || !user ? (
+              <div className="w-full flex items-center justify-center p-2 rounded-xl select-none">
+                <div className="w-9 h-9 rounded-full bg-secondary/80 dark:bg-neutral-800/80 animate-pulse shrink-0" />
+              </div>
+            ) : (
+              <DropdownMenu onOpenChange={(open) => { if (!open) setAccountSubView('main'); }}>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <DropdownMenuTrigger asChild>
+                      <button className="w-full flex items-center justify-center p-2 rounded-xl hover:bg-secondary transition-colors cursor-pointer select-none outline-none focus:outline-none focus-visible:outline-none focus:ring-0 focus-visible:ring-0 ring-0 border-0">
+                        <div className="w-9 h-9 rounded-full overflow-hidden shrink-0">
+                          <Avatar className="w-full h-full bg-secondary">
+                            <AvatarImage src={avatarUrl} />
+                            <AvatarFallback className="text-md font-semibold">
+                              {displayName.charAt(0).toUpperCase()}
+                            </AvatarFallback>
+                          </Avatar>
+                        </div>
+                      </button>
+                    </DropdownMenuTrigger>
+                  </TooltipTrigger>
+                  <TooltipContent side="right" className="text-md">
+                    {displayName}
+                  </TooltipContent>
+                </Tooltip>
+
+                <DropdownMenuContent
+                  side="top"
+                  align="start"
+                  alignOffset={-4}
+                  sideOffset={6}
+                  className="w-64 rounded-2xl p-1.5 bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/50 dark:border-neutral-700/50 outline-none focus:outline-none ring-0"
+                >
+                  {renderAccountMenuItems()}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
+          </div>
+        </div>
+      ) : (
+        // ----------------------------------------------------
+        // Expanded Sidebar
+        // ----------------------------------------------------
+        <>
+          {/* Mobile overlay */}
+          <div
+            className="fixed inset-0 z-40 bg-black/60 backdrop-blur-xs xl:hidden"
+            onClick={onToggle}
+          />
+
+          <aside className="fixed xl:static inset-y-0 left-0 z-50 w-[280px] sm:w-[260px] h-[100dvh] max-h-[100dvh] bg-sidebar border-r border-border/80 flex flex-col shrink-0 select-none group/sidebar animate-in slide-in-from-left-full xl:animate-none duration-200">
+            {/* Full-height border resize/toggle handle */}
+            <div
+              onClick={onToggle}
+              style={{ cursor: 'col-resize' }}
+              className="absolute -right-[3px] top-0 bottom-0 w-[6px] z-10 hover:bg-foreground/15 transition-colors"
+            />
+
+            {/* Top Header */}
+            <div className="p-3 pb-2 pt-[max(env(safe-area-inset-top),0.75rem)] flex items-center justify-between relative z-20">
+              <Link href="/" className="flex items-center gap-2 px-1 hover:opacity-85 transition-opacity">
+                <span className="font-semibold text-xl tracking-tight text-foreground">CloseAI</span>
+              </Link>
+
+              <div className="flex items-center gap-0.5">
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary cursor-pointer"
+                      onClick={() => setShowSearch(!showSearch)}
+                    >
+                      <Search className="w-4 h-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom" sideOffset={6} className="text-md">
+                    Search chats
+                  </TooltipContent>
+                </Tooltip>
+
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      style={{ cursor: 'ew-resize' }}
+                      className="h-8 w-8 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary !cursor-ew-resize [&_*]:!cursor-ew-resize"
+                      onClick={() => {
+                        setIsCloseBtnHovered(false);
+                        setIsLogoHovered(false);
+                        onToggle();
+                      }}
+                      onMouseEnter={() => setIsCloseBtnHovered(true)}
+                      onMouseLeave={() => setIsCloseBtnHovered(false)}
+                    >
+                      <PanelLeft className="w-4 h-4 pointer-events-none" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom" sideOffset={6} className="text-md">
+                    Close sidebar
+                  </TooltipContent>
+                </Tooltip>
+              </div>
+            </div>
+
+            {/* New Chat Button */}
+            <div className="px-3 pt-1 pb-2 space-y-2 relative z-20">
               <button
                 onClick={() => {
                   onNewChat();
@@ -777,46 +931,163 @@ export function Sidebar({
                     onToggle();
                   }
                 }}
-                className="w-10 h-10 rounded-xl flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors cursor-pointer"
-                aria-label="New chat"
+                className="w-full flex items-center justify-between h-10 px-3 rounded-xl hover:bg-secondary text-muted-foreground hover:text-foreground text-md font-medium group cursor-pointer transition-all duration-150"
               >
-                <Plus className="w-4 h-4" />
+                <div className="flex items-center gap-2.5">
+                  <Plus className="w-4 h-4 text-muted-foreground group-hover:text-foreground" />
+                  <span>New chat</span>
+                </div>
               </button>
-            </TooltipTrigger>
-            <TooltipContent side="right" className="text-md">
-              New chat
-            </TooltipContent>
-          </Tooltip>
 
-          {/* Pinned Shortcut */}
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <button
-                onClick={onToggle}
-                className="w-10 h-10 rounded-xl flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors cursor-pointer"
-                aria-label="Pinned chats"
-              >
-                <Pin className="w-4 h-4" />
-              </button>
-            </TooltipTrigger>
-            <TooltipContent side="right" className="text-md">
-              Pinned chats
-            </TooltipContent>
-          </Tooltip>
-        </div>
-
-        {/* Bottom User Profile Dock (Matching Open Sidebar Position) */}
-        <div className="w-full p-2 pb-[max(env(safe-area-inset-bottom),0.75rem)] border-t border-border/80 mt-auto flex items-center justify-center relative z-20">
-          {isLoading || !user ? (
-            <div className="w-full flex items-center justify-center p-2 rounded-xl select-none">
-              <div className="w-9 h-9 rounded-full bg-secondary/80 dark:bg-neutral-800/80 animate-pulse shrink-0" />
+              {/* Collapsible Search input */}
+              {showSearch && (
+                <div className="relative group">
+                  <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-foreground transition-colors pointer-events-none" />
+                  <input
+                    type="text"
+                    placeholder="Search anything"
+                    value={searchQuery}
+                    onChange={(e) => onSearchChange(e.target.value)}
+                    className="w-full pl-9 pr-3 h-10 text-md bg-secondary rounded-xl text-foreground placeholder:text-muted-foreground focus:placeholder:text-foreground focus:outline-none focus-visible:outline-none focus:ring-0 focus-visible:ring-0 border-0 transition-colors"
+                    autoFocus
+                  />
+                </div>
+              )}
             </div>
-          ) : (
-            <DropdownMenu onOpenChange={(open) => { if (!open) setAccountSubView('main'); }}>
-              <Tooltip>
-                <TooltipTrigger asChild>
+
+            {/* Chat History Stream */}
+            <ScrollArea className="flex-1 px-2">
+              {isLoading ? (
+                <div className="space-y-5 py-3 px-1 select-none">
+                  {/* PINNED Skeleton Group */}
+                  <div className="space-y-2">
+                    <div className="h-3 w-20 bg-muted-foreground/20 rounded animate-pulse ml-2" />
+                    <div className="space-y-1.5">
+                      <div className="h-8 w-full bg-secondary/80 dark:bg-neutral-800/60 rounded-xl animate-pulse" />
+                    </div>
+                  </div>
+
+                  {/* ARCHIVED Skeleton Group */}
+                  <div className="space-y-2 pt-1">
+                    <div className="h-3 w-24 bg-muted-foreground/20 rounded animate-pulse ml-2" />
+                    <div className="space-y-1.5">
+                      <div className="h-8 w-full bg-secondary/70 dark:bg-neutral-800/50 rounded-xl animate-pulse" />
+                    </div>
+                  </div>
+
+                  {/* TODAY Skeleton Group */}
+                  <div className="space-y-2 pt-1">
+                    <div className="h-3 w-16 bg-muted-foreground/20 rounded animate-pulse ml-2" />
+                    <div className="space-y-1.5">
+                      <div className="h-8 w-full bg-secondary/70 dark:bg-neutral-800/50 rounded-xl animate-pulse" />
+                      <div className="h-8 w-full bg-secondary/70 dark:bg-neutral-800/50 rounded-xl animate-pulse" />
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-4 py-2">
+                  {/* PINNED Section */}
+                  <div className="space-y-0.5">
+                    <button
+                      type="button"
+                      onClick={() => toggleSection('Pinned')}
+                      className="w-full flex items-center justify-between px-3 py-1 text-[15px] font-semibold tracking-wider text-muted-foreground/80 hover:text-foreground uppercase select-none cursor-pointer transition-colors group/section text-left"
+                    >
+                      <span>PINNED</span>
+                      <AnimatedChevron
+                        open={!collapsedSections['Pinned']}
+                        disableHover
+                        orientation="right-down"
+                        size={16}
+                        className="text-muted-foreground/70 group-hover/section:text-foreground shrink-0"
+                      />
+                    </button>
+                    {!collapsedSections['Pinned'] && (
+                      <>
+                        {(groupedChats['Pinned'] || []).length === 0 ? (
+                          <div className="px-3 py-1 text-[13.5px] text-muted-foreground/60 select-none font-normal">
+                            No pinned chats
+                          </div>
+                        ) : (
+                          groupedChats['Pinned'].map((chat) => renderChatItem(chat))
+                        )}
+                      </>
+                    )}
+                  </div>
+
+                  {/* ARCHIVED Section */}
+                  <div className="space-y-0.5">
+                    <button
+                      type="button"
+                      onClick={() => toggleSection('Archived')}
+                      className="w-full flex items-center justify-between px-3 py-1 text-[15px] font-semibold tracking-wider text-muted-foreground/80 hover:text-foreground uppercase select-none cursor-pointer transition-colors group/section text-left"
+                    >
+                      <span>ARCHIVED</span>
+                      <AnimatedChevron
+                        open={!collapsedSections['Archived']}
+                        disableHover
+                        orientation="right-down"
+                        size={16}
+                        className="text-muted-foreground/70 group-hover/section:text-foreground shrink-0"
+                      />
+                    </button>
+                    {!collapsedSections['Archived'] && (
+                      <>
+                        {(groupedChats['Archived'] || []).length === 0 ? (
+                          <div className="px-3 py-1 text-[13.5px] text-muted-foreground/60 select-none font-normal">
+                            No archived chats
+                          </div>
+                        ) : (
+                          groupedChats['Archived'].map((chat) => renderChatItem(chat))
+                        )}
+                      </>
+                    )}
+                  </div>
+
+                  {/* RECENTS / Date Groups Section */}
+                  {Object.entries(groupedChats).filter(([g, list]) => g !== 'Pinned' && g !== 'Archived' && list.length > 0).length === 0 ? (
+                    <div className="space-y-0.5 py-1">
+                      <div className="px-3 py-1 text-[15px] font-semibold tracking-wider text-muted-foreground/80 uppercase select-none">
+                        RECENTS
+                      </div>
+                      <div className="px-3 py-1 text-[13.5px] text-muted-foreground/60 select-none font-normal">
+                        {searchQuery ? 'No chats found' : 'No chats'}
+                      </div>
+                    </div>
+                  ) : (
+                    Object.entries(groupedChats).map(([group, groupChats]) => {
+                      if (group === 'Pinned' || group === 'Archived' || groupChats.length === 0) {
+                        return null;
+                      }
+
+                      return (
+                        <div key={group} className="space-y-0.5">
+                          <div className="px-3 py-1 text-[15px] font-semibold tracking-wider text-muted-foreground/80 uppercase select-none">
+                            {group}
+                          </div>
+                          {groupChats.map((chat) => renderChatItem(chat))}
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+              )}
+            </ScrollArea>
+
+            {/* Bottom User Profile Dock (Matching Screenshot 1, 2) */}
+            <div className="p-2 pb-[max(env(safe-area-inset-bottom),0.75rem)] border-t border-border/80 mt-auto relative z-20">
+              {isLoading || !user ? (
+                <div className="w-full flex items-center gap-2.5 py-2 pl-[2px] pr-2 select-none">
+                  <div className="w-9 h-9 rounded-full bg-secondary/80 dark:bg-neutral-800/80 animate-pulse shrink-0" />
+                  <div className="flex-1 min-w-0 space-y-1.5">
+                    <div className="h-3.5 w-24 bg-secondary/80 dark:bg-neutral-800/80 rounded animate-pulse" />
+                    <div className="h-2.5 w-12 bg-secondary/60 dark:bg-neutral-800/60 rounded animate-pulse" />
+                  </div>
+                </div>
+              ) : (
+                <DropdownMenu onOpenChange={(open) => { if (!open) setAccountSubView('main'); }}>
                   <DropdownMenuTrigger asChild>
-                    <button className="w-full flex items-center justify-center p-2 rounded-xl hover:bg-secondary transition-colors cursor-pointer select-none outline-none focus:outline-none focus-visible:outline-none focus:ring-0 focus-visible:ring-0 ring-0 border-0">
+                    <button className="w-full flex items-center gap-2.5 py-2 pl-[2px] pr-2 rounded-xl hover:bg-secondary transition-colors text-left group cursor-pointer select-none outline-none focus:outline-none focus-visible:outline-none focus:ring-0 focus-visible:ring-0 ring-0 border-0">
                       <div className="w-9 h-9 rounded-full overflow-hidden shrink-0">
                         <Avatar className="w-full h-full bg-secondary">
                           <AvatarImage src={avatarUrl} />
@@ -825,297 +1096,35 @@ export function Sidebar({
                           </AvatarFallback>
                         </Avatar>
                       </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[15px] font-medium text-foreground truncate leading-snug">
+                          {displayName}
+                        </p>
+                        <p className="text-[15px] text-muted-foreground leading-none" suppressHydrationWarning>
+                          {planDisplay}
+                        </p>
+                      </div>
                     </button>
                   </DropdownMenuTrigger>
-                </TooltipTrigger>
-                <TooltipContent side="right" className="text-md">
-                  {displayName}
-                </TooltipContent>
-              </Tooltip>
 
-              <DropdownMenuContent
-                side="top"
-                align="start"
-                alignOffset={-4}
-                sideOffset={6}
-                className="w-64 rounded-2xl p-1.5 bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/50 dark:border-neutral-700/50 outline-none focus:outline-none ring-0"
-              >
-                {renderAccountMenuItems()}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          )}
-        </div>
-      </div>
-    );
-  }
-
-  // ----------------------------------------------------
-  // Expanded Sidebar
-  // ----------------------------------------------------
-  return (
-    <>
-      {/* Mobile overlay */}
-      <div
-        className="fixed inset-0 z-40 bg-black/60 backdrop-blur-xs xl:hidden"
-        onClick={onToggle}
-      />
-
-      <aside className="fixed xl:static inset-y-0 left-0 z-50 w-[280px] sm:w-[260px] h-[100dvh] max-h-[100dvh] bg-sidebar border-r border-border/80 flex flex-col shrink-0 select-none group/sidebar animate-in slide-in-from-left-full xl:animate-none duration-200">
-        {/* Full-height border resize/toggle handle */}
-        <div
-          onClick={onToggle}
-          style={{ cursor: 'col-resize' }}
-          className="absolute -right-[3px] top-0 bottom-0 w-[6px] z-10 hover:bg-foreground/15 transition-colors"
-        />
-
-        {/* Top Header */}
-        <div className="p-3 pb-2 pt-[max(env(safe-area-inset-top),0.75rem)] flex items-center justify-between relative z-20">
-          <Link href="/" className="flex items-center gap-2 px-1 hover:opacity-85 transition-opacity">
-            <span className="font-semibold text-xl tracking-tight text-foreground">CloseAI</span>
-          </Link>
-
-          <div className="flex items-center gap-0.5">
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary cursor-pointer"
-                  onClick={() => setShowSearch(!showSearch)}
-                >
-                  <Search className="w-4 h-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="bottom" sideOffset={6} className="text-md">
-                Search chats
-              </TooltipContent>
-            </Tooltip>
-
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  style={{ cursor: 'ew-resize' }}
-                  className="h-8 w-8 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary !cursor-ew-resize [&_*]:!cursor-ew-resize"
-                  onClick={() => {
-                    setIsCloseBtnHovered(false);
-                    setIsLogoHovered(false);
-                    onToggle();
-                  }}
-                  onMouseEnter={() => setIsCloseBtnHovered(true)}
-                  onMouseLeave={() => setIsCloseBtnHovered(false)}
-                >
-                  <PanelLeft className="w-4 h-4 pointer-events-none" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="bottom" sideOffset={6} className="text-md">
-                Close sidebar
-              </TooltipContent>
-            </Tooltip>
-          </div>
-        </div>
-
-        {/* New Chat Button */}
-        <div className="px-3 pt-1 pb-2 space-y-2 relative z-20">
-          <button
-            onClick={() => {
-              onNewChat();
-              if (typeof window !== 'undefined' && window.innerWidth < 1280) {
-                onToggle();
-              }
-            }}
-            className="w-full flex items-center justify-between h-10 px-3 rounded-xl hover:bg-secondary text-muted-foreground hover:text-foreground text-md font-medium group cursor-pointer transition-all duration-150"
-          >
-            <div className="flex items-center gap-2.5">
-              <Plus className="w-4 h-4 text-muted-foreground group-hover:text-foreground" />
-              <span>New chat</span>
-            </div>
-          </button>
-
-          {/* Collapsible Search input */}
-          {showSearch && (
-            <div className="relative group">
-              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-foreground transition-colors pointer-events-none" />
-              <input
-                type="text"
-                placeholder="Search anything"
-                value={searchQuery}
-                onChange={(e) => onSearchChange(e.target.value)}
-                className="w-full pl-9 pr-3 h-10 text-md bg-secondary rounded-xl text-foreground placeholder:text-muted-foreground focus:placeholder:text-foreground focus:outline-none focus-visible:outline-none focus:ring-0 focus-visible:ring-0 border-0 transition-colors"
-                autoFocus
-              />
-            </div>
-          )}
-        </div>
-
-        {/* Chat History Stream */}
-        <ScrollArea className="flex-1 px-2">
-          {isLoading ? (
-            <div className="space-y-5 py-3 px-1 select-none">
-              {/* PINNED Skeleton Group */}
-              <div className="space-y-2">
-                <div className="h-3 w-20 bg-muted-foreground/20 rounded animate-pulse ml-2" />
-                <div className="space-y-1.5">
-                  <div className="h-8 w-full bg-secondary/80 dark:bg-neutral-800/60 rounded-xl animate-pulse" />
-                </div>
-              </div>
-
-              {/* ARCHIVED Skeleton Group */}
-              <div className="space-y-2 pt-1">
-                <div className="h-3 w-24 bg-muted-foreground/20 rounded animate-pulse ml-2" />
-                <div className="space-y-1.5">
-                  <div className="h-8 w-full bg-secondary/70 dark:bg-neutral-800/50 rounded-xl animate-pulse" />
-                </div>
-              </div>
-
-              {/* TODAY Skeleton Group */}
-              <div className="space-y-2 pt-1">
-                <div className="h-3 w-16 bg-muted-foreground/20 rounded animate-pulse ml-2" />
-                <div className="space-y-1.5">
-                  <div className="h-8 w-full bg-secondary/70 dark:bg-neutral-800/50 rounded-xl animate-pulse" />
-                  <div className="h-8 w-full bg-secondary/70 dark:bg-neutral-800/50 rounded-xl animate-pulse" />
-                </div>
-              </div>
-            </div>
-          ) : (
-            <div className="space-y-4 py-2">
-              {/* PINNED Section */}
-              <div className="space-y-0.5">
-                <button
-                  type="button"
-                  onClick={() => toggleSection('Pinned')}
-                  className="w-full flex items-center justify-between px-3 py-1 text-[15px] font-semibold tracking-wider text-muted-foreground/80 hover:text-foreground uppercase select-none cursor-pointer transition-colors group/section text-left"
-                >
-                  <span>PINNED</span>
-                  <AnimatedChevron
-                    open={!collapsedSections['Pinned']}
-                    disableHover
-                    orientation="right-down"
-                    size={16}
-                    className="text-muted-foreground/70 group-hover/section:text-foreground shrink-0"
-                  />
-                </button>
-                {!collapsedSections['Pinned'] && (
-                  <>
-                    {(groupedChats['Pinned'] || []).length === 0 ? (
-                      <div className="px-3 py-1 text-[13.5px] text-muted-foreground/60 select-none font-normal">
-                        No pinned chats
-                      </div>
-                    ) : (
-                      groupedChats['Pinned'].map((chat) => renderChatItem(chat))
-                    )}
-                  </>
-                )}
-              </div>
-
-              {/* ARCHIVED Section */}
-              <div className="space-y-0.5">
-                <button
-                  type="button"
-                  onClick={() => toggleSection('Archived')}
-                  className="w-full flex items-center justify-between px-3 py-1 text-[15px] font-semibold tracking-wider text-muted-foreground/80 hover:text-foreground uppercase select-none cursor-pointer transition-colors group/section text-left"
-                >
-                  <span>ARCHIVED</span>
-                  <AnimatedChevron
-                    open={!collapsedSections['Archived']}
-                    disableHover
-                    orientation="right-down"
-                    size={16}
-                    className="text-muted-foreground/70 group-hover/section:text-foreground shrink-0"
-                  />
-                </button>
-                {!collapsedSections['Archived'] && (
-                  <>
-                    {(groupedChats['Archived'] || []).length === 0 ? (
-                      <div className="px-3 py-1 text-[13.5px] text-muted-foreground/60 select-none font-normal">
-                        No archived chats
-                      </div>
-                    ) : (
-                      groupedChats['Archived'].map((chat) => renderChatItem(chat))
-                    )}
-                  </>
-                )}
-              </div>
-
-              {/* RECENTS / Date Groups Section */}
-              {Object.entries(groupedChats).filter(([g, list]) => g !== 'Pinned' && g !== 'Archived' && list.length > 0).length === 0 ? (
-                <div className="space-y-0.5 py-1">
-                  <div className="px-3 py-1 text-[15px] font-semibold tracking-wider text-muted-foreground/80 uppercase select-none">
-                    RECENTS
-                  </div>
-                  <div className="px-3 py-1 text-[13.5px] text-muted-foreground/60 select-none font-normal">
-                    {searchQuery ? 'No chats found' : 'No chats'}
-                  </div>
-                </div>
-              ) : (
-                Object.entries(groupedChats).map(([group, groupChats]) => {
-                  if (group === 'Pinned' || group === 'Archived' || groupChats.length === 0) {
-                    return null;
-                  }
-
-                  return (
-                    <div key={group} className="space-y-0.5">
-                      <div className="px-3 py-1 text-[15px] font-semibold tracking-wider text-muted-foreground/80 uppercase select-none">
-                        {group}
-                      </div>
-                      {groupChats.map((chat) => renderChatItem(chat))}
-                    </div>
-                  );
-                })
+                  <DropdownMenuContent
+                    side="top"
+                    align="start"
+                    alignOffset={0}
+                    sideOffset={6}
+                    className="w-[var(--radix-dropdown-menu-trigger-width)] min-w-[var(--radix-dropdown-menu-trigger-width)] max-w-[calc(100vw-24px)] max-h-[calc(100dvh-5rem)] overflow-y-auto rounded-2xl p-1.5 bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/50 dark:border-neutral-700/50 outline-none focus:outline-none ring-0"
+                  >
+                    {renderAccountMenuItems()}
+                  </DropdownMenuContent>
+                </DropdownMenu>
               )}
             </div>
-          )}
-        </ScrollArea>
+          </aside>
+        </>
+      )}
 
-        {/* Bottom User Profile Dock (Matching Screenshot 1, 2) */}
-        <div className="p-2 pb-[max(env(safe-area-inset-bottom),0.75rem)] border-t border-border/80 mt-auto relative z-20">
-          {isLoading || !user ? (
-            <div className="w-full flex items-center gap-2.5 py-2 pl-[2px] pr-2 select-none">
-              <div className="w-9 h-9 rounded-full bg-secondary/80 dark:bg-neutral-800/80 animate-pulse shrink-0" />
-              <div className="flex-1 min-w-0 space-y-1.5">
-                <div className="h-3.5 w-24 bg-secondary/80 dark:bg-neutral-800/80 rounded animate-pulse" />
-                <div className="h-2.5 w-12 bg-secondary/60 dark:bg-neutral-800/60 rounded animate-pulse" />
-              </div>
-            </div>
-          ) : (
-            <DropdownMenu onOpenChange={(open) => { if (!open) setAccountSubView('main'); }}>
-              <DropdownMenuTrigger asChild>
-                <button className="w-full flex items-center gap-2.5 py-2 pl-[2px] pr-2 rounded-xl hover:bg-secondary transition-colors text-left group cursor-pointer select-none outline-none focus:outline-none focus-visible:outline-none focus:ring-0 focus-visible:ring-0 ring-0 border-0">
-                  <div className="w-9 h-9 rounded-full overflow-hidden shrink-0">
-                    <Avatar className="w-full h-full bg-secondary">
-                      <AvatarImage src={avatarUrl} />
-                      <AvatarFallback className="text-md font-semibold">
-                        {displayName.charAt(0).toUpperCase()}
-                      </AvatarFallback>
-                    </Avatar>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-[15px] font-medium text-foreground truncate leading-snug">
-                      {displayName}
-                    </p>
-                    <p className="text-[15px] text-muted-foreground leading-none" suppressHydrationWarning>
-                      {planDisplay}
-                    </p>
-                  </div>
-                </button>
-              </DropdownMenuTrigger>
-
-              <DropdownMenuContent
-                side="top"
-                align="start"
-                alignOffset={0}
-                sideOffset={6}
-                className="w-[var(--radix-dropdown-menu-trigger-width)] min-w-[var(--radix-dropdown-menu-trigger-width)] max-w-[calc(100vw-24px)] max-h-[calc(100dvh-5rem)] overflow-y-auto rounded-2xl p-1.5 bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/50 dark:border-neutral-700/50 outline-none focus:outline-none ring-0"
-              >
-                {renderAccountMenuItems()}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          )}
-        </div>
-      </aside>
-
-      {/* Logout Confirmation Modal */}
+      {/* Logout Confirmation Modal — mounted here, outside the isOpen branch,
+          so it renders whether the sidebar is expanded or collapsed to the rail. */}
       <LogoutModal
         open={showLogoutModal}
         onOpenChange={setShowLogoutModal}
@@ -1125,7 +1134,7 @@ export function Sidebar({
         userAvatar={avatarUrl}
       />
 
-      {/* Delete Confirmation Modal */}
+      {/* Delete Confirmation Modal — same reasoning as above. */}
       <DeleteModal
         open={!!chatToDelete}
         onOpenChange={(open) => {

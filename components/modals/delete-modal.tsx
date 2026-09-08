@@ -24,7 +24,7 @@ export function DeleteModal({
       open={open}
       onOpenChange={onOpenChange}
       snapPoints={["auto"]}
-      className="max-w-[380px]"
+      className="max-w-[400px]"
     >
       <div className="flex flex-col items-center text-center space-y-4 pt-2 pb-1">
         {/* Title */}

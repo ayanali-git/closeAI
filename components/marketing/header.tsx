@@ -7,15 +7,13 @@ import {
   ArrowUpRight,
   ArrowUp,
   ArrowLeft,
-  PanelRight,
-  PanelLeft,
-  Menu,
 } from "lucide-react";
 import { CloseAIIcon } from "@/components/brand/logo";
 import {
   AnimatedArrow,
   AnimatedChevron,
   AnimatedSearchClose,
+  AnimatedPanelToggle,
   AnimatedComingSoonText,
 } from "@/components/ui/animated";
 import { useAuth } from "@/hooks/use-auth";
@@ -1076,14 +1074,10 @@ export function MarketingHeader() {
                 setMobileNavOpen(!mobileNavOpen);
                 setMobileSubMenu(null);
               }}
-              className="p-2 text-foreground"
-              aria-label="Menu"
+              className="p-2 text-foreground transition-colors flex items-center justify-center"
+              aria-label={mobileNavOpen ? "Close menu" : "Open menu"}
             >
-              {mobileNavOpen ? (
-                <PanelRight className="w-4 h-4" />
-              ) : (
-                <PanelLeft className="w-4 h-4" />
-              )}
+              <AnimatedPanelToggle open={mobileNavOpen} size={18} />
             </button>
           </div>
         </div>
@@ -1667,7 +1661,6 @@ export function MarketingHeader() {
                     className="flex items-center gap-1.5 text-3xl sm:text-4xl font-medium tracking-tight text-foreground hover:opacity-80 transition-opacity py-1.5"
                   >
                     <span>Foundation</span>
-                    <ArrowUpRight className="w-6 h-6 stroke-[2.5]" />
                   </Link>
                 </div>
 

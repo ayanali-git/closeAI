@@ -263,6 +263,62 @@ export function AnimatedSearchClose({
 
 export { AnimatedSearchClose as AnimatedSearchIcon };
 
+export interface AnimatedPanelToggleProps extends React.HTMLAttributes<HTMLSpanElement> {
+  /** true = "panel open" state (rail/filled column on the right), false = "panel closed" state (rail/filled column on the left) */
+  open?: boolean;
+  className?: string;
+  size?: number;
+  strokeWidth?: number;
+}
+
+export function AnimatedPanelToggle({
+  open,
+  className,
+  size = 18,
+  strokeWidth = 1.75,
+  style,
+  ...props
+}: AnimatedPanelToggleProps) {
+  const active = Boolean(open);
+  const motionVal = useMotionValue(+active);
+  const spring = useSpring(motionVal, { stiffness: 480, damping: 34, mass: 0.7 });
+
+  useEffect(() => {
+    motionVal.set(+active);
+  }, [active, motionVal]);
+
+  // Divider line slides from x=9 (closed / panel-left) to x=15 (open / panel-right) —
+  // same simple two-column glyph as lucide's PanelLeft / PanelRight, just animated.
+  const railX = useTransform(spring, [0, 1], [9, 15]);
+
+  return (
+    <span
+      aria-hidden="true"
+      className={cn(
+        'relative inline-flex items-center justify-center shrink-0 select-none pointer-events-none',
+        className
+      )}
+      style={{ width: size, height: size, ...style }}
+      {...props}
+    >
+      <motion.svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={strokeWidth}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        className="w-full h-full overflow-visible"
+      >
+        {/* Outer frame, fixed */}
+        <rect x="3" y="4" width="18" height="16" rx="2.5" />
+        {/* Divider line that slides between the left-third and right-third position */}
+        <motion.line x1={railX} y1="4" x2={railX} y2="20" />
+      </motion.svg>
+    </span>
+  );
+}
+
 export interface AnimatedComingSoonTextProps {
   label: string;
   comingSoonText?: string;

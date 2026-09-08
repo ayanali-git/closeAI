@@ -705,6 +705,21 @@ export default function PublicSharedChatPage() {
     }
   };
 
+  // A shared conversation should open at the newest message after a reload.
+  // Repeat across layout/asset settling so long markdown and images cannot
+  // leave the reader stranded above the actual bottom.
+  useEffect(() => {
+    if (isLoading || isError || messages.length === 0) return;
+    const scroll = () => scrollToBottom();
+    scroll();
+    const frames = [requestAnimationFrame(scroll), requestAnimationFrame(() => requestAnimationFrame(scroll))];
+    const timers = [window.setTimeout(scroll, 80), window.setTimeout(scroll, 250), window.setTimeout(scroll, 600)];
+    return () => {
+      frames.forEach(cancelAnimationFrame);
+      timers.forEach(clearTimeout);
+    };
+  }, [isLoading, isError, messages.length]);
+
   useEffect(() => {
     if (!chatId) return;
 
@@ -894,6 +909,7 @@ export default function PublicSharedChatPage() {
                     user={null}
                     isTyping={false}
                     pendingMessage={null}
+                    showMessageActions={false}
                   />
                 </div>
               )}

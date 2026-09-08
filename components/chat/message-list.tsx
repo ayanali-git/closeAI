@@ -498,6 +498,14 @@ export function MessageList({
 
   let userMessageCounter = 0;
 
+  const isThinking =
+    isTyping &&
+    (Boolean(pendingMessage) ||
+      !messages.length ||
+      messages[messages.length - 1]?.role === "user" ||
+      (messages[messages.length - 1]?.role === "assistant" &&
+        !messages[messages.length - 1]?.content));
+
   return (
     <div className="w-full max-w-3xl mx-auto pt-10 pb-2 space-y-5 px-6">
       {messages.map((msg, index) => {
@@ -509,6 +517,11 @@ export function MessageList({
 
         if (isUser) {
           const isEditing = editingMessageId === msgId;
+          const isLastUserMsg =
+            index === messages.length - 1 ||
+            (index === messages.length - 2 && messages[messages.length - 1]?.role === "assistant");
+          const isThisMsgThinking = isLastUserMsg && isThinking;
+
           return (
             <div
               key={msgId}
@@ -558,10 +571,10 @@ export function MessageList({
                     <button
                       type="button"
                       onClick={() => submitEdit(msg, index)}
-                      disabled={!editDraftText.trim() || isTyping}
+                      disabled={!editDraftText.trim()}
                       className={cn(
                         "px-4 py-1.5 rounded-full text-[15px] font-medium transition-all cursor-pointer",
-                        editDraftText.trim() && !isTyping
+                        editDraftText.trim()
                           ? "bg-foreground text-background hover:opacity-90 active:scale-95"
                           : "bg-neutral-300 dark:bg-[#484848] text-muted-foreground/60 cursor-not-allowed opacity-60"
                       )}
@@ -582,28 +595,30 @@ export function MessageList({
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <button
+                          type="button"
                           onClick={() => copyToClipboard(msg.content, msgId)}
-                          className="p-1.5 rounded-sm hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors"
+                          className="p-1.5 rounded-sm hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
                           aria-label="Copy prompt"
                         >
                           {isCopied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
                         </button>
                       </TooltipTrigger>
-                      <TooltipContent side="bottom" sideOffset={4} className="text-md">Copy</TooltipContent>
+                      <TooltipContent side="bottom" sideOffset={4} className="text-md">Copy prompt</TooltipContent>
                     </Tooltip>
 
-                    {(onEditAndResend || onEditMessage) && (
+                    {(onEditAndResend || onEditMessage) && !isThisMsgThinking && (
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <button
+                            type="button"
                             onClick={() => startEditing(msgId, msg.content)}
-                            className="p-1.5 rounded-sm hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors"
-                            aria-label="Edit message"
+                            className="p-1.5 rounded-sm hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                            aria-label="Edit prompt"
                           >
                             <Pencil className="w-4 h-4" />
                           </button>
                         </TooltipTrigger>
-                        <TooltipContent side="bottom" sideOffset={4} className="text-md">Edit</TooltipContent>
+                        <TooltipContent side="bottom" sideOffset={4} className="text-md">Edit prompt</TooltipContent>
                       </Tooltip>
                     )}
                   </div>
@@ -746,7 +761,7 @@ export function MessageList({
                         {isCopied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
                       </button>
                     </TooltipTrigger>
-                    <TooltipContent side="bottom" sideOffset={4} className="text-md">Copy</TooltipContent>
+                    <TooltipContent side="bottom" sideOffset={4} className="text-md">Copy response</TooltipContent>
                   </Tooltip>
 
                   <Tooltip>
@@ -839,12 +854,12 @@ export function MessageList({
                           onClick={() => onRegenerate(msg, index)}
                           disabled={isTyping}
                           className="p-1.5 rounded-sm hover:bg-secondary hover:text-foreground transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                          aria-label="Regenerate response"
+                          aria-label="Try again"
                         >
                           <RefreshCw className="w-4 h-4" />
                         </button>
                       </TooltipTrigger>
-                      <TooltipContent side="bottom" sideOffset={4} className="text-md">Regenerate</TooltipContent>
+                      <TooltipContent side="bottom" sideOffset={4} className="text-md">Try again</TooltipContent>
                     </Tooltip>
                   )}
                 </div>
@@ -856,7 +871,7 @@ export function MessageList({
 
       {/* Optimistic Pending User Message */}
       {pendingMessage && (
-        <div className="flex flex-col items-end opacity-85">
+        <div className="flex flex-col items-end group transition-all">
           {pendingMessage.files.length > 0 && (
             <div className="flex flex-wrap gap-2.5 mb-2.5 justify-end items-end">
               {pendingMessage.files.map((file, i) => (
@@ -866,6 +881,23 @@ export function MessageList({
           )}
           <div className="bg-bubble dark:bg-[#2F2F2F] text-foreground text-[15px] sm:text-[15.5px] leading-relaxed rounded-2xl sm:rounded-3xl px-4 sm:px-5 py-2.5 sm:py-3 max-w-[85%] sm:max-w-[75%] whitespace-pre-wrap select-text break-words">
             {pendingMessage.content}
+          </div>
+
+          {/* User Hover Actions Toolbar — Copy button during pending/thinking (Edit hidden while thinking) */}
+          <div className="flex items-center gap-1 mt-1.5 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  type="button"
+                  onClick={() => copyToClipboard(pendingMessage.content, "pending-msg")}
+                  className="p-1.5 rounded-sm hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                  aria-label="Copy prompt"
+                >
+                  {copiedId === "pending-msg" ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom" sideOffset={4} className="text-md">Copy</TooltipContent>
+            </Tooltip>
           </div>
         </div>
       )}

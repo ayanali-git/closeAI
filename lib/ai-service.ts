@@ -152,7 +152,6 @@ ${fileContext ? `\n\nFile Context:\n${fileContext}` : ''}`;
           const fallbackRes = await this.generateGeminiResponse(messages, fileContext, imageUrls, "gemini-3.7-flash");
           return {
             ...fallbackRes,
-            content: `> *Note: OpenAI API credit balance is exhausted (HTTP 429). Responded using Google Gemini instead.*\n\n${fallbackRes.content}`,
           };
         }
         throw new Error('OpenAI quota exceeded (no remaining credits on account). Please check your OpenAI billing or switch to Google Gemini.');

@@ -111,8 +111,8 @@ export default function LandingPage() {
                   className={cn(
                     "px-4 py-3 rounded-full text-md sm:text-[15px] transition-all outline-none focus:outline-none focus-visible:outline-none focus:ring-0 focus-visible:ring-0 ring-0",
                     pill.disabled
-                      ? "cursor-not-allowed select-none bg-white/50 dark:bg-[#212121]/50 border border-border/80 dark:border-none backdrop-blur-sm text-muted-foreground hover:text-foreground group/pill"
-                      : "cursor-pointer",
+                      ? "cursor-not-allowed select-none bg-white/50 dark:bg-[#212121]/50 hover:bg-secondary dark:hover:bg-[#2f2f2f] border border-border/80 dark:border-none backdrop-blur-sm text-muted-foreground hover:text-foreground group/pill"
+                      : "cursor-pointer bg-white/50 dark:bg-[#212121]/50 hover:bg-secondary dark:hover:bg-[#2f2f2f]",
                     isSelected
                       ? "bg-secondary text-foreground border border-border/80 dark:border-none"
                       : !pill.disabled && "bg-white/50 dark:bg-[#212121]/50 border border-border/80 dark:border-none backdrop-blur-sm hover:bg-secondary text-muted-foreground hover:text-foreground"
@@ -139,11 +139,11 @@ export default function LandingPage() {
         <section className="px-6 sm:px-8 max-w-[1400px] mx-auto pt-6 pb-28">
           <div className="relative flex flex-col lg:flex-row gap-8 lg:gap-14">
             
-            {/* STICKY LEFT COLUMN TRACK: GPT-5.6 Spotlight */}
+            {/* STICKY LEFT COLUMN TRACK: Astra GPT-6 Spotlight */}
             <div className="w-full lg:w-[62%] relative">
               <div className="lg:sticky lg:top-24">
                 <Link href="/research/overview" className="group block">
-                {/* Big Cosmic Image Card with GPT 5.6 */}
+                {/* Big Cosmic Image Card with Astra GPT-6 */}
                 <div className="relative w-full aspect-[16/10] rounded-3xl overflow-hidden bg-black transition-all duration-300">
                   {/* Space Planet, Earth Crescent & Cosmic Sun Flare Background */}
                   <div
@@ -157,17 +157,17 @@ export default function LandingPage() {
                   <div className="absolute -bottom-16 -left-16 w-80 h-80 rounded-full bg-slate-900/90 border border-slate-700/50 blur-sm pointer-events-none" />
                   <div className="absolute top-1/4 right-1/4 w-96 h-96 rounded-full bg-amber-400/20 blur-3xl pointer-events-none" />
 
-                  {/* Top-Left: Bold Giant "GPT" */}
+                  {/* Top-Left: Bold Giant "Astra" */}
                   <div className="absolute top-6 sm:top-10 left-6 sm:left-10 z-10">
-                    <span className="text-6xl sm:text-8xl md:text-9xl font-black tracking-tighter text-white select-none leading-none drop-shadow-2xl">
-                      GPT
+                    <span className="text-6xl sm:text-8xl md:text-9xl font-black tracking-tighter text-muted-foreground group-hover:text-foreground select-none leading-none drop-shadow-2xl">
+                      Astra
                     </span>
                   </div>
 
-                  {/* Bottom-Right: Bold Giant "5.6" */}
+                  {/* Bottom-Right: Bold Giant "GPT-6" */}
                   <div className="absolute bottom-6 sm:bottom-10 right-6 sm:right-10 z-10">
-                    <span className="text-6xl sm:text-8xl md:text-9xl font-black tracking-tighter text-white select-none leading-none drop-shadow-2xl">
-                      5.6
+                    <span className="text-6xl sm:text-8xl md:text-9xl font-black tracking-tighter text-muted-foreground group-hover:text-foreground select-none leading-none drop-shadow-2xl">
+                      GPT-6
                     </span>
                   </div>
                 </div>
@@ -175,7 +175,7 @@ export default function LandingPage() {
                 {/* Left Title & Tag Below Card */}
                 <div className="mt-4 flex flex-col justify-between h-[92px] max-w-2xl">
                   <h2 className="text-xl sm:text-2xl md:text-3xl font-bold tracking-tight text-muted-foreground group-hover:text-foreground leading-snug">
-                    GPT-5.6: Frontier intelligence that scales with your ambition
+                    Astra GPT-6: Frontier intelligence that scales with your ambition
                   </h2>
                   <div className="flex items-center gap-2 text-md text-muted-foreground">
                     <span className="font-semibold text-foreground">Product</span>
@@ -428,7 +428,6 @@ export default function LandingPage() {
                   <span className="text-md font-semibold text-neutral-300 uppercase tracking-wider">
                     {story.category}
                   </span>
-                  <ArrowUpRight className="w-4 h-4 text-neutral-400 group-hover:text-white" />
                 </div>
                 <div className="relative z-10">
                   <h3 className="text-xl font-semibold text-muted-foreground group-hover:text-foreground leading-snug mb-2">

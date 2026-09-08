@@ -217,6 +217,7 @@ export const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(function Cha
   const [menuAlignOffset, setMenuAlignOffset] = useState(0);
   const [menuWidth, setMenuWidth] = useState<number | undefined>(undefined);
   const recognitionRef = useRef<any>(null);
+  const cursorPositionRef = useRef<number | null>(null);
   const [currentModel, setCurrentModel] = useState(selectedModel);
 
   useEffect(() => {
@@ -304,13 +305,36 @@ export const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(function Cha
     return () => window.removeEventListener("resize", adjustHeight);
   }, [adjustHeight]);
 
-  // Keep focus on textarea when layout expands/collapses on paste or edit
+  // Auto-focus textarea on mount / page reload (matching s/[id] behavior)
   useEffect(() => {
-    if (isExpandedLayout) {
-      setTimeout(() => {
-        textareaRef.current?.focus();
-      }, 0);
-    }
+    const timer = setTimeout(() => {
+      if (textareaRef.current) {
+        textareaRef.current.focus();
+        const len = textareaRef.current.value.length;
+        textareaRef.current.setSelectionRange(len, len);
+      }
+    }, 50);
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Keep focus and restore exact cursor position when layout expands or collapses
+  useEffect(() => {
+    const focusAndRestoreCursor = () => {
+      if (textareaRef.current) {
+        textareaRef.current.focus();
+        const targetPos =
+          cursorPositionRef.current !== null
+            ? cursorPositionRef.current
+            : textareaRef.current.value.length;
+        try {
+          textareaRef.current.setSelectionRange(targetPos, targetPos);
+        } catch (e) {}
+      }
+    };
+
+    focusAndRestoreCursor();
+    const timer = setTimeout(focusAndRestoreCursor, 0);
+    return () => clearTimeout(timer);
   }, [isExpandedLayout]);
 
   // Calculate dynamic menu sideOffset & alignOffset so it is ALWAYS positioned above the chat input pill
@@ -716,6 +740,7 @@ export const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(function Cha
                 ref={textareaRef}
                 value={message}
                 onChange={(e) => {
+                  cursorPositionRef.current = e.target.selectionEnd;
                   onMessageChange(e.target.value);
                   const el = e.target;
                   el.style.height = "auto";
@@ -728,6 +753,15 @@ export const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(function Cha
                     el.style.height = `${Math.max(scrollH, 44)}px`;
                     el.style.overflowY = "hidden";
                   }
+                }}
+                onSelect={(e) => {
+                  cursorPositionRef.current = e.currentTarget.selectionEnd;
+                }}
+                onClick={(e) => {
+                  cursorPositionRef.current = e.currentTarget.selectionEnd;
+                }}
+                onKeyUp={(e) => {
+                  cursorPositionRef.current = e.currentTarget.selectionEnd;
                 }}
                 onKeyDown={handleKeyDown}
                 onPaste={handlePaste}
@@ -790,6 +824,7 @@ export const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(function Cha
                 ref={textareaRef}
                 value={message}
                 onChange={(e) => {
+                  cursorPositionRef.current = e.target.selectionEnd;
                   onMessageChange(e.target.value);
                   const el = e.target;
                   el.style.height = "auto";
@@ -797,6 +832,15 @@ export const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(function Cha
                   if (scrollH > 38 || e.target.value.includes("\n")) {
                     setIsMultiLine(true);
                   }
+                }}
+                onSelect={(e) => {
+                  cursorPositionRef.current = e.currentTarget.selectionEnd;
+                }}
+                onClick={(e) => {
+                  cursorPositionRef.current = e.currentTarget.selectionEnd;
+                }}
+                onKeyUp={(e) => {
+                  cursorPositionRef.current = e.currentTarget.selectionEnd;
                 }}
                 onKeyDown={handleKeyDown}
                 onPaste={handlePaste}

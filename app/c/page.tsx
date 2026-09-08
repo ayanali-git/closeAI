@@ -26,11 +26,14 @@ function NewChatContent() {
 
   const {
     sidebarOpen,
+    setSidebarOpen,
     toggleSidebar: handleToggleSidebar,
+    chats,
+    setChats,
+    isChatsLoading,
+    loadChats,
   } = useSidebarContext();
   const [isSidebarBtnHovered, setIsSidebarBtnHovered] = useState(false);
-  const [chats, setChats] = useState<Chat[]>([]);
-  const [isChatsLoading, setIsChatsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [message, setMessage] = useState("");
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
@@ -113,18 +116,6 @@ function NewChatContent() {
       handleAutoCreateAndSend(promptToSend.trim());
     }
   }, [user, loading, queryPrompt, router]);
-
-  const loadChats = async () => {
-    if (!user) return;
-    try {
-      const userChats = await chatService.getUserChats(supabase, user.id);
-      setChats(userChats);
-    } catch (error) {
-      console.error("Error loading chats:", error);
-    } finally {
-      setIsChatsLoading(false);
-    }
-  };
 
   const handleToggleArchive = async (id: string, archived: boolean) => {
     try {
@@ -210,6 +201,9 @@ function NewChatContent() {
         onNewChat={() => {
           setMessage("");
           setUploadedFiles([]);
+          if (typeof window !== 'undefined' && window.innerWidth < 1280) {
+            setSidebarOpen(false);
+          }
         }}
         onDeleteChat={async (id) => {
           await chatService.deleteChat(supabase, id);
@@ -235,7 +229,7 @@ function NewChatContent() {
       <div className="flex-1 flex flex-col min-w-0 h-full relative overflow-hidden">
         {/* Transparent Top Floating Header */}
         <header className="shrink-0 z-30 h-14 pt-[env(safe-area-inset-top,0px)] px-3 sm:px-4 flex items-center justify-between select-none">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 pointer-events-auto mt-3 pl-3 sm:pl-0">
             {!sidebarOpen && (
               <Tooltip>
                 <TooltipTrigger asChild>

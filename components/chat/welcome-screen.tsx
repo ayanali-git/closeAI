@@ -73,9 +73,11 @@ export function WelcomeScreen({
     <div className="flex-1 w-full h-full flex flex-col items-center justify-center text-center select-none pb-6 sm:pb-8">
       <div className="w-full max-w-3xl flex flex-col items-center justify-center space-y-6">
         {/* Dynamic Title */}
-        <h1 className="text-2xl sm:text-3xl font-medium tracking-tight text-foreground/90 animate-in fade-in-50 duration-300">
-          {dynamicTitle}
-        </h1>
+        <div className="w-full px-6">
+          <h1 className="text-2xl sm:text-3xl font-medium tracking-tight text-foreground/90 animate-in fade-in-50 duration-300">
+            {dynamicTitle}
+          </h1>
+        </div>
 
         {/* Centered Floating Input Bar */}
         {children && <div className="w-full">{children}</div>}

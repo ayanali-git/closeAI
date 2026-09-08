@@ -41,6 +41,7 @@ import {
 import { useSidebarContext } from "@/components/chat/sidebar-context";
 import { cn } from "@/lib/utils";
 import toast from "@/lib/toast";
+import { DeleteModal } from "@/components/modals/delete-modal";
 
 export default function ActiveChatPage() {
   const { user, token, loading } = useAuth();
@@ -50,12 +51,16 @@ export default function ActiveChatPage() {
 
   const {
     sidebarOpen,
+    setSidebarOpen,
     toggleSidebar: handleToggleSidebar,
+    chats,
+    setChats,
+    isChatsLoading,
+    loadChats,
   } = useSidebarContext();
   const [isSidebarBtnHovered, setIsSidebarBtnHovered] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
-  const [chats, setChats] = useState<Chat[]>([]);
-  const [isChatsLoading, setIsChatsLoading] = useState(true);
   const [isChatLoading, setIsChatLoading] = useState(true);
   const [currentChatTitle, setCurrentChatTitle] = useState<string>("");
   const [messages, setMessages] = useState<Message[]>([]);
@@ -102,7 +107,8 @@ export default function ActiveChatPage() {
 
   const forceScrollToBottom = () => {
     if (!scrollContainerRef.current) return;
-    scrollContainerRef.current.scrollTop = scrollContainerRef.current.scrollHeight;
+    scrollContainerRef.current.scrollTop =
+      scrollContainerRef.current.scrollHeight;
     setShowScrollBottom(false);
     isAutoScrollPinnedRef.current = true;
   };
@@ -169,17 +175,22 @@ export default function ActiveChatPage() {
     }
   }, [user, loading, chatId, router]);
 
-  const loadChats = async () => {
-    if (!user) return;
-    try {
-      const userChats = await chatService.getUserChats(supabase, user.id);
-      setChats(userChats);
-    } catch (error) {
-      console.error("Error loading chats:", error);
-    } finally {
-      setIsChatsLoading(false);
+  // Auto-focus chat input on load / reload (matching s/[id] behavior)
+  useEffect(() => {
+    if (!isChatLoading) {
+      const timer = setTimeout(() => {
+        const textarea = document.querySelector(
+          'textarea[placeholder="Ask anything"]'
+        ) as HTMLTextAreaElement | null;
+        if (textarea) {
+          textarea.focus();
+          const len = textarea.value.length;
+          textarea.setSelectionRange(len, len);
+        }
+      }, 50);
+      return () => clearTimeout(timer);
     }
-  };
+  }, [isChatLoading]);
 
   const handleToggleArchive = async (id: string, archived: boolean) => {
     if (archived) {
@@ -202,7 +213,9 @@ export default function ActiveChatPage() {
       setMessages(details.messages || []);
 
       // Auto-heal truncated titles for existing chats
-      const firstMsg = details.messages?.find((m: any) => m.role === "user")?.content?.trim();
+      const firstMsg = details.messages
+        ?.find((m: any) => m.role === "user")
+        ?.content?.trim();
       if (
         firstMsg &&
         details.title !== firstMsg &&
@@ -308,7 +321,8 @@ export default function ActiveChatPage() {
       });
 
       if (isAutoScrollPinnedRef.current && scrollContainerRef.current) {
-        scrollContainerRef.current.scrollTop = scrollContainerRef.current.scrollHeight;
+        scrollContainerRef.current.scrollTop =
+          scrollContainerRef.current.scrollHeight;
       }
       await new Promise((r) => setTimeout(r, intervalMs));
     }
@@ -329,7 +343,10 @@ export default function ActiveChatPage() {
     }
   };
 
-  const triggerAiGeneration = async (promptText: string, modelOverride?: string) => {
+  const triggerAiGeneration = async (
+    promptText: string,
+    modelOverride?: string
+  ) => {
     setIsTyping(true);
     setPendingMessage({ content: promptText, files: [] });
     isAutoScrollPinnedRef.current = true;
@@ -368,7 +385,10 @@ export default function ActiveChatPage() {
 
       const result = await response.json();
       if (result.assistantMessage && result.userMessage) {
-        await streamAssistantResponse(result.userMessage, result.assistantMessage);
+        await streamAssistantResponse(
+          result.userMessage,
+          result.assistantMessage
+        );
       } else {
         const details = await chatService.getChatDetails(supabase, chatId);
         if (details?.messages) {
@@ -393,6 +413,9 @@ export default function ActiveChatPage() {
     messageIndex: number
   ) => {
     if (!newContent.trim() || !user || !chatId) return;
+
+    // Abort active stream immediately if currently generating
+    streamAbortControllerRef.current = true;
 
     // 1. Truncate local messages array up to messageIndex
     const remainingMessages = messages.slice(0, messageIndex);
@@ -567,7 +590,10 @@ export default function ActiveChatPage() {
 
       const result = await response.json();
       if (result.userMessage && result.assistantMessage) {
-        await streamAssistantResponse(result.userMessage, result.assistantMessage);
+        await streamAssistantResponse(
+          result.userMessage,
+          result.assistantMessage
+        );
       } else {
         await loadChat();
         setIsTyping(false);
@@ -619,7 +645,12 @@ export default function ActiveChatPage() {
         chats={chats}
         currentChatId={chatId}
         onChatSelect={(id) => router.push(`/c/${id}`)}
-        onNewChat={() => router.push("/c")}
+        onNewChat={() => {
+          if (typeof window !== "undefined" && window.innerWidth < 1280) {
+            setSidebarOpen(false);
+          }
+          router.push("/c");
+        }}
         onDeleteChat={async (id) => {
           await chatService.deleteChat(supabase, id);
           if (id === chatId) router.push("/c");
@@ -645,7 +676,7 @@ export default function ActiveChatPage() {
       <div className="flex-1 flex flex-col min-w-0 h-full relative overflow-hidden">
         {/* Transparent Floating Header - Buttons float cleanly on top, no background bar/patti */}
         <header className="absolute top-0 left-0 right-0 z-30 h-14 pt-[env(safe-area-inset-top,0px)] px-3 sm:px-4 flex items-center justify-between select-none pointer-events-none bg-transparent">
-          <div className="flex items-center gap-2 pointer-events-auto pl-1 sm:pl-0">
+          <div className="flex items-center gap-2 pointer-events-auto mt-3 pl-3 sm:pl-0">
             {!sidebarOpen && (
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -661,17 +692,22 @@ export default function ActiveChatPage() {
                     className="xl:hidden w-9 h-9 rounded-xl bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/50 dark:border-neutral-700/50 text-neutral-700 dark:text-neutral-200 hover:text-foreground dark:hover:text-foreground hover:bg-background dark:hover:bg-background flex items-center justify-center transition-colors cursor-pointer outline-none focus:outline-none"
                     aria-label="Open sidebar"
                   >
-                      <PanelRight className="w-4 h-4 text-foreground" />
+                    <PanelRight className="w-4 h-4 text-foreground" />
                   </button>
                 </TooltipTrigger>
-                <TooltipContent side="bottom" align="start" sideOffset={6} className="text-md">
+                <TooltipContent
+                  side="bottom"
+                  align="start"
+                  sideOffset={6}
+                  className="text-md"
+                >
                   Open sidebar
                 </TooltipContent>
               </Tooltip>
             )}
           </div>
 
-          <div className="flex items-center gap-1.5 sm:gap-2 pointer-events-auto pr-1 sm:pr-1">
+          <div className="flex items-center gap-1.5 sm:gap-2 pointer-events-auto mt-3 pr-3 sm:pr-1">
             <Tooltip>
               <TooltipTrigger asChild>
                 <button
@@ -680,10 +716,11 @@ export default function ActiveChatPage() {
                   onClick={async () => {
                     setIsSharing(true);
                     try {
-                      const shareUrl = `${window.location.origin}/share/${chatId}`;
+                      const shareUrl = `${window.location.origin}/s/${chatId}`;
                       await navigator.clipboard.writeText(shareUrl);
                       toast.success("Public link copied to your clipboard", {
-                        description: "Anyone with this link can see this conversation",
+                        description:
+                          "Anyone with this link can see this conversation",
                       });
                     } catch (e) {
                       toast.error("Failed to copy link");
@@ -691,12 +728,12 @@ export default function ActiveChatPage() {
                       setTimeout(() => setIsSharing(false), 300);
                     }
                   }}
-                  className="h-9 px-2.5 sm:px-3 gap-1.5 rounded-xl bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/50 dark:border-neutral-700/50 text-neutral-700 dark:text-neutral-200 hover:text-foreground dark:hover:text-foreground hover:bg-background dark:hover:bg-background flex items-center justify-center text-base font-medium transition-colors cursor-pointer outline-none focus:outline-none disabled:opacity-70 disabled:pointer-events-auto disabled:cursor-not-allowed"
+                  className="group h-9 px-2.5 sm:px-3 gap-1.5 rounded-xl bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/50 dark:border-neutral-700/50 text-neutral-700 dark:text-neutral-200 hover:text-foreground dark:hover:text-foreground hover:bg-background dark:hover:bg-background flex items-center justify-center text-base font-medium transition-colors cursor-pointer outline-none focus:outline-none disabled:opacity-70 disabled:pointer-events-auto disabled:cursor-not-allowed"
                 >
                   {isSharing ? (
-                    <Loader className="w-4 h-4 shrink-0 animate-spin text-foreground" />
+                    <Loader className="w-4 h-4 shrink-0 animate-spin text-muted-foreground group-hover:text-foreground" />
                   ) : (
-                    <Upload className="w-4 h-4 shrink-0 text-foreground" />
+                    <Upload className="w-4 h-4 shrink-0 text-muted-foreground group-hover:text-foreground" />
                   )}
                   <span className="inline">Share</span>
                 </button>
@@ -712,15 +749,20 @@ export default function ActiveChatPage() {
                 <TooltipTrigger asChild>
                   <DropdownMenuTrigger asChild>
                     <button
-                      className="w-9 h-9 rounded-xl bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/50 dark:border-neutral-700/50 text-neutral-700 dark:text-neutral-200 hover:text-foreground dark:hover:text-foreground hover:bg-background dark:hover:bg-background flex items-center justify-center transition-colors cursor-pointer outline-none focus:outline-none"
-                      aria-label="Chat options"
+                      className="group w-9 h-9 rounded-xl bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/50 dark:border-neutral-700/50 text-neutral-700 dark:text-neutral-200 hover:text-foreground dark:hover:text-foreground hover:bg-background dark:hover:bg-background flex items-center justify-center transition-colors cursor-pointer outline-none focus:outline-none"
+                      aria-label="More options"
                     >
-                      <MoreHorizontal className="w-4 h-4 text-foreground" />
+                      <MoreHorizontal className="w-4 h-4 text-muted-foreground group-hover:text-foreground" />
                     </button>
                   </DropdownMenuTrigger>
                 </TooltipTrigger>
-                <TooltipContent side="bottom" align="end" sideOffset={6} className="text-md">
-                  More
+                <TooltipContent
+                  side="bottom"
+                  align="end"
+                  sideOffset={6}
+                  className="text-md"
+                >
+                  More options
                 </TooltipContent>
               </Tooltip>
 
@@ -731,9 +773,9 @@ export default function ActiveChatPage() {
               >
                 <DropdownMenuItem
                   onClick={() => toast("No files attached to this chat")}
-                  className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-[15px] font-normal cursor-pointer text-foreground hover:bg-secondary dark:hover:bg-[#2f2f2f] transition-colors"
+                  className="group flex items-center gap-2.5 px-3 py-2 rounded-xl text-[15px] font-normal cursor-pointer text-foreground hover:bg-secondary dark:hover:bg-[#2f2f2f] transition-colors"
                 >
-                  <Folder className="w-4 h-4 text-foreground" />
+                  <Folder className="w-4 h-4 text-muted-foreground group-hover:text-foreground" />
                   <span>View files in chat</span>
                 </DropdownMenuItem>
 
@@ -742,7 +784,11 @@ export default function ActiveChatPage() {
                     const currentChat = chats.find((c) => c.id === chatId);
                     const isStarred = !!currentChat?.starred;
                     if (!isStarred) {
-                      await chatService.toggleChatArchive(supabase, chatId, false);
+                      await chatService.toggleChatArchive(
+                        supabase,
+                        chatId,
+                        false
+                      );
                     }
                     await chatService.toggleChatStar(
                       supabase,
@@ -752,16 +798,16 @@ export default function ActiveChatPage() {
                     loadChats();
                     toast.success(isStarred ? "Chat unpinned" : "Chat pinned");
                   }}
-                  className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-[15px] font-normal cursor-pointer text-foreground hover:bg-secondary dark:hover:bg-[#2f2f2f] transition-colors"
+                  className="group flex items-center gap-2.5 px-3 py-2 rounded-xl text-[15px] font-normal cursor-pointer text-foreground hover:bg-secondary dark:hover:bg-[#2f2f2f] transition-colors"
                 >
                   {chats.find((c) => c.id === chatId)?.starred ? (
                     <>
-                      <PinOff className="w-4 h-4 text-foreground" />
+                      <PinOff className="w-4 h-4 text-muted-foreground group-hover:text-foreground" />
                       <span>Unpin</span>
                     </>
                   ) : (
                     <>
-                      <Pin className="w-4 h-4 text-foreground" />
+                      <Pin className="w-4 h-4 text-muted-foreground group-hover:text-foreground" />
                       <span>Pin</span>
                     </>
                   )}
@@ -773,12 +819,12 @@ export default function ActiveChatPage() {
                     const isArchived = !!currentChat?.archived;
                     await handleToggleArchive(chatId, !isArchived);
                   }}
-                  className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-[15px] font-normal cursor-pointer text-foreground hover:bg-secondary dark:hover:bg-[#2f2f2f] transition-colors"
+                  className="group flex items-center gap-2.5 px-3 py-2 rounded-xl text-[15px] font-normal cursor-pointer text-foreground hover:bg-secondary dark:hover:bg-[#2f2f2f] transition-colors"
                 >
                   {chats.find((c) => c.id === chatId)?.archived ? (
-                    <ArchiveX className="w-4 h-4 text-foreground" />
+                    <ArchiveX className="w-4 h-4 text-muted-foreground group-hover:text-foreground" />
                   ) : (
-                    <Archive className="w-4 h-4 text-foreground" />
+                    <Archive className="w-4 h-4 text-muted-foreground group-hover:text-foreground" />
                   )}
                   <span>
                     {chats.find((c) => c.id === chatId)?.archived
@@ -788,13 +834,10 @@ export default function ActiveChatPage() {
                 </DropdownMenuItem>
 
                 <DropdownMenuItem
-                  onClick={async () => {
-                    await chatService.deleteChat(supabase, chatId);
-                    router.push("/c");
-                  }}
-                  className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-[15px] font-normal cursor-pointer text-red-500 hover:bg-red-500/10 focus:text-red-500 transition-colors"
+                  onClick={() => setShowDeleteModal(true)}
+                  className="group flex items-center gap-2.5 px-3 py-2 rounded-xl text-[15px] font-normal cursor-pointer text-red-600 transition-colors"
                 >
-                  <Trash2 className="w-4 h-4 text-red-500" />
+                  <Trash2 className="w-4 h-4 text-red-500 group-hover:text-red-600" />
                   <span>Delete</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
@@ -806,10 +849,7 @@ export default function ActiveChatPage() {
         <div
           ref={scrollContainerRef}
           onScroll={handleScroll}
-          className={cn(
-            "flex-1 w-full overflow-x-hidden relative no-overscroll flex flex-col pt-14 scroll-smooth",
-            isChatLoading ? "overflow-y-hidden" : "overflow-y-auto"
-          )}
+          className="flex-1 w-full overflow-x-hidden relative no-overscroll flex flex-col pt-14 scroll-smooth overflow-y-scroll [scrollbar-gutter:stable]"
         >
           <div className="flex-1 flex flex-col min-h-full">
             {/* Messages Container or Loader */}
@@ -830,7 +870,12 @@ export default function ActiveChatPage() {
               </div>
             )}
             {/* Right-Edge TOC Navigator */}
-            {!isChatLoading && <TocNavigator messages={messages} containerRef={scrollContainerRef} />}
+            {!isChatLoading && (
+              <TocNavigator
+                messages={messages}
+                containerRef={scrollContainerRef}
+              />
+            )}
 
             {/* Floating Input Dock inside scroll container for 100% scrollbar-aware width alignment */}
             <div className="sticky bottom-0 left-0 right-0 z-20 pointer-events-none pb-[max(env(safe-area-inset-bottom,0px),0.5rem)] bg-gradient-to-t from-background via-background/90 to-transparent pt-4 mt-auto">
@@ -844,7 +889,7 @@ export default function ActiveChatPage() {
                   onFilesChange={setUploadedFiles}
                   isTyping={isTyping}
                   isUploading={isUploading}
-                  showDisclaimer={messages.length > 0}
+                  showDisclaimer={true}
                   selectedModel={selectedModel}
                   onModelChange={setSelectedModel}
                   selectedTier={selectedModelTier}
@@ -853,32 +898,32 @@ export default function ActiveChatPage() {
                   {/* Dynamic Floating Scroll-to-Bottom Button — stays right above input pill */}
                   <AnimatePresence>
                     {showScrollBottom && (
-                      <motion.div
-                        initial={{ opacity: 0, y: 10, scale: 0.92 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: 10, scale: 0.92 }}
-                        transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
-                        className="absolute bottom-full mb-3 left-1/2 -translate-x-1/2 z-30 pointer-events-auto"
-                      >
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                isAutoScrollPinnedRef.current = true;
-                                scrollToBottom("smooth");
-                              }}
-                              className="w-10 h-10 rounded-full bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/50 dark:border-neutral-700/50 text-neutral-700 dark:text-neutral-200 hover:text-foreground dark:hover:text-foreground hover:bg-background dark:hover:bg-background flex items-center justify-center transition-all cursor-pointer"
-                              aria-label="Scroll to bottom"
+                      <div className="absolute bottom-full mb-3 inset-x-0 flex justify-center pointer-events-none z-30">
+                        <div className="pointer-events-auto">
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  isAutoScrollPinnedRef.current = true;
+                                  scrollToBottom("smooth");
+                                }}
+                                className="group w-10 h-10 rounded-full bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/50 dark:border-neutral-700/50 text-neutral-700 dark:text-neutral-200 hover:text-foreground dark:hover:text-foreground hover:bg-background dark:hover:bg-background flex items-center justify-center transition-all cursor-pointer"
+                                aria-label="Scroll to bottom"
+                              >
+                                <ArrowDown className="w-5 h-5 text-muted-foreground group-hover:text-foreground shrink-0" />
+                              </button>
+                            </TooltipTrigger>
+                            <TooltipContent
+                              side="top"
+                              sideOffset={8}
+                              className="text-md"
                             >
-                              <ArrowDown className="w-5 h-5" />
-                            </button>
-                          </TooltipTrigger>
-                          <TooltipContent side="top" sideOffset={8} className="text-md">
-                            Scroll to bottom
-                          </TooltipContent>
-                        </Tooltip>
-                      </motion.div>
+                              Scroll to bottom
+                            </TooltipContent>
+                          </Tooltip>
+                        </div>
+                      </div>
                     )}
                   </AnimatePresence>
                 </ChatInput>
@@ -887,6 +932,16 @@ export default function ActiveChatPage() {
           </div>
         </div>
       </div>
+
+      <DeleteModal
+        open={showDeleteModal}
+        onOpenChange={setShowDeleteModal}
+        itemTitle={currentChatTitle || "Chat"}
+        onConfirm={async () => {
+          await chatService.deleteChat(supabase, chatId);
+          router.push("/c");
+        }}
+      />
     </div>
   );
 }

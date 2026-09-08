@@ -56,6 +56,8 @@ import { useTheme } from 'next-themes';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { AnimatedChevron } from '@/components/ui/animated';
+import { LogoutModal } from '@/components/modals/logout-modal';
+import { DeleteModal } from '@/components/modals/delete-modal';
 
 interface SidebarProps {
   user: User | null;
@@ -169,6 +171,8 @@ export function Sidebar({
   const [isLogoHovered, setIsLogoHovered] = useState(false);
   const [isCloseBtnHovered, setIsCloseBtnHovered] = useState(false);
   const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({});
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [chatToDelete, setChatToDelete] = useState<Chat | null>(null);
 
   const toggleSection = (group: string) => {
     setCollapsedSections((prev) => ({
@@ -420,7 +424,7 @@ export function Sidebar({
               <DropdownMenuSeparator />
               <DropdownMenuItem asChild>
                 <Link href="/auth/login" className="flex items-center gap-2.5 px-3 py-2 cursor-pointer rounded-xl text-md">
-                  <Plus className="w-4 h-4 text-muted-foreground" />
+                  <Plus className="w-4 h-4 text-muted-foreground group-hover:text-foreground" />
                   <span>Add account</span>
                 </Link>
               </DropdownMenuItem>
@@ -436,7 +440,7 @@ export function Sidebar({
             href="/upgrade"
             className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-md cursor-pointer"
           >
-            <Sparkles className="w-4 h-4 text-muted-foreground" />
+            <Sparkles className="w-4 h-4 text-muted-foreground group-hover:text-foreground" />
             <span>{userPlan && userPlan !== 'free' ? 'Manage plan' : 'Upgrade plan'}</span>
           </Link>
         </DropdownMenuItem>
@@ -447,7 +451,7 @@ export function Sidebar({
             href="/settings"
             className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-md cursor-pointer"
           >
-            <Clock className="w-4 h-4 text-muted-foreground" />
+            <Clock className="w-4 h-4 text-muted-foreground group-hover:text-foreground" />
             <span>Personalization</span>
           </Link>
         </DropdownMenuItem>
@@ -458,7 +462,7 @@ export function Sidebar({
             href="/settings"
             className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-md cursor-pointer"
           >
-            <UserIcon className="w-4 h-4 text-muted-foreground" />
+            <UserIcon className="w-4 h-4 text-muted-foreground group-hover:text-foreground" />
             <span>Profile</span>
           </Link>
         </DropdownMenuItem>
@@ -469,7 +473,7 @@ export function Sidebar({
             href="/settings"
             className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-md cursor-pointer"
           >
-            <Settings className="w-4 h-4 text-muted-foreground" />
+            <Settings className="w-4 h-4 text-muted-foreground group-hover:text-foreground" />
             <span>Settings</span>
           </Link>
         </DropdownMenuItem>
@@ -496,8 +500,8 @@ export function Sidebar({
         ) : (
           <DropdownMenuSub>
             <DropdownMenuSubTrigger className="flex items-center gap-2.5 px-3 py-2 text-md rounded-xl cursor-pointer">
-              <Sun className="w-4 h-4 dark:hidden text-muted-foreground" />
-              <Moon className="w-4 h-4 hidden dark:block text-muted-foreground" />
+              <Sun className="w-4 h-4 dark:hidden text-muted-foreground group-hover:text-foreground" />
+              <Moon className="w-4 h-4 hidden dark:block text-muted-foreground group-hover:text-foreground" />
               <span>Theme</span>
             </DropdownMenuSubTrigger>
             <DropdownMenuSubContent sideOffset={2} alignOffset={-89} className="w-40 rounded-2xl p-1.5 bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/50 dark:border-neutral-700/50">
@@ -529,50 +533,50 @@ export function Sidebar({
         ) : (
           <DropdownMenuSub>
             <DropdownMenuSubTrigger className="flex items-center gap-2.5 px-3 py-2 text-md rounded-xl cursor-pointer">
-              <LifeBuoy className="w-4 h-4 text-muted-foreground" />
+              <LifeBuoy className="w-4 h-4 text-muted-foreground group-hover:text-foreground" />
               <span>Help</span>
             </DropdownMenuSubTrigger>
             <DropdownMenuSubContent sideOffset={2} alignOffset={-261} className="w-56 rounded-2xl p-1.5 bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/50 dark:border-neutral-700/50">
               <DropdownMenuItem asChild>
                 <Link href="/support/help" className="flex items-center gap-2.5 px-3 py-2 cursor-pointer rounded-xl text-md">
-                  <HelpCircle className="w-4 h-4 text-muted-foreground" />
+                  <HelpCircle className="w-4 h-4 text-muted-foreground group-hover:text-foreground" />
                   <span>Help center</span>
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
                 <Link href="/company/blog" className="flex items-center gap-2.5 px-3 py-2 cursor-pointer rounded-xl text-md">
-                  <PenLine className="w-4 h-4 text-muted-foreground" />
+                  <PenLine className="w-4 h-4 text-muted-foreground group-hover:text-foreground" />
                   <span>Release notes</span>
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
                 <Link href="/product/docs" className="flex items-center gap-2.5 px-3 py-2 cursor-pointer rounded-xl text-md">
-                  <ArrowDownCircle className="w-4 h-4 text-muted-foreground" />
+                  <ArrowDownCircle className="w-4 h-4 text-muted-foreground group-hover:text-foreground" />
                   <span>Download apps</span>
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
                 <Link href="/settings" className="flex items-center gap-2.5 px-3 py-2 cursor-pointer rounded-xl text-md">
-                  <Command className="w-4 h-4 text-muted-foreground" />
+                  <Command className="w-4 h-4 text-muted-foreground group-hover:text-foreground" />
                   <span>Keyboard shortcuts</span>
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem asChild>
                 <Link href="/support/terms" className="flex items-center gap-2.5 px-3 py-2 cursor-pointer rounded-xl text-md">
-                  <FileText className="w-4 h-4 text-muted-foreground" />
+                  <FileText className="w-4 h-4 text-muted-foreground group-hover:text-foreground" />
                   <span>Terms of Service</span>
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
                 <Link href="/support/privacy" className="flex items-center gap-2.5 px-3 py-2 cursor-pointer rounded-xl text-md">
-                  <Info className="w-4 h-4 text-muted-foreground" />
+                  <Info className="w-4 h-4 text-muted-foreground group-hover:text-foreground" />
                   <span>Privacy Policy</span>
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
                 <Link href="/company/contact" className="flex items-center gap-2.5 px-3 py-2 cursor-pointer rounded-xl text-md">
-                  <Bug className="w-4 h-4 text-muted-foreground" />
+                  <Bug className="w-4 h-4 text-muted-foreground group-hover:text-foreground" />
                   <span>Report a bug</span>
                 </Link>
               </DropdownMenuItem>
@@ -584,12 +588,123 @@ export function Sidebar({
 
         {/* Log out */}
         <DropdownMenuItem
-          onClick={signOut}
-          className="text-red-500 hover:text-red-500 focus:text-red-500 flex items-center gap-2.5 px-3 py-2 cursor-pointer rounded-xl"
+          onClick={() => setShowLogoutModal(true)}
+          className="flex items-center gap-2.5 px-3 py-2 cursor-pointer rounded-xl"
         >
-          <LogOut className="w-4 h-4 text-red-500" />
-          <span className="font-medium">Log out</span>
+          <LogOut className="w-4 h-4 text-muted-foreground group-hover:text-foreground" />
+          <span>Log out</span>
         </DropdownMenuItem>
+      </div>
+    );
+  };
+
+  const renderChatItem = (chat: Chat) => {
+    const isHovered = hoveredChatId === chat.id;
+    const isSelected = currentChatId === chat.id;
+
+    return (
+      <div
+        key={chat.id}
+        onClick={() => {
+          onChatSelect(chat.id);
+          if (typeof window !== 'undefined' && window.innerWidth < 1280) {
+            onToggle();
+          }
+        }}
+        onMouseEnter={() => setHoveredChatId(chat.id)}
+        onMouseLeave={() => setHoveredChatId(null)}
+        className={cn(
+          'group relative flex items-center justify-between px-3 py-2 rounded-xl text-md cursor-pointer transition-all duration-150',
+          isSelected
+            ? 'bg-secondary text-foreground font-medium'
+            : 'text-muted-foreground hover:bg-secondary hover:text-foreground'
+        )}
+      >
+        {/* Title with Smooth Marquee on Hover */}
+        <ChatTitleMarquee
+          title={chat.title || 'New chat'}
+          isHovered={isHovered}
+        />
+
+        {/* Status indicators when not hovered */}
+        {chat.starred && !isHovered && (
+          <PinOff className="w-4 h-4 text-muted-foreground/70 shrink-0 ml-1.5" />
+        )}
+        {chat.archived && !chat.starred && !isHovered && (
+          <ArchiveX className="w-4 h-4 text-muted-foreground/70 shrink-0 ml-1.5" />
+        )}
+
+        {/* Hover Actions with Smooth Fade */}
+        <div
+          className={cn(
+            'absolute right-1 top-1/2 -translate-y-1/2 flex items-center gap-0.5 pl-8 pr-1.5 py-1 rounded-r-xl transition-all duration-150 z-10',
+            isSelected || isHovered
+              ? 'bg-gradient-to-l from-secondary via-secondary from-25% to-transparent'
+              : 'bg-gradient-to-l from-sidebar via-sidebar from-25% to-transparent',
+            isHovered
+              ? 'opacity-100 pointer-events-auto'
+              : 'max-md:opacity-100 max-md:pointer-events-auto opacity-0 pointer-events-none'
+          )}
+        >
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onToggleStar(chat.id, !chat.starred);
+                }}
+                className="p-1 rounded-md text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+              >
+                {chat.starred ? (
+                  <PinOff className="w-4 h-4 text-foreground" />
+                ) : (
+                  <Pin className="w-4 h-4" />
+                )}
+              </button>
+            </TooltipTrigger>
+            <TooltipContent className="text-md">
+              {chat.starred ? 'Unpin' : 'Pin'}
+            </TooltipContent>
+          </Tooltip>
+
+          {onToggleArchive && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onToggleArchive(chat.id, !chat.archived);
+                  }}
+                  className="p-1 rounded-md text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                >
+                  {chat.archived ? (
+                    <ArchiveX className="w-4 h-4" />
+                  ) : (
+                    <Archive className="w-4 h-4" />
+                  )}
+                </button>
+              </TooltipTrigger>
+              <TooltipContent className="text-md">
+                {chat.archived ? 'Unarchive' : 'Archive'}
+              </TooltipContent>
+            </Tooltip>
+          )}
+
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setChatToDelete(chat);
+                }}
+                className="p-1 rounded-md text-muted-foreground hover:text-red-500 transition-colors cursor-pointer"
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent className="text-md">Delete</TooltipContent>
+          </Tooltip>
+        </div>
       </div>
     );
   };
@@ -624,7 +739,7 @@ export function Sidebar({
                 {isLogoHovered ? (
                   <PanelRight className="w-4 h-4 text-foreground pointer-events-none" />
                 ) : (
-                  <CloseAIIcon size={22} className="pointer-events-none" />
+                  <CloseAIIcon size={26} className="pointer-events-none" />
                 )}
               </button>
             </TooltipTrigger>
@@ -656,7 +771,12 @@ export function Sidebar({
           <Tooltip>
             <TooltipTrigger asChild>
               <button
-                onClick={onNewChat}
+                onClick={() => {
+                  onNewChat();
+                  if (typeof window !== 'undefined' && window.innerWidth < 1280) {
+                    onToggle();
+                  }
+                }}
                 className="w-10 h-10 rounded-xl flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors cursor-pointer"
                 aria-label="New chat"
               >
@@ -801,6 +921,9 @@ export function Sidebar({
           <button
             onClick={() => {
               onNewChat();
+              if (typeof window !== 'undefined' && window.innerWidth < 1280) {
+                onToggle();
+              }
             }}
             className="w-full flex items-center justify-between h-10 px-3 rounded-xl hover:bg-secondary text-muted-foreground hover:text-foreground text-md font-medium group cursor-pointer transition-all duration-150"
           >
@@ -857,169 +980,90 @@ export function Sidebar({
             </div>
           ) : (
             <div className="space-y-4 py-2">
-              {Object.entries(groupedChats).map(([group, groupChats]) => {
-                const isPinnedGroup = group === 'Pinned';
-                const isArchiveGroup = group === 'Archived';
-                const isCollapsibleGroup = isPinnedGroup || isArchiveGroup;
-
-                if (!isPinnedGroup && !isArchiveGroup && groupChats.length === 0) {
-                  return null;
-                }
-
-                const isCollapsed = isCollapsibleGroup && !!collapsedSections[group];
-
-                return (
-                  <div key={group} className="space-y-0.5">
-                    {isCollapsibleGroup ? (
-                      <button
-                        type="button"
-                        onClick={() => toggleSection(group)}
-                        className="w-full flex items-center justify-between px-3 py-1 text-[15px] font-semibold tracking-wider text-muted-foreground/80 hover:text-foreground uppercase select-none cursor-pointer transition-colors group/section text-left"
-                      >
-                        <span>{group}</span>
-                        <AnimatedChevron
-                          open={!isCollapsed}
-                          disableHover
-                          orientation="right-down"
-                          size={16}
-                          className="text-muted-foreground/70 group-hover/section:text-foreground shrink-0"
-                        />
-                      </button>
+              {/* PINNED Section */}
+              <div className="space-y-0.5">
+                <button
+                  type="button"
+                  onClick={() => toggleSection('Pinned')}
+                  className="w-full flex items-center justify-between px-3 py-1 text-[15px] font-semibold tracking-wider text-muted-foreground/80 hover:text-foreground uppercase select-none cursor-pointer transition-colors group/section text-left"
+                >
+                  <span>PINNED</span>
+                  <AnimatedChevron
+                    open={!collapsedSections['Pinned']}
+                    disableHover
+                    orientation="right-down"
+                    size={16}
+                    className="text-muted-foreground/70 group-hover/section:text-foreground shrink-0"
+                  />
+                </button>
+                {!collapsedSections['Pinned'] && (
+                  <>
+                    {(groupedChats['Pinned'] || []).length === 0 ? (
+                      <div className="px-3 py-1 text-[13.5px] text-muted-foreground/60 select-none font-normal">
+                        No pinned chats
+                      </div>
                     ) : (
+                      groupedChats['Pinned'].map((chat) => renderChatItem(chat))
+                    )}
+                  </>
+                )}
+              </div>
+
+              {/* ARCHIVED Section */}
+              <div className="space-y-0.5">
+                <button
+                  type="button"
+                  onClick={() => toggleSection('Archived')}
+                  className="w-full flex items-center justify-between px-3 py-1 text-[15px] font-semibold tracking-wider text-muted-foreground/80 hover:text-foreground uppercase select-none cursor-pointer transition-colors group/section text-left"
+                >
+                  <span>ARCHIVED</span>
+                  <AnimatedChevron
+                    open={!collapsedSections['Archived']}
+                    disableHover
+                    orientation="right-down"
+                    size={16}
+                    className="text-muted-foreground/70 group-hover/section:text-foreground shrink-0"
+                  />
+                </button>
+                {!collapsedSections['Archived'] && (
+                  <>
+                    {(groupedChats['Archived'] || []).length === 0 ? (
+                      <div className="px-3 py-1 text-[13.5px] text-muted-foreground/60 select-none font-normal">
+                        No archived chats
+                      </div>
+                    ) : (
+                      groupedChats['Archived'].map((chat) => renderChatItem(chat))
+                    )}
+                  </>
+                )}
+              </div>
+
+              {/* RECENTS / Date Groups Section */}
+              {Object.entries(groupedChats).filter(([g, list]) => g !== 'Pinned' && g !== 'Archived' && list.length > 0).length === 0 ? (
+                <div className="space-y-0.5 py-1">
+                  <div className="px-3 py-1 text-[15px] font-semibold tracking-wider text-muted-foreground/80 uppercase select-none">
+                    RECENTS
+                  </div>
+                  <div className="px-3 py-1 text-[13.5px] text-muted-foreground/60 select-none font-normal">
+                    {searchQuery ? 'No chats found' : 'No chats'}
+                  </div>
+                </div>
+              ) : (
+                Object.entries(groupedChats).map(([group, groupChats]) => {
+                  if (group === 'Pinned' || group === 'Archived' || groupChats.length === 0) {
+                    return null;
+                  }
+
+                  return (
+                    <div key={group} className="space-y-0.5">
                       <div className="px-3 py-1 text-[15px] font-semibold tracking-wider text-muted-foreground/80 uppercase select-none">
                         {group}
                       </div>
-                    )}
-
-                    {!isCollapsed && (
-                      <>
-                        {isPinnedGroup && groupChats.length === 0 && (
-                          <div className="px-3 py-1 text-[13.5px] text-muted-foreground/60 select-none font-normal">
-                            No pinned chats
-                          </div>
-                        )}
-
-                        {isArchiveGroup && groupChats.length === 0 && (
-                          <div className="px-3 py-1 text-[13.5px] text-muted-foreground/60 select-none font-normal">
-                            No archived chats
-                          </div>
-                        )}
-
-                        {groupChats.map((chat) => {
-                          const isHovered = hoveredChatId === chat.id;
-                          const isSelected = currentChatId === chat.id;
-
-                          return (
-                            <div
-                              key={chat.id}
-                              onClick={() => {
-                                onChatSelect(chat.id);
-                                if (typeof window !== 'undefined' && window.innerWidth < 1024) {
-                                  onToggle();
-                                }
-                              }}
-                              onMouseEnter={() => setHoveredChatId(chat.id)}
-                              onMouseLeave={() => setHoveredChatId(null)}
-                              className={cn(
-                                'group relative flex items-center justify-between px-3 py-2 rounded-xl text-md cursor-pointer transition-all duration-150',
-                                isSelected
-                                  ? 'bg-secondary text-foreground font-medium'
-                                  : 'text-muted-foreground hover:bg-secondary hover:text-foreground'
-                              )}
-                            >
-                              {/* Title with Smooth Marquee on Hover */}
-                              <ChatTitleMarquee
-                                title={chat.title || 'New chat'}
-                                isHovered={isHovered}
-                              />
-
-                              {/* Status indicators when not hovered */}
-                              {chat.starred && !isHovered && (
-                                <PinOff className="w-4 h-4 text-muted-foreground/70 shrink-0 ml-1.5" />
-                              )}
-                              {chat.archived && !chat.starred && !isHovered && (
-                                <ArchiveX className="w-4 h-4 text-muted-foreground/70 shrink-0 ml-1.5" />
-                              )}
-
-                              {/* Hover Actions with Smooth Fade */}
-                              <div
-                                className={cn(
-                                  'absolute right-1 top-1/2 -translate-y-1/2 flex items-center gap-0.5 pl-8 pr-1.5 py-1 rounded-r-xl transition-all duration-150 z-10',
-                                  isSelected || isHovered
-                                    ? 'bg-gradient-to-l from-secondary via-secondary from-25% to-transparent'
-                                    : 'bg-gradient-to-l from-sidebar via-sidebar from-25% to-transparent',
-                                  isHovered
-                                    ? 'opacity-100 pointer-events-auto'
-                                    : 'max-md:opacity-100 max-md:pointer-events-auto opacity-0 pointer-events-none'
-                                )}
-                              >
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <button
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        onToggleStar(chat.id, !chat.starred);
-                                      }}
-                                      className="p-1 rounded-md text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
-                                    >
-                                      {chat.starred ? (
-                                        <PinOff className="w-4 h-4 text-foreground" />
-                                      ) : (
-                                        <Pin className="w-4 h-4" />
-                                      )}
-                                    </button>
-                                  </TooltipTrigger>
-                                  <TooltipContent className="text-md">
-                                    {chat.starred ? 'Unpin' : 'Pin'}
-                                  </TooltipContent>
-                                </Tooltip>
-
-                                {onToggleArchive && (
-                                  <Tooltip>
-                                    <TooltipTrigger asChild>
-                                      <button
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          onToggleArchive(chat.id, !chat.archived);
-                                        }}
-                                        className="p-1 rounded-md text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
-                                      >
-                                        {chat.archived ? (
-                                          <ArchiveX className="w-4 h-4" />
-                                        ) : (
-                                          <Archive className="w-4 h-4" />
-                                        )}
-                                      </button>
-                                    </TooltipTrigger>
-                                    <TooltipContent className="text-md">
-                                      {chat.archived ? 'Unarchive' : 'Archive'}
-                                    </TooltipContent>
-                                  </Tooltip>
-                                )}
-
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <button
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        onDeleteChat(chat.id);
-                                      }}
-                                      className="p-1 rounded-md text-muted-foreground hover:text-red-500 transition-colors cursor-pointer"
-                                    >
-                                      <Trash2 className="w-4 h-4" />
-                                    </button>
-                                  </TooltipTrigger>
-                                  <TooltipContent className="text-md">Delete</TooltipContent>
-                                </Tooltip>
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </>
-                    )}
-                  </div>
-                );
-              })}
+                      {groupChats.map((chat) => renderChatItem(chat))}
+                    </div>
+                  );
+                })
+              )}
             </div>
           )}
         </ScrollArea>
@@ -1070,6 +1114,31 @@ export function Sidebar({
           )}
         </div>
       </aside>
+
+      {/* Logout Confirmation Modal */}
+      <LogoutModal
+        open={showLogoutModal}
+        onOpenChange={setShowLogoutModal}
+        onConfirm={signOut}
+        userName={displayName}
+        userEmail={userEmail}
+        userAvatar={avatarUrl}
+      />
+
+      {/* Delete Confirmation Modal */}
+      <DeleteModal
+        open={!!chatToDelete}
+        onOpenChange={(open) => {
+          if (!open) setChatToDelete(null);
+        }}
+        itemTitle={chatToDelete?.title || 'New chat'}
+        onConfirm={() => {
+          if (chatToDelete) {
+            onDeleteChat(chatToDelete.id);
+            setChatToDelete(null);
+          }
+        }}
+      />
     </>
   );
 }

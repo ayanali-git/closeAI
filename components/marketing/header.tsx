@@ -27,6 +27,7 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
+import { LogoutModal } from "@/components/modals/logout-modal";
 import { cn } from "@/lib/utils";
 
 type MegaMenuCategory =
@@ -346,6 +347,9 @@ const SITE_SEARCH_INDEX: SiteSearchItem[] = [
   },
 ];
 
+const useIsomorphicLayoutEffect =
+  typeof window !== "undefined" ? React.useLayoutEffect : React.useEffect;
+
 export function MarketingHeader() {
   const { user, loading, signOut } = useAuth();
   const router = useRouter();
@@ -359,12 +363,16 @@ export function MarketingHeader() {
   const [accountMenuOpen, setAccountMenuOpen] = useState(false);
   const [loginMenuOpen, setLoginMenuOpen] = useState(false);
   const [tryMenuOpen, setTryMenuOpen] = useState(false);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [hoveredNav, setHoveredNav] = useState<string | null>(null);
+  const [scrollbarWidth, setScrollbarWidth] = useState(0);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const accountTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const loginTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const tryTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const headerRef = useRef<HTMLElement>(null);
+  const isLocked = isSearchOpen || mobileNavOpen;
 
   const searchResults = React.useMemo(() => {
     const q = submittedQuery.trim().toLowerCase();
@@ -436,31 +444,43 @@ export function MarketingHeader() {
 
   useEffect(() => {
     setMounted(true);
+    const sb = window.innerWidth - document.documentElement.clientWidth;
+    if (sb > 0) {
+      setScrollbarWidth(sb);
+    }
   }, []);
 
-  useEffect(() => {
-    if (isSearchOpen) {
-      if (searchInputRef.current) {
-        searchInputRef.current.focus();
-      }
-      const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
-      const prevBodyOverflow = document.body.style.overflow;
-      const prevHtmlOverflow = document.documentElement.style.overflow;
-      const prevBodyPaddingRight = document.body.style.paddingRight;
+  // Lock background scroll when search or mobile nav is open.
+  // Runs synchronously before paint so the browser paints the exact compensation on frame 1.
+  useIsomorphicLayoutEffect(() => {
+    if (!isLocked) return;
 
-      document.body.style.overflow = "hidden";
-      document.documentElement.style.overflow = "hidden";
-      if (scrollbarWidth > 0) {
-        document.body.style.paddingRight = `${scrollbarWidth}px`;
-      }
-
-      return () => {
-        document.body.style.overflow = prevBodyOverflow;
-        document.documentElement.style.overflow = prevHtmlOverflow;
-        document.body.style.paddingRight = prevBodyPaddingRight;
-      };
+    if (isSearchOpen && searchInputRef.current) {
+      searchInputRef.current.focus();
     }
-  }, [isSearchOpen]);
+
+    const sbWidth =
+      window.innerWidth - document.documentElement.clientWidth || scrollbarWidth;
+    if (sbWidth > 0 && sbWidth !== scrollbarWidth) {
+      setScrollbarWidth(sbWidth);
+    }
+
+    const prevHtmlOverflow = document.documentElement.style.overflow;
+    const prevBodyOverflow = document.body.style.overflow;
+    const prevBodyPaddingRight = document.body.style.paddingRight;
+
+    document.documentElement.style.overflow = "hidden";
+    document.body.style.overflow = "hidden";
+    if (sbWidth > 0) {
+      document.body.style.paddingRight = `${sbWidth}px`;
+    }
+
+    return () => {
+      document.documentElement.style.overflow = prevHtmlOverflow;
+      document.body.style.overflow = prevBodyOverflow;
+      document.body.style.paddingRight = prevBodyPaddingRight;
+    };
+  }, [isLocked, isSearchOpen]);
 
   // Handle escape key to close menu/search
   useEffect(() => {
@@ -469,11 +489,29 @@ export function MarketingHeader() {
         setActiveMenu(null);
         setHoveredNav(null);
         setIsSearchOpen(false);
+        setMobileNavOpen(false);
       }
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
+
+  // Close mobile navigation drawer on resize to desktop & keep scrollbar width updated
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 1024) {
+        setMobileNavOpen(false);
+      }
+      if (!isLocked) {
+        const sb = window.innerWidth - document.documentElement.clientWidth;
+        if (sb > 0) {
+          setScrollbarWidth(sb);
+        }
+      }
+    };
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, [isLocked]);
 
   const handleMouseEnter = (category: MegaMenuCategory) => {
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
@@ -500,16 +538,24 @@ export function MarketingHeader() {
       {/* Backdrop blur overlay when mega menu is active */}
       <div
         className={cn(
-          "fixed inset-0 top-14 z-40 bg-background/98 backdrop-blur-2xl pointer-events-none",
+          "fixed inset-y-0 left-0 top-14 z-40 bg-background/98 backdrop-blur-2xl pointer-events-none",
           activeMenu ? "opacity-100 pointer-events-auto" : "opacity-0"
         )}
+        style={{
+          right: isLocked && scrollbarWidth > 0 ? `${scrollbarWidth}px` : 0,
+          width: isLocked && scrollbarWidth > 0 ? `calc(100% - ${scrollbarWidth}px)` : "100%",
+        }}
         onClick={() => setActiveMenu(null)}
       />
 
       {/* FULLSCREEN SEARCH OVERLAY (OpenAI Style) */}
       {isSearchOpen && (
         <div
-          className="fixed inset-0 top-14 z-40 bg-background/98 backdrop-blur-2xl overflow-y-auto px-6 sm:px-8 py-12 sm:py-16 select-none"
+          className="fixed inset-y-0 left-0 top-14 z-40 bg-background/98 backdrop-blur-2xl overflow-y-auto overscroll-contain px-6 sm:px-8 py-12 sm:py-16 select-none"
+          style={{
+            right: scrollbarWidth > 0 ? `${scrollbarWidth}px` : 0,
+            width: scrollbarWidth > 0 ? `calc(100% - ${scrollbarWidth}px)` : "100%",
+          }}
           onClick={(e) => {
             if (e.target === e.currentTarget) {
               setIsSearchOpen(false);
@@ -533,7 +579,7 @@ export function MarketingHeader() {
                     }
                   }}
                   placeholder="Search about anything"
-                  className="w-full bg-transparent text-2xl sm:text-4xl text-foreground font-normal placeholder:text-muted-foreground outline-none border-none ring-0 py-2 leading-normal sm:leading-relaxed"
+                  className="w-full bg-transparent text-2xl sm:text-4xl font-normal text-foreground placeholder:text-muted-foreground focus:placeholder:text-foreground outline-none border-none ring-0 py-2 leading-normal sm:leading-relaxed"
                 />
                 <button
                   type="submit"
@@ -669,7 +715,12 @@ export function MarketingHeader() {
       )}
 
       <header
-        className="sticky top-0 z-50 w-full bg-background select-none transition-colors duration-200"
+        ref={headerRef}
+        className="fixed top-0 left-0 z-50 w-full bg-background select-none transition-colors duration-200"
+        style={{
+          right: isLocked && scrollbarWidth > 0 ? `${scrollbarWidth}px` : 0,
+          width: isLocked && scrollbarWidth > 0 ? `calc(100% - ${scrollbarWidth}px)` : "100%",
+        }}
         onMouseLeave={handleMouseLeave}
       >
         <div className="max-w-[1400px] mx-auto px-6 sm:px-8 h-14 flex items-center justify-between relative">
@@ -877,13 +928,13 @@ export function MarketingHeader() {
                     onMouseEnter={handleAccountEnter}
                     onMouseLeave={handleAccountLeave}
                     onClick={() => setAccountMenuOpen(!accountMenuOpen)}
-                    className="group flex rounded-full bg-white/50 dark:bg-[#212121]/50 hover:bg-secondary dark:hover:bg-[#2f2f2f] border border-border/80 dark:border-none items-center gap-1.5 text-[15px] font-medium text-muted-foreground hover:text-foreground transition-colors px-4 py-2 cursor-pointer outline-none select-none"
+                    className="group flex rounded-full bg-white/50 dark:bg-[#212121]/50 hover:bg-secondary dark:hover:bg-[#2f2f2f] border border-border/80 dark:border-none items-center gap-1.5 text-[15px] font-medium text-foreground transition-colors px-4 py-2 cursor-pointer outline-none select-none"
                   >
                     <span>Account</span>
                     <AnimatedChevron
                       open={accountMenuOpen}
                       size={18}
-                      className="text-muted-foreground group-hover:text-foreground transition-colors"
+                      className="text-foreground transition-colors"
                     />
                   </button>
 
@@ -914,9 +965,9 @@ export function MarketingHeader() {
                           type="button"
                           onClick={() => {
                             setAccountMenuOpen(false);
-                            signOut();
+                            setShowLogoutModal(true);
                           }}
-                          className="w-full flex items-center gap-2 px-4 py-2 text-md rounded-xl text-red-500 hover:bg-secondary dark:hover:bg-[#2f2f2f] transition-colors text-left cursor-pointer"
+                          className="w-full flex items-center gap-2 px-4 py-2 text-md rounded-xl text-foreground hover:bg-secondary dark:hover:bg-[#2f2f2f] transition-colors text-left cursor-pointer"
                         >
                           Log Out
                         </button>
@@ -943,13 +994,13 @@ export function MarketingHeader() {
                     onMouseEnter={handleLoginEnter}
                     onMouseLeave={handleLoginLeave}
                     onClick={() => setLoginMenuOpen(!loginMenuOpen)}
-                    className="group flex rounded-full bg-white/50 dark:bg-[#212121]/50 hover:bg-secondary dark:hover:bg-[#2f2f2f] border border-border/80 dark:border-none items-center gap-1.5 text-[15px] font-medium text-muted-foreground hover:text-foreground transition-colors px-4 py-2 cursor-pointer outline-none select-none"
+                    className="group flex rounded-full bg-white/50 dark:bg-[#212121]/50 hover:bg-secondary dark:hover:bg-[#2f2f2f] border border-border/80 dark:border-none items-center gap-1.5 text-[15px] font-medium text-foreground transition-colors px-4 py-2 cursor-pointer outline-none select-none"
                   >
                     <span>Log In</span>
                     <AnimatedChevron
                       open={loginMenuOpen}
                       size={18}
-                      className="text-muted-foreground group-hover:text-foreground transition-colors"
+                      className="text-foreground transition-colors"
                     />
                   </button>
 
@@ -1013,7 +1064,7 @@ export function MarketingHeader() {
                 setIsSearchOpen(!isSearchOpen);
                 setMobileNavOpen(false);
               }}
-              className="p-2 text-muted-foreground hover:text-foreground transition-colors flex items-center justify-center"
+              className="p-2 text-foreground transition-colors flex items-center justify-center"
               aria-label={isSearchOpen ? "Close search" : "Search"}
             >
               <AnimatedSearchClose isOpen={isSearchOpen} size={18} />
@@ -1025,7 +1076,7 @@ export function MarketingHeader() {
                 setMobileNavOpen(!mobileNavOpen);
                 setMobileSubMenu(null);
               }}
-              className="p-2 text-muted-foreground hover:text-foreground"
+              className="p-2 text-foreground"
               aria-label="Menu"
             >
               {mobileNavOpen ? (
@@ -1569,7 +1620,13 @@ export function MarketingHeader() {
         {/* MOBILE NAVIGATION DRAWER                            */}
         {/* ---------------------------------------------------------------- */}
         {mobileNavOpen && (
-          <div className="lg:hidden fixed inset-x-0 top-14 bottom-0 bg-background border-b border-border p-6 flex flex-col justify-between overflow-y-auto z-50 select-none">
+          <div
+            className="lg:hidden fixed inset-y-0 left-0 top-14 bg-background border-b border-border p-6 flex flex-col justify-between overflow-y-auto overscroll-contain scrollbar-none z-50 select-none"
+            style={{
+              right: scrollbarWidth > 0 ? `${scrollbarWidth}px` : 0,
+              width: scrollbarWidth > 0 ? `calc(100% - ${scrollbarWidth}px)` : "100%",
+            }}
+          >
             {mobileSubMenu === null ? (
               /* LEVEL 1: MAIN NAVIGATION LIST (Image 3) */
               <div className="flex flex-col justify-between h-full">
@@ -2015,8 +2072,8 @@ export function MarketingHeader() {
                         <button
                           type="button"
                           onClick={() => {
-                            signOut();
                             setMobileNavOpen(false);
+                            setShowLogoutModal(true);
                           }}
                           className="block text-xl font-medium text-red-500 hover:opacity-80 transition-opacity py-1 cursor-pointer"
                         >
@@ -2031,6 +2088,23 @@ export function MarketingHeader() {
           </div>
         )}
       </header>
+
+      {/* Logout Confirmation Modal */}
+      <LogoutModal
+        open={showLogoutModal}
+        onOpenChange={setShowLogoutModal}
+        onConfirm={async () => {
+          setShowLogoutModal(false);
+          await signOut();
+          router.push("/");
+        }}
+        userName={user?.user_metadata?.full_name || user?.email?.split("@")[0]}
+        userEmail={user?.email}
+        userAvatar={user?.user_metadata?.avatar_url}
+      />
+
+      {/* Spacer to preserve 56px (h-14) in document flow for fixed header */}
+      <div className="h-14 w-full shrink-0" aria-hidden="true" />
     </>
   );
 }

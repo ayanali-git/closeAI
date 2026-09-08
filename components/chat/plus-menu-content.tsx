@@ -969,7 +969,7 @@ export function PlusMenuContent({
         onClick={onAddFiles}
         className="flex items-center gap-2.5 px-3 py-2 text-md rounded-xl cursor-pointer text-foreground [@media(hover:hover)]:hover:bg-secondary dark:[@media(hover:hover)]:hover:bg-[#2f2f2f] active:bg-secondary/80 dark:active:bg-[#2f2f2f]/80 transition-colors outline-none focus:outline-none focus:bg-transparent focus-visible:outline-none whitespace-nowrap text-left"
       >
-        <Paperclip className="w-4 h-4 text-muted-foreground shrink-0" />
+        <Paperclip className="w-4 h-4 text-muted-foreground group-hover:text-foreground shrink-0" />
         <span className="whitespace-nowrap font-medium">Add photos & files</span>
       </DropdownMenuItem>
 
@@ -1002,7 +1002,7 @@ export function PlusMenuContent({
             chevronClassName="-ml-0.5"
             className="flex items-center px-3 py-2 text-md rounded-xl cursor-pointer text-foreground hover:bg-secondary dark:hover:bg-[#2f2f2f] data-[state=open]:bg-secondary dark:data-[state=open]:bg-[#2f2f2f] transition-colors outline-none whitespace-nowrap [&>svg:last-child]:shrink-0 text-left"
           >
-            <Package className="w-4 h-4 text-muted-foreground shrink-0 mr-2" />
+            <Package className="w-4 h-4 text-muted-foreground group-hover:text-foreground shrink-0 mr-2" />
             <span className="whitespace-nowrap font-medium shrink-0 mr-1.5">Select models</span>
             <ModelMarqueeText
               text={model}

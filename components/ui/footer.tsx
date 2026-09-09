@@ -345,7 +345,7 @@ export function Footer() {
                 e.preventDefault();
                 e.stopPropagation();
               }}
-              className="flex items-center text-base gap-1.5 px-4 py-2 rounded-full bg-white/50 dark:bg-[#212121]/50 hover:bg-secondary dark:hover:bg-[#2f2f2f] text-muted-foreground transition-colors cursor-not-allowed select-none whitespace-nowrap"
+              className="flex items-center text-base gap-1.5 px-4 py-2 rounded-full font-medium bg-white/50 dark:bg-[#212121]/50 hover:bg-secondary dark:hover:bg-[#2f2f2f] text-muted-foreground transition-colors cursor-not-allowed select-none whitespace-nowrap"
             >
               <Globe className="w-4 h-4 shrink-0" />
               <AnimatedComingSoonText

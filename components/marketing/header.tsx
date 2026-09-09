@@ -962,7 +962,7 @@ export function MarketingHeader() {
                       onMouseLeave={handleAccountLeave}
                       className="absolute right-0 top-full pt-2 z-50"
                     >
-                      <div className="w-40 rounded-2xl p-1.5 bg-white/50 dark:bg-[#212121]/50 border border-border/80 dark:border-none backdrop-blur-sm">
+                      <div className="w-40 rounded-2xl font-medium p-1.5 bg-white/50 dark:bg-[#212121]/50 border border-border/80 dark:border-none backdrop-blur-sm">
                         <Link
                           href="/c"
                           onClick={() => setAccountMenuOpen(false)}
@@ -1028,7 +1028,7 @@ export function MarketingHeader() {
                       onMouseLeave={handleLoginLeave}
                       className="absolute right-0 top-full pt-2 z-50"
                     >
-                      <div className="w-48 rounded-2xl p-1.5 bg-white/50 dark:bg-[#212121]/50 border border-border/80 dark:border-none backdrop-blur-sm">
+                      <div className="w-48 rounded-2xl font-medium p-1.5 bg-white/50 dark:bg-[#212121]/50 border border-border/80 dark:border-none backdrop-blur-sm">
                         <Link
                           href="/auth/login"
                           onClick={() => setLoginMenuOpen(false)}

@@ -404,7 +404,7 @@ export function Sidebar({
                 <p className="text-md text-muted-foreground leading-tight">{planDisplay}</p>
               </div>
             </DropdownMenuSubTrigger>
-            <DropdownMenuSubContent sideOffset={2} alignOffset={-97} className="w-64 rounded-2xl p-1.5 bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/50 dark:border-neutral-700/50">
+            <DropdownMenuSubContent sideOffset={2} alignOffset={-97} className="w-64 rounded-2xl p-1.5 bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/80 dark:border-neutral-700/80">
               <div className="flex items-center gap-2 px-3 py-2 text-md text-muted-foreground select-none">
                 <UserIcon className="w-4 h-4 shrink-0" />
                 <span className="truncate">{userEmail}</span>
@@ -504,7 +504,7 @@ export function Sidebar({
               <Moon className="w-4 h-4 hidden dark:block text-muted-foreground group-hover:text-foreground" />
               <span>Theme</span>
             </DropdownMenuSubTrigger>
-            <DropdownMenuSubContent sideOffset={2} alignOffset={-89} className="w-40 rounded-2xl p-1.5 bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/50 dark:border-neutral-700/50">
+            <DropdownMenuSubContent sideOffset={2} alignOffset={-89} className="w-40 rounded-2xl p-1.5 bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/80 dark:border-neutral-700/80">
               <DropdownMenuRadioGroup value={theme} onValueChange={setTheme}>
                 <DropdownMenuRadioItem value="light">Light</DropdownMenuRadioItem>
                 <DropdownMenuRadioItem value="dark">Dark</DropdownMenuRadioItem>
@@ -536,7 +536,7 @@ export function Sidebar({
               <LifeBuoy className="w-4 h-4 text-muted-foreground group-hover:text-foreground" />
               <span>Help</span>
             </DropdownMenuSubTrigger>
-            <DropdownMenuSubContent sideOffset={2} alignOffset={-261} className="w-56 rounded-2xl p-1.5 bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/50 dark:border-neutral-700/50">
+            <DropdownMenuSubContent sideOffset={2} alignOffset={-261} className="w-56 rounded-2xl p-1.5 bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/80 dark:border-neutral-700/80">
               <DropdownMenuItem asChild>
                 <Link href="/support/help" className="flex items-center gap-2.5 px-3 py-2 cursor-pointer rounded-xl text-md">
                   <HelpCircle className="w-4 h-4 text-muted-foreground group-hover:text-foreground" />
@@ -812,6 +812,22 @@ export function Sidebar({
                 Pinned chats
               </TooltipContent>
             </Tooltip>
+
+            {/* Archived Shortcut */}
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  onClick={onToggle}
+                  className="w-10 h-10 rounded-xl flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors cursor-pointer"
+                  aria-label="Archived chats"
+                >
+                  <Archive className="w-4 h-4" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="right" className="text-md">
+                Archived chats
+              </TooltipContent>
+            </Tooltip>
           </div>
 
           {/* Bottom User Profile Dock (Matching Open Sidebar Position) */}
@@ -847,7 +863,7 @@ export function Sidebar({
                   align="start"
                   alignOffset={-4}
                   sideOffset={6}
-                  className="w-64 rounded-2xl p-1.5 bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/50 dark:border-neutral-700/50 outline-none focus:outline-none ring-0"
+                  className="w-64 rounded-2xl p-1.5 bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/80 dark:border-neutral-700/80 outline-none focus:outline-none ring-0"
                 >
                   {renderAccountMenuItems()}
                 </DropdownMenuContent>
@@ -1112,7 +1128,7 @@ export function Sidebar({
                     align="start"
                     alignOffset={0}
                     sideOffset={6}
-                    className="w-[var(--radix-dropdown-menu-trigger-width)] min-w-[var(--radix-dropdown-menu-trigger-width)] max-w-[calc(100vw-24px)] max-h-[calc(100dvh-5rem)] overflow-y-auto rounded-2xl p-1.5 bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/50 dark:border-neutral-700/50 outline-none focus:outline-none ring-0"
+                    className="w-[var(--radix-dropdown-menu-trigger-width)] min-w-[var(--radix-dropdown-menu-trigger-width)] max-w-[calc(100vw-24px)] max-h-[calc(100dvh-5rem)] overflow-y-auto rounded-2xl p-1.5 bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/80 dark:border-neutral-700/80 outline-none focus:outline-none ring-0"
                   >
                     {renderAccountMenuItems()}
                   </DropdownMenuContent>

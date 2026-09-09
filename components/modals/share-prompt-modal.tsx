@@ -198,15 +198,15 @@ export function SharePromptModal({
           )}
         </div>
 
-        {/* Preview Card — renders the prompt exactly like a real sent message (ChatGPT-style share card) */}
-        <div className="relative w-full rounded-2xl overflow-hidden bg-neutral-900 dark:bg-[#1a1a1a] border border-neutral-800 dark:border-neutral-700/50">
-          {/* Bottom gradient overlay — fades into the CloseAI branding, matching the ChatGPT-style share card */}
+        {/* Preview Card — renders the prompt exactly like a real sent message */}
+        <div className="relative w-full rounded-2xl overflow-hidden dark:bg-neutral-800 dark:bg-[#1a1a1a]">
+          {/* Bottom gradient overlay — fades into the CloseAI branding */}
           <div className="absolute bottom-0 left-0 right-0 h-1/2 z-10 pointer-events-none bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
 
           <div
             className={cn(
               "relative z-0 min-h-[300px] sm:min-h-[330px] flex flex-col items-end justify-start gap-2.5 px-5 sm:px-6 pt-5 sm:pt-6 pb-12 sm:pb-14",
-              // Both states pin to the top of the card, like ChatGPT's share preview — no vertical centering gap above the content.
+              // Both states pin to the top of the card, share preview — no vertical centering gap above the content.
             )}
           >
             {/* Files Preview — same small-thumbnail treatment as a real message attachment, not a big stretched square */}
@@ -221,7 +221,7 @@ export function SharePromptModal({
                     <div
                       key={file.id || i}
                       className={cn(
-                        "overflow-hidden rounded-2xl bg-neutral-800",
+                        "overflow-hidden rounded-full bg-secondary border border-border/80",
                         isImage ? "max-w-[100px] sm:max-w-[150px]" : "max-w-full"
                       )}
                     >
@@ -232,9 +232,9 @@ export function SharePromptModal({
                           className="w-full max-h-[180px] sm:max-h-[220px] object-cover rounded-2xl"
                         />
                       ) : (
-                        <div className="flex items-center gap-1.5 px-3 py-2 text-xs sm:text-sm text-neutral-300">
+                        <div className="flex items-center gap-1.5 px-3 py-2 text-xs sm:text-sm text-foreground">
                           <FileTypeIcon
-                            className="w-4 h-4 shrink-0 text-neutral-400"
+                            className="w-4 h-4 shrink-0 text-muted-foreground"
                             weight="fill"
                           />
                           <span className="whitespace-nowrap">
@@ -250,7 +250,7 @@ export function SharePromptModal({
 
             {/* Prompt Text — identical bubble styling (bg / rounding / padding) to a real sent message bubble */}
             {promptText && (
-              <p className="bg-[#2F2F2F] text-foreground text-[15px] sm:text-[15.5px] leading-relaxed rounded-2xl sm:rounded-3xl px-4 sm:px-5 py-2.5 sm:py-3 max-w-[85%] whitespace-pre-wrap break-words">
+              <p className="bg-bubble dark:bg-[#2F2F2F] text-foreground text-[15px] sm:text-[15.5px] leading-relaxed rounded-2xl sm:rounded-3xl px-4 sm:px-5 py-2.5 sm:py-3 max-w-[85%] whitespace-pre-wrap break-words">
                 {promptText}
               </p>
             )}
@@ -279,7 +279,7 @@ export function SharePromptModal({
                 <LinkIcon className="w-6 h-6" weight="bold" />
               )}
             </div>
-            <span className="text-xs font-medium text-muted-foreground group-hover:text-foreground select-none">
+            <span className="text-xs font-medium text-foreground select-none">
               {linkCopied ? "Copied!" : "Copy"}
             </span>
           </button>
@@ -293,7 +293,7 @@ export function SharePromptModal({
             <div className="w-16 h-16 rounded-full bg-foreground text-background flex items-center justify-center transition-opacity group-hover:opacity-80">
               <XLogoIcon className="w-6 h-6" weight="bold" />
             </div>
-            <span className="text-xs font-medium text-muted-foreground group-hover:text-foreground select-none">X</span>
+            <span className="text-xs font-medium text-foreground select-none">X</span>
           </button>
 
           {/* LinkedIn */}
@@ -305,7 +305,7 @@ export function SharePromptModal({
             <div className="w-16 h-16 rounded-full bg-foreground text-background flex items-center justify-center transition-opacity group-hover:opacity-80">
               <LinkedinLogoIcon className="w-6 h-6" weight="bold" />
             </div>
-            <span className="text-xs font-medium text-muted-foreground group-hover:text-foreground select-none">
+            <span className="text-xs font-medium text-foreground select-none">
               LinkedIn
             </span>
           </button>
@@ -319,7 +319,7 @@ export function SharePromptModal({
             <div className="w-16 h-16 rounded-full bg-foreground text-background flex items-center justify-center transition-opacity group-hover:opacity-80">
               <DotsThreeIcon className="w-6 h-6" weight="bold" />
             </div>
-            <span className="text-xs font-medium text-muted-foreground group-hover:text-foreground select-none">
+            <span className="text-xs font-medium text-foreground select-none">
               More
             </span>
           </button>

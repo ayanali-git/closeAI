@@ -66,23 +66,24 @@ export function BottomSheet({
     if (open) setSnap(defaultSnap);
   }, [open, defaultSnap]);
 
-  // Lock background scroll while open.
+  // Lock background scroll while open, matching the header search pattern.
+  // Uses overflow:hidden + padding-right compensation instead of position:fixed
+  // so the page content and header don't shift when the scrollbar disappears.
   useEffect(() => {
     if (!open) return;
+    const html = document.documentElement;
     const body = document.body;
-    const scrollY = window.scrollY;
-    const prev = {
-      position: body.style.position,
-      top: body.style.top,
-      left: body.style.left,
-      right: body.style.right,
-      overflow: body.style.overflow,
-    };
-    body.style.position = "fixed";
-    body.style.top = `-${scrollY}px`;
-    body.style.left = "0";
-    body.style.right = "0";
+    // Measure scrollbar width before hiding it
+    const scrollbarWidth = window.innerWidth - html.clientWidth;
+    const prevHtmlOverflow = html.style.overflow;
+    const prevBodyOverflow = body.style.overflow;
+    const prevBodyPaddingRight = body.style.paddingRight;
+
+    html.style.overflow = "hidden";
     body.style.overflow = "hidden";
+    if (scrollbarWidth > 0) {
+      body.style.paddingRight = `${scrollbarWidth}px`;
+    }
 
     const onKey = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
@@ -94,12 +95,9 @@ export function BottomSheet({
 
     return () => {
       window.removeEventListener("keydown", onKey);
-      body.style.position = prev.position;
-      body.style.top = prev.top;
-      body.style.left = prev.left;
-      body.style.right = prev.right;
-      body.style.overflow = prev.overflow;
-      window.scrollTo(0, scrollY);
+      html.style.overflow = prevHtmlOverflow;
+      body.style.overflow = prevBodyOverflow;
+      body.style.paddingRight = prevBodyPaddingRight;
     };
   }, [open, onOpenChange]);
 

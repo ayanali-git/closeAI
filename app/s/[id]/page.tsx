@@ -20,6 +20,7 @@ import {
   ArrowDown,
   Maximize2,
   Minimize2,
+  MicOff,
 } from "lucide-react";
 import {
   Tooltip,
@@ -222,7 +223,7 @@ function SharedChatInputPill({
 
     el.style.height = "auto";
     const scrollH = el.scrollHeight;
-    const maxH = isFullyExpanded ? 460 : 200;
+    const maxH = isFullyExpanded ? 600 : 300;
 
     if (scrollH > 38 || prompt.includes("\n")) {
       setIsMultiLine(true);
@@ -423,13 +424,13 @@ function SharedChatInputPill({
               ref={plusButtonRef}
               type="button"
               className="w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary dark:hover:bg-[#2f2f2f] transition-colors shrink-0 cursor-pointer outline-none focus:outline-none"
-              aria-label="Add files & more"
+              aria-label="Attach and more"
             >
               <Plus className="w-5 h-5" />
             </button>
           </DropdownMenuTrigger>
         </TooltipTrigger>
-        <TooltipContent className="text-md">Add files & more</TooltipContent>
+        <TooltipContent className="text-md">Attach and more</TooltipContent>
       </Tooltip>
       <DropdownMenuContent
         side="top"
@@ -439,14 +440,14 @@ function SharedChatInputPill({
         avoidCollisions={true}
         collisionPadding={12}
         className={cn(
-          "rounded-2xl p-1.5 bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/50 dark:border-neutral-700/50 select-none outline-none z-50",
+          "rounded-2xl p-1.5 bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/80 dark:border-neutral-700/80 select-none outline-none z-50",
           menuWidth ? "" : "w-[244px] max-w-[calc(100vw-24px)]"
         )}
         style={{
           width: menuWidth ? `${menuWidth}px` : undefined,
         }}
       >
-        <PlusMenuContent onAddFiles={handleContinue} isOpen={plusMenuOpen} />
+        <PlusMenuContent onAddFiles={handleContinue} isOpen={plusMenuOpen} disableAttach={true} />
       </DropdownMenuContent>
     </DropdownMenu>
   );
@@ -477,16 +478,20 @@ function SharedChatInputPill({
             className={cn(
               "w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-all cursor-pointer shrink-0",
               isListening
-                ? "bg-red-500/15 text-red-500 animate-pulse"
+                ? "bg-red-500/15 text-red-500 hover:bg-red-500/25 ring-red-500/30"
                 : "text-muted-foreground hover:text-foreground hover:bg-secondary"
             )}
             aria-label={isListening ? "Stop dictation" : "Dictate"}
           >
-            <Mic className="w-5 h-5" />
+            {isListening ? (
+              <MicOff className="w-5 h-5 text-red-500" />
+            ) : (
+              <Mic className="w-5 h-5" />
+            )}
           </button>
         </TooltipTrigger>
         <TooltipContent className="text-md">
-          {isListening ? "Listening..." : "Dictate"}
+          {isListening ? "Stop dictation" : "Dictate"}
         </TooltipContent>
       </Tooltip>
 
@@ -523,7 +528,7 @@ function SharedChatInputPill({
                   <button
                     type="button"
                     onClick={onScrollToBottom}
-                    className="group w-10 h-10 rounded-full bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/50 dark:border-neutral-700/50 text-neutral-700 dark:text-neutral-200 hover:text-foreground dark:hover:text-foreground hover:bg-background dark:hover:bg-background flex items-center justify-center transition-all cursor-pointer"
+                    className="group w-10 h-10 rounded-full bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/80 dark:border-neutral-700/80 text-neutral-700 dark:text-neutral-200 hover:text-foreground dark:hover:text-foreground hover:bg-background dark:hover:bg-background hover:border-border/80 dark:hover:border-neutral-700/80 flex items-center justify-center transition-all cursor-pointer"
                     aria-label="Scroll to bottom"
                   >
                     <ArrowDown className="w-5 h-5 text-muted-foreground group-hover:text-foreground shrink-0" />
@@ -541,8 +546,8 @@ function SharedChatInputPill({
       <div
         ref={pillRef}
         className={cn(
-          "relative bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/50 dark:border-neutral-700/50 transition-all duration-200",
-          "focus-within:bg-background dark:focus-within:bg-background focus-within:text-foreground dark:focus-within:text-foreground",
+          "relative bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/80 dark:border-neutral-700/80 transition-all duration-200",
+          "hover:bg-background dark:hover:bg-background focus-within:text-foreground dark:focus-within:text-foreground",
           "rounded-3xl",
           isExpandedLayout
             ? "p-3.5 sm:p-4"
@@ -697,6 +702,15 @@ export default function PublicSharedChatPage() {
     setShowScrollBottom(isScrolledUp);
   };
 
+  const dockRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!dockRef.current) return;
+    const ro = new ResizeObserver(() => handleScroll());
+    ro.observe(dockRef.current);
+    return () => ro.disconnect();
+  }, []);
+
   const scrollToBottom = () => {
     if (scrollContainerRef.current) {
       scrollContainerRef.current.scrollTo({
@@ -712,8 +726,15 @@ export default function PublicSharedChatPage() {
     if (isLoading || isError || messages.length === 0) return;
     const scroll = () => scrollToBottom();
     scroll();
-    const frames = [requestAnimationFrame(scroll), requestAnimationFrame(() => requestAnimationFrame(scroll))];
-    const timers = [window.setTimeout(scroll, 80), window.setTimeout(scroll, 250), window.setTimeout(scroll, 600)];
+    const frames = [
+      requestAnimationFrame(scroll),
+      requestAnimationFrame(() => requestAnimationFrame(scroll)),
+    ];
+    const timers = [
+      window.setTimeout(scroll, 80),
+      window.setTimeout(scroll, 250),
+      window.setTimeout(scroll, 600),
+    ];
     return () => {
       frames.forEach(cancelAnimationFrame);
       timers.forEach(clearTimeout);
@@ -789,7 +810,7 @@ export default function PublicSharedChatPage() {
 
   useEffect(() => {
     if (cleanTitle) {
-      document.title = `CloseAI \u2014 ${cleanTitle}`;
+      document.title = `CloseAI \u007C Shared Chat\u003A ${cleanTitle}`;
     } else {
       document.title = "CloseAI";
     }
@@ -800,7 +821,7 @@ export default function PublicSharedChatPage() {
 
   return (
     <div className="flex flex-col h-[100dvh] w-full bg-background text-foreground overflow-hidden relative">
-      <title>{cleanTitle ? `CloseAI \u2014 ${cleanTitle}` : "CloseAI"}</title>
+      <title>{cleanTitle ? `CloseAI \u007C Shared Chat\u003A ${cleanTitle}` : "CloseAI"}</title>
 
       {/* Transparent Floating Header - Buttons float cleanly on top, matching c/[id] exactly */}
       <header className="absolute top-0 left-0 right-0 z-30 h-14 pt-[env(safe-area-inset-top,0px)] px-3 sm:px-4 flex items-center justify-between select-none pointer-events-none bg-transparent">
@@ -830,7 +851,7 @@ export default function PublicSharedChatPage() {
                 type="button"
                 disabled={isSharing}
                 onClick={handleShareClick}
-                className="group h-9 px-2.5 sm:px-3 gap-1.5 rounded-xl bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/50 dark:border-neutral-700/50 text-neutral-700 dark:text-neutral-200 hover:text-foreground dark:hover:text-foreground hover:bg-background dark:hover:bg-background flex items-center justify-center text-base font-medium transition-colors cursor-pointer outline-none focus:outline-none disabled:opacity-70 disabled:pointer-events-auto disabled:cursor-not-allowed"
+                className="group h-9 px-2.5 sm:px-3 gap-1.5 rounded-xl bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/80 dark:border-neutral-700/80 text-neutral-700 dark:text-neutral-200 hover:text-foreground dark:hover:text-foreground hover:bg-background dark:hover:bg-background flex items-center justify-center text-base font-medium transition-colors cursor-pointer outline-none focus:outline-none disabled:opacity-70 disabled:pointer-events-auto disabled:cursor-not-allowed"
               >
                 {isSharing ? (
                   <Loader className="w-4 h-4 shrink-0 animate-spin text-muted-foreground group-hover:text-foreground" />
@@ -850,7 +871,7 @@ export default function PublicSharedChatPage() {
               <button
                 type="button"
                 onClick={() => window.open("/c", "_blank")}
-                className="group w-9 h-9 rounded-xl bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/50 dark:border-neutral-700/50 text-neutral-700 dark:text-neutral-200 hover:text-foreground dark:hover:text-foreground hover:bg-background dark:hover:bg-background flex items-center justify-center transition-colors cursor-pointer outline-none focus:outline-none"
+                className="group w-9 h-9 rounded-xl bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/80 dark:border-neutral-700/80 text-neutral-700 dark:text-neutral-200 hover:text-foreground dark:hover:text-foreground hover:bg-background dark:hover:bg-background flex items-center justify-center transition-colors cursor-pointer outline-none focus:outline-none"
                 aria-label="New chat"
               >
                 <Plus className="w-4 h-4 text-muted-foreground group-hover:text-foreground" />
@@ -910,12 +931,16 @@ export default function PublicSharedChatPage() {
                     isTyping={false}
                     pendingMessage={null}
                     showMessageActions={false}
+                    stickyCodeHeaderClass="top-0"
                   />
                 </div>
               )}
 
               {/* Floating Input Dock inside scroll container */}
-              <div className="sticky bottom-0 left-0 right-0 z-20 pointer-events-none pb-[max(env(safe-area-inset-bottom,0px),0.5rem)] bg-gradient-to-t from-background via-background/90 to-transparent pt-4 mt-auto w-full">
+              <div
+                ref={dockRef}
+                className="sticky bottom-0 left-0 right-0 z-20 pointer-events-none pb-[max(env(safe-area-inset-bottom,0px),0.5rem)] bg-gradient-to-t from-background via-background/90 to-transparent pt-4 mt-auto w-full"
+              >
                 <div className="pointer-events-auto">
                   <SharedChatInputPill
                     chatId={chatId}

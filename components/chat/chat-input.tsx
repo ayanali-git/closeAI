@@ -277,7 +277,7 @@ export const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(function Cha
     // Reset height to measure scrollHeight accurately
     el.style.height = "auto";
     const scrollH = el.scrollHeight;
-    const maxH = isFullyExpanded ? 460 : 200;
+    const maxH = isFullyExpanded ? 600 : 300;
 
     if (scrollH > 38 || message.includes("\n")) {
       setIsMultiLine(true);
@@ -564,7 +564,7 @@ export const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(function Cha
           </DropdownMenuTrigger>
         </TooltipTrigger>
         <TooltipContent className="text-md">
-          Add files & more
+          Attach and more
         </TooltipContent>
       </Tooltip>
 
@@ -576,7 +576,7 @@ export const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(function Cha
         avoidCollisions={true}
         collisionPadding={12}
         className={cn(
-          "rounded-2xl p-1.5 bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/50 dark:border-neutral-700/50 select-none outline-none",
+          "rounded-2xl p-1.5 bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/80 dark:border-neutral-700/80 select-none outline-none",
           menuWidth ? "" : "w-[244px] max-w-[calc(100vw-24px)]"
         )}
         style={{
@@ -697,8 +697,8 @@ export const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(function Cha
         {...getRootProps()}
         ref={pillRef}
         className={cn(
-          "relative bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/50 dark:border-neutral-700/50 transition-all duration-200",
-          "focus-within:bg-background dark:focus-within:bg-background focus-within:text-foreground dark:focus-within:text-foreground",
+          "relative bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/80 dark:border-neutral-700/80 transition-all duration-200",
+          "hover:bg-background dark:hover:bg-background focus-within:text-foreground dark:focus-within:text-foreground",
           "rounded-3xl",
           isExpandedLayout
             ? "p-3.5 sm:p-4"

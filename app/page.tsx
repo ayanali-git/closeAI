@@ -27,6 +27,22 @@ export default function LandingPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
+  // Hover-dims-siblings state, one per grid section
+  const [hoveredSpotlight, setHoveredSpotlight] = useState<number | null>(null);
+  const [hoveredNews, setHoveredNews] = useState<number | null>(null);
+  const [hoveredResearch, setHoveredResearch] = useState<number | null>(null);
+  const [hoveredBusiness, setHoveredBusiness] = useState<number | null>(null);
+
+  const getCardColor = (hoveredIndex: number | null, i: number) => {
+    if (hoveredIndex === null) return "text-foreground";
+    return hoveredIndex === i ? "text-foreground" : "text-muted-foreground";
+  };
+
+  const getOpacity = (hoveredIndex: number | null, i: number) => {
+    if (hoveredIndex === null) return "opacity-100";
+    return hoveredIndex === i ? "opacity-100" : "opacity-50";
+  };
+
   const handleHeroSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const prompt = heroPrompt.trim();
@@ -171,7 +187,7 @@ export default function LandingPage() {
                     handlePillClick(pill.prompt);
                   }}
                   className={cn(
-                    "px-4 py-3 rounded-full text-md sm:text-[15px] transition-all outline-none focus:outline-none focus-visible:outline-none focus:ring-0 focus-visible:ring-0 ring-0",
+                    "px-4 py-3 rounded-full font-medium text-md sm:text-[15px] transition-all outline-none focus:outline-none focus-visible:outline-none focus:ring-0 focus-visible:ring-0 ring-0",
                     pill.disabled
                       ? "cursor-not-allowed select-none bg-white/50 dark:bg-[#212121]/50 hover:bg-secondary dark:hover:bg-[#2f2f2f] border border-border/80 dark:border-none backdrop-blur-sm text-muted-foreground hover:text-foreground group/pill"
                       : "cursor-pointer bg-white/50 dark:bg-[#212121]/50 hover:bg-secondary dark:hover:bg-[#2f2f2f]",
@@ -199,17 +215,23 @@ export default function LandingPage() {
         {/* ---------------------------------------------------------------- */}
         {/* FEATURED SPOTLIGHT (Sticky Left + Scrolling Right) */}
         {/* ---------------------------------------------------------------- */}
-        <section className="px-6 sm:px-8 max-w-[1400px] mx-auto pt-6 pb-28">
-          <div className="group/spotlight relative flex flex-col lg:flex-row gap-8 lg:gap-14">
+        <section className="px-6 sm:px-8 max-w-[2000px] mx-auto pt-6 pb-28">
+          <div className="relative flex flex-col lg:flex-row justify-center gap-8 lg:gap-14"
+            onMouseLeave={() => setHoveredSpotlight(null)}
+          >
             {/* STICKY LEFT COLUMN TRACK: Astra GPT-6 Spotlight */}
-            <div className="w-full lg:w-[62%] relative">
+            <div className="w-full lg:w-[46.5%] relative">
               <div className="lg:sticky lg:top-24">
                 <Link
                   href="/research/overview"
-                  className="group/card block transition-opacity duration-200 group-hover/spotlight:opacity-50 hover:!opacity-100"
+                  onMouseEnter={() => setHoveredSpotlight(0)}
+                  className={cn(
+                    "block transition-opacity duration-200",
+                    getOpacity(hoveredSpotlight, 0)
+                  )}
                 >
                   {/* Big Card */}
-                  <div className="relative w-full aspect-[16/10] rounded-3xl overflow-hidden bg-black transition-all duration-300">
+                  <div className="relative w-full aspect-[16/10] rounded-md border border-border/80 dark:border-none overflow-hidden bg-black transition-all duration-300">
                     <Image
                       src="/assets/images/gpt-6.png"
                       alt="GPT-6 Astra"
@@ -221,8 +243,13 @@ export default function LandingPage() {
 
                   {/* Left Title & Tag Below Card */}
                   <div className="mt-4 flex flex-col justify-between h-[92px] max-w-2xl">
-                    <h2 className="text-xl sm:text-2xl md:text-3xl font-bold tracking-tight text-muted-foreground group-hover/card:text-foreground leading-snug">
-                      GPT-6 Astra: A new generation of intelligence
+                    <h2
+                      className={cn(
+                        "text-xl sm:text-2xl md:text-3xl font-bold tracking-tight leading-snug transition-colors",
+                        getCardColor(hoveredSpotlight, 0)
+                      )}
+                    >
+                      GPT-6 Astra: A New Generation of Intelligence
                     </h2>
                     <div className="flex items-center gap-2 mb-5 text-md text-muted-foreground">
                       <span className="font-semibold text-foreground">
@@ -239,42 +266,17 @@ export default function LandingPage() {
             </div>
 
             {/* SCROLLING RIGHT COLUMN: 3 Items Stream (one by one) */}
-            <div className="w-full lg:w-[38%] flex flex-col gap-8 lg:gap-10">
+            <div className="w-full lg:w-[23%] flex flex-col gap-8 lg:gap-10">
               {/* Item 1 */}
               <Link
-                href="/company/blog"
-                className="group/card block transition-opacity duration-200 group-hover/spotlight:opacity-50 hover:!opacity-100"
-              >
-                <div className="relative w-full aspect-[4/3] rounded-2xl overflow-hidden bg-black">
-                  <Image
-                    src="/assets/images/images-2.5.png"
-                    alt="Introducing CloseAI images 2.5"
-                    fill
-                    className="object-cover"
-                  />
-                </div>
-                <div className="mt-4 flex flex-col justify-between h-[92px]">
-                  <h3 className="text-lg sm:text-xl md:text-2xl font-semibold text-muted-foreground group-hover/card:text-foreground leading-snug">
-                    Introducing CloseAI images 2.5
-                  </h3>
-                  <div className="flex items-center gap-2 mb-5 text-md text-muted-foreground">
-                    <span className="font-semibold text-foreground">
-                      Security
-                    </span>
-                    <span>·</span>
-                    <span>Feb 10, 2026</span>
-                    <span>·</span>
-                    <span>8 min read</span>
-                  </div>
-                </div>
-              </Link>
-
-              {/* Item 2 */}
-              <Link
                 href="/product/features"
-                className="group/card block transition-opacity duration-200 group-hover/spotlight:opacity-50 hover:!opacity-100"
+                onMouseEnter={() => setHoveredSpotlight(1)}
+                className={cn(
+                  "block transition-opacity duration-200",
+                  getOpacity(hoveredSpotlight, 1)
+                )}
               >
-                <div className="relative w-full aspect-[4/3] rounded-2xl overflow-hidden bg-black">
+                <div className="relative w-full aspect-[4/3] rounded-md overflow-hidden bg-background">
                   <Image
                     src="/assets/images/system-card.png"
                     alt="GPT-6 Astra System Cards"
@@ -283,8 +285,13 @@ export default function LandingPage() {
                   />
                 </div>
                 <div className="mt-4 flex flex-col justify-between h-[92px]">
-                  <h3 className="text-lg sm:text-xl md:text-2xl font-semibold text-muted-foreground group-hover/card:text-foreground leading-snug">
-                    GPT-6 Astra System Cards
+                  <h3
+                    className={cn(
+                      "text-lg sm:text-xl md:text-2xl font-semibold leading-snug transition-colors",
+                      getCardColor(hoveredSpotlight, 1)
+                    )}
+                  >
+                    GPT-6 Astra: System Cards
                   </h3>
                   <div className="flex items-center gap-2 mb-5 text-md text-muted-foreground">
                     <span className="font-semibold text-foreground">
@@ -298,12 +305,54 @@ export default function LandingPage() {
                 </div>
               </Link>
 
+              {/* Item 2 */}
+              <Link
+                href="/company/blog"
+                onMouseEnter={() => setHoveredSpotlight(2)}
+                className={cn(
+                  "block transition-opacity duration-200",
+                  getOpacity(hoveredSpotlight, 2)
+                )}
+              >
+                <div className="relative w-full aspect-[4/3] rounded-md overflow-hidden bg-black">
+                  <Image
+                    src="/assets/images/images-2.5.png"
+                    alt="Introducing CloseAI images 2.5"
+                    fill
+                    className="object-cover"
+                  />
+                </div>
+                <div className="mt-4 flex flex-col justify-between h-[92px]">
+                  <h3
+                    className={cn(
+                      "text-lg sm:text-xl md:text-2xl font-semibold leading-snug transition-colors",
+                      getCardColor(hoveredSpotlight, 2)
+                    )}
+                  >
+                    Introducing CloseAI Images 2.5
+                  </h3>
+                  <div className="flex items-center gap-2 mb-5 text-md text-muted-foreground">
+                    <span className="font-semibold text-foreground">
+                      Security
+                    </span>
+                    <span>·</span>
+                    <span>Feb 10, 2026</span>
+                    <span>·</span>
+                    <span>8 min read</span>
+                  </div>
+                </div>
+              </Link>
+
               {/* Item 3 */}
               <Link
                 href="/product/features"
-                className="group/card block transition-opacity duration-200 group-hover/spotlight:opacity-50 hover:!opacity-100"
+                onMouseEnter={() => setHoveredSpotlight(3)}
+                className={cn(
+                  "block transition-opacity duration-200",
+                  getOpacity(hoveredSpotlight, 3)
+                )}
               >
-                <div className="relative w-full aspect-[4/3] rounded-2xl overflow-hidden bg-black">
+                <div className="relative w-full aspect-[4/3] rounded-md overflow-hidden bg-black">
                   <Image
                     src="/assets/images/hugging-face.png"
                     alt="Improving GPT-5.6 Sol in CloseAI"
@@ -312,8 +361,13 @@ export default function LandingPage() {
                   />
                 </div>
                 <div className="mt-4 flex flex-col justify-between h-[92px]">
-                  <h3 className="text-lg sm:text-xl md:text-2xl font-semibold text-muted-foreground group-hover/card:text-foreground leading-snug">
-                    Launching Health in CloseAI
+                  <h3
+                    className={cn(
+                      "text-lg sm:text-xl md:text-2xl font-semibold leading-snug transition-colors",
+                      getCardColor(hoveredSpotlight, 3)
+                    )}
+                  >
+                    The Hugging Face Incident
                   </h3>
                   <div className="flex items-center gap-2 mb-5 text-md text-muted-foreground">
                     <span className="font-semibold text-foreground">
@@ -347,7 +401,10 @@ export default function LandingPage() {
             </Link>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
+            onMouseLeave={() => setHoveredNews(null)}
+          >
             {[
               {
                 title:
@@ -388,7 +445,8 @@ export default function LandingPage() {
               <Link
                 key={i}
                 href="/company/blog"
-                className="group flex flex-col rounded-2xl overflow-hidden bg-card border border-border/80 dark:border-none transition-all"
+                onMouseEnter={() => setHoveredNews(i)}
+                className="flex flex-col rounded-md overflow-hidden bg-card border border-border/80 dark:border-none transition-all"
               >
                 {/* Visual Thumbnail: DiceBear glass avatar */}
                 <div className="relative h-40 w-full bg-secondary overflow-hidden flex items-end p-4">
@@ -397,14 +455,24 @@ export default function LandingPage() {
                     src={newsAvatar(news.title)}
                     alt=""
                     aria-hidden="true"
-                    className="absolute inset-0 h-full w-full object-cover opacity-85 group-hover:opacity-100 transition-opacity"
+                    className={cn(
+                      "absolute inset-0 h-full w-full object-cover transition-opacity",
+                      hoveredNews === null || hoveredNews === i
+                        ? "opacity-100"
+                        : "opacity-85"
+                    )}
                   />
                   <span className="relative text-[15px] font-semibold text-white/90 uppercase tracking-wider bg-black/40 px-2.5 py-1 rounded-full backdrop-blur-md">
                     {news.category}
                   </span>
                 </div>
                 <div className="p-5 flex-1 flex flex-col justify-between">
-                  <h3 className="text-base sm:text-lg md:text-xl font-medium text-muted-foreground group-hover:text-foreground leading-snug mb-3">
+                  <h3
+                    className={cn(
+                      "text-base sm:text-lg md:text-xl font-medium leading-snug mb-3 transition-colors",
+                      getCardColor(hoveredNews, i)
+                    )}
+                  >
                     {news.title}
                   </h3>
                   <p className="text-md text-muted-foreground">{news.date}</p>
@@ -431,7 +499,10 @@ export default function LandingPage() {
             </Link>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div
+            className="grid grid-cols-1 md:grid-cols-3 gap-6"
+            onMouseLeave={() => setHoveredResearch(null)}
+          >
             {[
               {
                 title:
@@ -452,7 +523,8 @@ export default function LandingPage() {
               <Link
                 key={i}
                 href="/research/overview"
-                className="group flex flex-col rounded-2xl overflow-hidden bg-card border border-border/80 dark:border-none transition-all"
+                onMouseEnter={() => setHoveredResearch(i)}
+                className="flex flex-col rounded-md overflow-hidden bg-card border border-border/80 dark:border-none transition-all"
               >
                 {/* Visual Thumbnail: DiceBear constellation avatar (theme-aware) */}
                 <div className="relative h-44 w-full overflow-hidden">
@@ -472,7 +544,12 @@ export default function LandingPage() {
                   />
                 </div>
                 <div className="p-5 flex-1 flex flex-col justify-between">
-                  <h3 className="text-base sm:text-lg md:text-xl font-semibold text-muted-foreground group-hover:text-foreground leading-snug mb-3">
+                  <h3
+                    className={cn(
+                      "text-base sm:text-lg md:text-xl font-semibold leading-snug mb-3 transition-colors",
+                      getCardColor(hoveredResearch, i)
+                    )}
+                  >
                     {paper.title}
                   </h3>
                   <p className="text-md text-muted-foreground">
@@ -501,7 +578,10 @@ export default function LandingPage() {
             </Link>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div
+            className="grid grid-cols-1 md:grid-cols-3 gap-6"
+            onMouseLeave={() => setHoveredBusiness(null)}
+          >
             {[
               {
                 title:
@@ -522,7 +602,8 @@ export default function LandingPage() {
               <Link
                 key={i}
                 href="/business/enterprise"
-                className="group flex flex-col rounded-2xl overflow-hidden bg-card border border-border/80 dark:border-none transition-all"
+                onMouseEnter={() => setHoveredBusiness(i)}
+                className="flex flex-col rounded-md overflow-hidden bg-card border border-border/80 dark:border-none transition-all"
               >
                 {/* Visual Thumbnail: DiceBear planets avatar (theme-aware) */}
                 <div className="relative h-40 w-full overflow-hidden">
@@ -542,7 +623,12 @@ export default function LandingPage() {
                   />
                 </div>
                 <div className="p-5 flex-1 flex flex-col justify-between">
-                  <p className="text-base sm:text-lg md:text-xl font-medium text-muted-foreground group-hover:text-foreground mb-1">
+                  <p
+                    className={cn(
+                      "text-base sm:text-lg md:text-xl font-medium mb-1 transition-colors",
+                      getCardColor(hoveredBusiness, i)
+                    )}
+                  >
                     {study.title}
                   </p>
                   <p className="text-md text-muted-foreground">Case study</p>
@@ -556,7 +642,7 @@ export default function LandingPage() {
         {/* BOTTOM CALL TO ACTION BANNER */}
         {/* ---------------------------------------------------------------- */}
         <section className="px-6 sm:px-8 max-w-[1400px] mx-auto py-16">
-          <div className="rounded-3xl bg-card border border-border/80 dark:border-none p-12 sm:p-16 text-center flex flex-col items-center justify-center space-y-6">
+          <div className="rounded-md bg-card border border-border/80 dark:border-none p-12 sm:p-16 text-center flex flex-col items-center justify-center space-y-6">
             <h2 className="text-3xl sm:text-5xl font-semibold tracking-tight text-foreground">
               Get started with closeAI
             </h2>

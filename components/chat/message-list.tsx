@@ -166,14 +166,16 @@ function CodeBlock({ language, code }: { language: string; code: string }) {
 
   const handleCopy = () => {
     navigator.clipboard.writeText(code);
-      setCopied(true);
-      toast.success("Code copied to clipboard");
-      setTimeout(() => setCopied(false), 2000);
+    setCopied(true);
+    toast.success("Code copied to clipboard");
+    setTimeout(() => setCopied(false), 2000);
   };
 
   let displayLang = language ? language.toLowerCase().trim() : "";
+
   if (!displayLang) {
     const firstLine = code.trim().split("\n")[0].trim();
+
     if (
       /^(sudo|brew|apt|dnf|pacman|yum|npm|npx|pnpm|yarn|git|docker|curl|wget|cd|mkdir|chmod|chown|systemctl|export|source|sh|bash)\b/.test(
         firstLine
@@ -190,16 +192,56 @@ function CodeBlock({ language, code }: { language: string; code: string }) {
   }, [code, displayLang]);
 
   return (
-    <div className="relative my-4 rounded-2xl sm:rounded-3xl overflow-hidden border border-neutral-200/90 dark:border-neutral-700/60 bg-neutral-50 dark:bg-[#141414] text-left">
-      {/* Header bar: language + copy button */}
-      <div className="flex items-center justify-between px-4 py-2 bg-neutral-100 dark:bg-[#1f1f1f] text-xs font-sans text-neutral-600 dark:text-neutral-300 select-none border-b border-neutral-200/80 dark:border-neutral-700/60">
-        <span className="font-mono text-base lowercase font-medium tracking-wide text-foreground">
+    <div
+      className="
+        relative my-4
+        rounded-2xl sm:rounded-3xl
+        bg-bubble dark:bg-[#2F2F2F]
+        text-left
+        isolate
+        overflow-visible
+      "
+    >
+      <div
+        className="
+          sticky -top-14 z-10
+          flex items-center justify-between
+          px-4 py-2
+          bg-bubble dark:bg-[#2F2F2F]
+          text-xs font-sans
+          text-neutral-600 dark:text-neutral-300
+          select-none
+          rounded-t-2xl sm:rounded-t-3xl
+
+          after:absolute
+          after:left-4
+          after:right-4
+          after:bottom-0
+          after:h-px
+          after:bg-neutral-200/80
+          dark:after:bg-neutral-700/60
+        "
+      >
+        <span className="font-mono text-base lowercase font-medium tracking-wide text-muted-foreground hover:text-foreground">
           {displayLang}
         </span>
+
         <button
           type="button"
           onClick={handleCopy}
-          className="flex items-center gap-1.5 px-2 py-2 rounded-full text-base text-neutral-600 hover:text-neutral-900 hover:bg-neutral-200/70 dark:text-neutral-300 dark:hover:text-white dark:hover:bg-white/10 transition-colors cursor-pointer outline-none"
+          className="
+            flex items-center gap-1.5
+            px-2 py-2
+            rounded-full
+            text-base
+            text-muted-foreground
+            hover:text-foreground
+            hover:bg-neutral-200/80
+            dark:hover:bg-white/10
+            transition-colors
+            cursor-pointer
+            outline-none
+          "
         >
           {copied ? (
             <>
@@ -215,9 +257,31 @@ function CodeBlock({ language, code }: { language: string; code: string }) {
         </button>
       </div>
 
-      {/* Code content with horizontal scrollbar */}
-      <div className="p-3.5 sm:p-4 overflow-x-auto code-scroll text-[15px] sm:text-[14px] font-mono leading-relaxed bg-neutral-100 dark:bg-[#1f1f1f] select-text">
-        <pre className="!m-0 !p-0 bg-transparent border-0 font-mono whitespace-pre w-max min-w-full">
+      {/* Code content */}
+      <div
+        className="
+          p-3.5 sm:p-4
+          overflow-x-auto
+          code-scroll
+          text-[15px] sm:text-[14px]
+          font-mono
+          leading-relaxed
+          bg-bubble dark:bg-[#2F2F2F]
+          select-text
+          rounded-b-2xl sm:rounded-b-3xl
+        "
+      >
+        <pre
+          className="
+            !m-0 !p-0
+            bg-transparent
+            border-0
+            font-mono
+            whitespace-pre
+            w-max
+            min-w-full
+          "
+        >
           <code
             className={`!bg-transparent !p-0 font-mono whitespace-pre block language-${displayLang}`}
             dangerouslySetInnerHTML={{ __html: highlightedHtml }}
@@ -295,7 +359,7 @@ function MessageAttachmentItem({ file }: { file: any }) {
 
   // Non-image file pill
   return (
-    <div className="flex items-center gap-1.5 bg-secondary text-foreground text-sm sm:text-[14px] px-3 py-1.5 rounded-full border border-border">
+    <div className="flex items-center gap-1.5 bg-secondary text-foreground text-sm sm:text-[14px] px-3 py-1.5 rounded-full border border-border/80">
       <Paperclip className="w-4 h-4 text-muted-foreground" />
       <span className="truncate max-w-[130px] sm:max-w-[160px] font-medium">
         {displayName}
@@ -499,9 +563,9 @@ export function MessageList({
 
   const copyToClipboard = (text: string, id: string) => {
     navigator.clipboard.writeText(text);
-      setCopiedId(id);
-      toast.success("Copied to clipboard");
-      setTimeout(() => setCopiedId(null), 2000);
+    setCopiedId(id);
+    toast.success("Copied to clipboard");
+    setTimeout(() => setCopiedId(null), 2000);
   };
 
   const handleFeedback = (id: string, type: "up" | "down") => {
@@ -591,7 +655,7 @@ export function MessageList({
 
                 {isEditing ? (
                   /* Inline Editor */
-                  <div className="w-full bg-secondary dark:bg-[#2F2F2F] rounded-2xl sm:rounded-3xl p-3 sm:p-4 border border-border/60 dark:border-neutral-700/60">
+                  <div className="w-full bg-bubble dark:bg-[#2F2F2F] rounded-2xl sm:rounded-3xl p-3 sm:p-4 border">
                     <textarea
                       ref={editTextareaRef}
                       value={editDraftText}
@@ -658,9 +722,7 @@ export function MessageList({
                             className="p-1.5 rounded-sm hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
                             aria-label="Copy message"
                           >
-                            {copyingId === msgId ? (
-                              <Loader className="w-4 h-4 animate-spin" />
-                            ) : isCopied ? (
+                            {isCopied ? (
                               <Check className="w-4 h-4" />
                             ) : (
                               <Copy className="w-4 h-4" />
@@ -746,7 +808,7 @@ export function MessageList({
             <div key={msgId} className="w-full group space-y-2">
               <div className="w-full space-y-3">
                 {/* Message Content */}
-                <div className="chat-markdown text-foreground select-text text-[15px] sm:text-[15.5px] leading-7 break-words overflow-hidden w-full">
+                <div className="chat-markdown text-foreground select-text text-[15px] sm:text-[15.5px] leading-7 break-words w-full">
                   <ReactMarkdown
                     remarkPlugins={[remarkGfm, remarkMath]}
                     rehypePlugins={[
@@ -755,7 +817,7 @@ export function MessageList({
                     components={{
                       table({ children }: any) {
                         return (
-                          <div className="my-4 w-full overflow-x-auto rounded-xl border border-border/70 bg-card/40">
+                          <div className="my-4 w-full overflow-x-auto rounded-xl border border-border/80 bg-card/40">
                             <table className="w-full text-left border-collapse text-sm !m-0">
                               {children}
                             </table>
@@ -850,7 +912,7 @@ export function MessageList({
                         );
                       },
                       hr() {
-                        return <hr className="my-6 border-border/60" />;
+                        return <hr className="my-6 border-border/80" />;
                       },
                       strong({ children }: any) {
                         return (
@@ -877,7 +939,7 @@ export function MessageList({
                           );
                         }
                         return (
-                          <div className="my-3 sm:my-4 rounded-xl overflow-hidden border border-neutral-200/90 dark:border-neutral-700/60 bg-neutral-50 dark:bg-[#1e1e1e] p-3 code-scroll">
+                          <div className="my-3 sm:my-4 rounded-xl overflow-hidden border border-neutral-200/80 dark:border-neutral-700/80 bg-neutral-50 dark:bg-[#1e1e1e] p-3 code-scroll">
                             <pre className="text-[15px] font-mono text-neutral-900 dark:text-neutral-100 whitespace-pre w-max min-w-full">
                               {children}
                             </pre>
@@ -910,7 +972,11 @@ export function MessageList({
                           className="p-1.5 rounded-sm hover:bg-secondary hover:text-foreground transition-colors"
                           aria-label="Copy response"
                         >
-                        {isCopied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                          {isCopied ? (
+                            <Check className="w-4 h-4" />
+                          ) : (
+                            <Copy className="w-4 h-4" />
+                          )}
                         </button>
                       </TooltipTrigger>
                       <TooltipContent
@@ -1077,14 +1143,26 @@ export function MessageList({
                 <TooltipTrigger asChild>
                   <button
                     type="button"
-                  onClick={() => copyToClipboard(pendingMessage.content, "pending-msg")}
+                    onClick={() =>
+                      copyToClipboard(pendingMessage.content, "pending-msg")
+                    }
                     className="p-1.5 rounded-sm hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
                     aria-label="Copy prompt"
                   >
-                  {copiedId === "pending-msg" ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                    {copiedId === "pending-msg" ? (
+                      <Check className="w-4 h-4" />
+                    ) : (
+                      <Copy className="w-4 h-4" />
+                    )}
                   </button>
                 </TooltipTrigger>
-              <TooltipContent side="bottom" sideOffset={4} className="text-md">Copy</TooltipContent>
+                <TooltipContent
+                  side="bottom"
+                  sideOffset={4}
+                  className="text-md"
+                >
+                  Copy
+                </TooltipContent>
               </Tooltip>
             </div>
           </div>

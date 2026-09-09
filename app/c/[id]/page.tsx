@@ -92,6 +92,15 @@ export default function ActiveChatPage() {
     isAutoScrollPinnedRef.current = !isScrolledUp;
   };
 
+  const dockRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!dockRef.current) return;
+    const ro = new ResizeObserver(() => handleScroll());
+    ro.observe(dockRef.current);
+    return () => ro.disconnect();
+  }, []);
+
   const scrollToBottom = (behavior: ScrollBehavior = "smooth") => {
     if (scrollContainerRef.current) {
       scrollContainerRef.current.scrollTo({
@@ -627,7 +636,7 @@ export default function ActiveChatPage() {
 
   useEffect(() => {
     if (cleanTitle) {
-      document.title = `CloseAI \u2014 ${cleanTitle}`;
+      document.title = `CloseAI \u007C ${cleanTitle}`;
     } else {
       document.title = "CloseAI";
     }
@@ -638,7 +647,7 @@ export default function ActiveChatPage() {
 
   return (
     <div className="flex h-full w-full bg-background text-foreground overflow-hidden">
-      <title>{cleanTitle ? `CloseAI \u2014 ${cleanTitle}` : "CloseAI"}</title>
+      <title>{cleanTitle ? `CloseAI \u007C ${cleanTitle}` : "CloseAI"}</title>
       {/* Sidebar */}
       <Sidebar
         user={user}
@@ -689,7 +698,7 @@ export default function ActiveChatPage() {
                     onMouseEnter={() => setIsSidebarBtnHovered(true)}
                     onMouseLeave={() => setIsSidebarBtnHovered(false)}
                     onBlur={() => setIsSidebarBtnHovered(false)}
-                    className="xl:hidden w-9 h-9 rounded-xl bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/50 dark:border-neutral-700/50 text-neutral-700 dark:text-neutral-200 hover:text-foreground dark:hover:text-foreground hover:bg-background dark:hover:bg-background flex items-center justify-center transition-colors cursor-pointer outline-none focus:outline-none"
+                    className="xl:hidden w-9 h-9 rounded-xl bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/80 dark:border-neutral-700/80 text-neutral-700 dark:text-neutral-200 hover:text-foreground dark:hover:text-foreground hover:bg-background dark:hover:bg-background flex items-center justify-center transition-colors cursor-pointer outline-none focus:outline-none"
                     aria-label="Open sidebar"
                   >
                     <PanelRight className="w-4 h-4 text-foreground" />
@@ -728,7 +737,7 @@ export default function ActiveChatPage() {
                       setTimeout(() => setIsSharing(false), 300);
                     }
                   }}
-                  className="group h-9 px-2.5 sm:px-3 gap-1.5 rounded-xl bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/50 dark:border-neutral-700/50 text-neutral-700 dark:text-neutral-200 hover:text-foreground dark:hover:text-foreground hover:bg-background dark:hover:bg-background flex items-center justify-center text-base font-medium transition-colors cursor-pointer outline-none focus:outline-none disabled:opacity-70 disabled:pointer-events-auto disabled:cursor-not-allowed"
+                  className="group h-9 px-2.5 sm:px-3 gap-1.5 rounded-xl bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/80 dark:border-neutral-700/80 text-neutral-700 dark:text-neutral-200 hover:text-foreground dark:hover:text-foreground hover:bg-background dark:hover:bg-background flex items-center justify-center text-base font-medium transition-colors cursor-pointer outline-none focus:outline-none disabled:opacity-70 disabled:pointer-events-auto disabled:cursor-not-allowed"
                 >
                   {isSharing ? (
                     <Loader className="w-4 h-4 shrink-0 animate-spin text-muted-foreground group-hover:text-foreground" />
@@ -749,7 +758,7 @@ export default function ActiveChatPage() {
                 <TooltipTrigger asChild>
                   <DropdownMenuTrigger asChild>
                     <button
-                      className="group w-9 h-9 rounded-xl bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/50 dark:border-neutral-700/50 text-neutral-700 dark:text-neutral-200 hover:text-foreground dark:hover:text-foreground hover:bg-background dark:hover:bg-background flex items-center justify-center transition-colors cursor-pointer outline-none focus:outline-none"
+                      className="group w-9 h-9 rounded-xl bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/80 dark:border-neutral-700/80 text-neutral-700 dark:text-neutral-200 hover:text-foreground dark:hover:text-foreground hover:bg-background dark:hover:bg-background flex items-center justify-center transition-colors cursor-pointer outline-none focus:outline-none"
                       aria-label="More options"
                     >
                       <MoreHorizontal className="w-4 h-4 text-muted-foreground group-hover:text-foreground" />
@@ -769,7 +778,7 @@ export default function ActiveChatPage() {
               <DropdownMenuContent
                 align="end"
                 sideOffset={6}
-                className="w-52 rounded-xl p-1.5 bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/50 dark:border-neutral-700/50"
+                className="w-52 rounded-xl p-1.5 bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/80 dark:border-neutral-700/80"
               >
                 <DropdownMenuItem
                   onClick={() => toast("No files attached to this chat")}
@@ -878,7 +887,10 @@ export default function ActiveChatPage() {
             )}
 
             {/* Floating Input Dock inside scroll container for 100% scrollbar-aware width alignment */}
-            <div className="sticky bottom-0 left-0 right-0 z-20 pointer-events-none pb-[max(env(safe-area-inset-bottom,0px),0.5rem)] bg-gradient-to-t from-background via-background/90 to-transparent pt-4 mt-auto">
+            <div
+              ref={dockRef}
+              className="sticky bottom-0 left-0 right-0 z-20 pointer-events-none pb-[max(env(safe-area-inset-bottom,0px),0.5rem)] bg-gradient-to-t from-background via-background/90 to-transparent pt-4 mt-auto"
+            >
               <div className="pointer-events-auto">
                 <ChatInput
                   message={inputValue}
@@ -908,7 +920,7 @@ export default function ActiveChatPage() {
                                   isAutoScrollPinnedRef.current = true;
                                   scrollToBottom("smooth");
                                 }}
-                                className="group w-10 h-10 rounded-full bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/50 dark:border-neutral-700/50 text-neutral-700 dark:text-neutral-200 hover:text-foreground dark:hover:text-foreground hover:bg-background dark:hover:bg-background flex items-center justify-center transition-all cursor-pointer"
+                                className="group w-10 h-10 rounded-full bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/80 dark:border-neutral-700/80 text-neutral-700 dark:text-neutral-200 hover:text-foreground dark:hover:text-foreground hover:bg-background dark:hover:bg-background hover:border-border/80 dark:hover:border-neutral-700/80 flex items-center justify-center transition-all cursor-pointer"
                                 aria-label="Scroll to bottom"
                               >
                                 <ArrowDown className="w-5 h-5 text-muted-foreground group-hover:text-foreground shrink-0" />

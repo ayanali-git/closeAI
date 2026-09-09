@@ -1,15 +1,23 @@
-'use client';
+"use client";
 
-import React, { useRef, useState, useEffect } from 'react';
-import { motion, useMotionValue, useSpring, useTransform } from 'framer-motion';
-import { cn } from '@/lib/utils';
+import React, { useRef, useState, useEffect } from "react";
+import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
+import * as CheckboxPrimitive from "@radix-ui/react-checkbox";
+import { cn } from "@/lib/utils";
 
 interface AnimatedArrowProps extends React.HTMLAttributes<HTMLSpanElement> {
   className?: string;
   size?: number;
+  strokeWidth?: number;
 }
 
-export function AnimatedArrow({ className, size = 16, style, ...props }: AnimatedArrowProps) {
+export function AnimatedArrow({
+  className,
+  size = 18,
+  strokeWidth = 2,
+  style,
+  ...props
+}: AnimatedArrowProps) {
   const ref = useRef<HTMLSpanElement>(null);
   const [hovered, setHovered] = useState(false);
 
@@ -18,9 +26,9 @@ export function AnimatedArrow({ className, size = 16, style, ...props }: Animate
     if (!el) return;
 
     const parentGroup =
-      el.closest('.group') ||
-      el.closest('button') ||
-      el.closest('a') ||
+      el.closest(".group") ||
+      el.closest("button") ||
+      el.closest("a") ||
       el.closest('[role="button"]') ||
       el;
 
@@ -28,24 +36,24 @@ export function AnimatedArrow({ className, size = 16, style, ...props }: Animate
     const onLeave = () => setHovered(false);
 
     try {
-      if (typeof window !== 'undefined' && parentGroup.matches(':hover')) {
+      if (typeof window !== "undefined" && parentGroup.matches(":hover")) {
         setHovered(true);
       }
     } catch (e) {}
 
-    parentGroup.addEventListener('mouseenter', onEnter);
-    parentGroup.addEventListener('mouseleave', onLeave);
+    parentGroup.addEventListener("mouseenter", onEnter);
+    parentGroup.addEventListener("mouseleave", onLeave);
     if (parentGroup !== el) {
-      el.addEventListener('mouseenter', onEnter);
-      el.addEventListener('mouseleave', onLeave);
+      el.addEventListener("mouseenter", onEnter);
+      el.addEventListener("mouseleave", onLeave);
     }
 
     return () => {
-      parentGroup.removeEventListener('mouseenter', onEnter);
-      parentGroup.removeEventListener('mouseleave', onLeave);
+      parentGroup.removeEventListener("mouseenter", onEnter);
+      parentGroup.removeEventListener("mouseleave", onLeave);
       if (parentGroup !== el) {
-        el.removeEventListener('mouseenter', onEnter);
-        el.removeEventListener('mouseleave', onLeave);
+        el.removeEventListener("mouseenter", onEnter);
+        el.removeEventListener("mouseleave", onLeave);
       }
     };
   }, []);
@@ -75,7 +83,7 @@ export function AnimatedArrow({ className, size = 16, style, ...props }: Animate
       ref={ref}
       aria-hidden="true"
       className={cn(
-        'inline-flex items-center justify-center shrink-0 ml-1.5 select-none pointer-events-none align-middle translate-y-[-0.5px]',
+        "inline-flex items-center justify-center shrink-0 ml-1.5 select-none pointer-events-none align-middle translate-y-[-0.5px]",
         className
       )}
       style={{ width: size, height: size, ...style }}
@@ -85,7 +93,7 @@ export function AnimatedArrow({ className, size = 16, style, ...props }: Animate
         viewBox="0 0 24 24"
         fill="none"
         stroke="currentColor"
-        strokeWidth="2"
+        strokeWidth={strokeWidth}
         strokeLinecap="round"
         strokeLinejoin="round"
         className="w-full h-full overflow-visible"
@@ -98,10 +106,11 @@ export function AnimatedArrow({ className, size = 16, style, ...props }: Animate
   );
 }
 
-export interface AnimatedChevronProps extends React.SVGAttributes<SVGSVGElement> {
+export interface AnimatedChevronProps
+  extends React.SVGAttributes<SVGSVGElement> {
   open?: boolean;
   disableHover?: boolean;
-  orientation?: 'up-down' | 'right-down';
+  orientation?: "up-down" | "right-down";
   className?: string;
   size?: number;
   strokeWidth?: number;
@@ -110,10 +119,10 @@ export interface AnimatedChevronProps extends React.SVGAttributes<SVGSVGElement>
 export function AnimatedChevron({
   open,
   disableHover = false,
-  orientation = 'up-down',
+  orientation = "up-down",
   className,
   size = 18,
-  strokeWidth = 1.5,
+  strokeWidth = 1.25,
   style,
   ...props
 }: AnimatedChevronProps) {
@@ -124,15 +133,16 @@ export function AnimatedChevron({
     if (disableHover) return;
     const el = ref.current;
     if (!el) return;
-    const parentGroup = el.closest('.group') || el.closest('button') || el.closest('a') || el;
+    const parentGroup =
+      el.closest(".group") || el.closest("button") || el.closest("a") || el;
     const onEnter = () => setHovered(true);
     const onLeave = () => setHovered(false);
 
-    parentGroup.addEventListener('mouseenter', onEnter);
-    parentGroup.addEventListener('mouseleave', onLeave);
+    parentGroup.addEventListener("mouseenter", onEnter);
+    parentGroup.addEventListener("mouseleave", onLeave);
     return () => {
-      parentGroup.removeEventListener('mouseenter', onEnter);
-      parentGroup.removeEventListener('mouseleave', onLeave);
+      parentGroup.removeEventListener("mouseenter", onEnter);
+      parentGroup.removeEventListener("mouseleave", onLeave);
     };
   }, [disableHover]);
 
@@ -164,7 +174,7 @@ export function AnimatedChevron({
     ([sx, sy, vx, vy, ex, ey]) => `${sx},${sy} ${vx},${vy} ${ex},${ey}`
   );
 
-  const points = orientation === 'right-down' ? pointsRightDown : pointsUpDown;
+  const points = orientation === "right-down" ? pointsRightDown : pointsUpDown;
 
   return (
     <svg
@@ -176,7 +186,7 @@ export function AnimatedChevron({
       strokeLinecap="round"
       strokeLinejoin="round"
       className={cn(
-        'inline-block shrink-0 overflow-visible select-none pointer-events-none transition-colors',
+        "inline-block shrink-0 overflow-visible select-none pointer-events-none transition-colors",
         className
       )}
       style={{ width: size, height: size, ...style }}
@@ -189,7 +199,8 @@ export function AnimatedChevron({
 
 export { AnimatedChevron as AnimatedChevronDown };
 
-export interface AnimatedSearchCloseProps extends React.HTMLAttributes<HTMLSpanElement> {
+export interface AnimatedSearchCloseProps
+  extends React.HTMLAttributes<HTMLSpanElement> {
   open?: boolean;
   isOpen?: boolean;
   className?: string;
@@ -202,19 +213,27 @@ export function AnimatedSearchClose({
   isOpen,
   className,
   size = 18,
-  strokeWidth = 1.5,
+  strokeWidth = 1.25,
   style,
   ...props
 }: AnimatedSearchCloseProps) {
   const active = Boolean(open ?? isOpen);
   const motionVal = useMotionValue(+active);
-  const spring = useSpring(motionVal, { stiffness: 520, damping: 38, mass: 0.7 });
+  const spring = useSpring(motionVal, {
+    stiffness: 520,
+    damping: 38,
+    mass: 0.7,
+  });
 
   useEffect(() => {
     motionVal.set(+active);
   }, [active, motionVal]);
 
-  const lensRadius = useTransform(spring, [0, 0.45, 0.8, 1], [4.15, 4.15, 0.5, 0]);
+  const lensRadius = useTransform(
+    spring,
+    [0, 0.45, 0.8, 1],
+    [4.15, 4.15, 0.5, 0]
+  );
   const lensOpacity = useTransform(spring, [0, 0.52, 0.8], [1, 1, 0]);
 
   const mainX1 = useTransform(spring, [0, 1], [10.1, 4.75]);
@@ -232,7 +251,7 @@ export function AnimatedSearchClose({
     <span
       aria-hidden="true"
       className={cn(
-        'relative inline-flex items-center justify-center shrink-0 select-none pointer-events-none overflow-hidden',
+        "relative inline-flex items-center justify-center shrink-0 select-none pointer-events-none overflow-hidden",
         className
       )}
       style={{ width: size, height: size, ...style }}
@@ -247,7 +266,12 @@ export function AnimatedSearchClose({
         strokeLinejoin="round"
         className="absolute inset-0 w-full h-full"
       >
-        <motion.circle cx="6.95" cy="6.95" r={lensRadius} style={{ opacity: lensOpacity }} />
+        <motion.circle
+          cx="6.95"
+          cy="6.95"
+          r={lensRadius}
+          style={{ opacity: lensOpacity }}
+        />
         <motion.line x1={mainX1} y1={mainY1} x2={mainX2} y2={mainY2} />
         <motion.line
           x1={crossX1}
@@ -263,7 +287,8 @@ export function AnimatedSearchClose({
 
 export { AnimatedSearchClose as AnimatedSearchIcon };
 
-export interface AnimatedPanelToggleProps extends React.HTMLAttributes<HTMLSpanElement> {
+export interface AnimatedPanelToggleProps
+  extends React.HTMLAttributes<HTMLSpanElement> {
   /** true = "panel open" state (rail/filled column on the right), false = "panel closed" state (rail/filled column on the left) */
   open?: boolean;
   className?: string;
@@ -275,13 +300,17 @@ export function AnimatedPanelToggle({
   open,
   className,
   size = 18,
-  strokeWidth = 1.75,
+  strokeWidth = 1.25,
   style,
   ...props
 }: AnimatedPanelToggleProps) {
   const active = Boolean(open);
   const motionVal = useMotionValue(+active);
-  const spring = useSpring(motionVal, { stiffness: 480, damping: 34, mass: 0.7 });
+  const spring = useSpring(motionVal, {
+    stiffness: 480,
+    damping: 34,
+    mass: 0.7,
+  });
 
   useEffect(() => {
     motionVal.set(+active);
@@ -295,7 +324,7 @@ export function AnimatedPanelToggle({
     <span
       aria-hidden="true"
       className={cn(
-        'relative inline-flex items-center justify-center shrink-0 select-none pointer-events-none',
+        "relative inline-flex items-center justify-center shrink-0 select-none pointer-events-none",
         className
       )}
       style={{ width: size, height: size, ...style }}
@@ -305,7 +334,7 @@ export function AnimatedPanelToggle({
         viewBox="0 0 24 24"
         fill="none"
         stroke="currentColor"
-        strokeWidth={strokeWidth}
+        strokeWidth={strokeWidth * 1.5}
         strokeLinecap="round"
         strokeLinejoin="round"
         className="w-full h-full overflow-visible"
@@ -322,14 +351,14 @@ export function AnimatedPanelToggle({
 export interface AnimatedComingSoonTextProps {
   label: string;
   comingSoonText?: string;
-  align?: 'start' | 'center';
+  align?: "start" | "center";
   className?: string;
 }
 
 export function AnimatedComingSoonText({
-  label = 'API Platform',
-  comingSoonText = 'Coming soon',
-  align = 'start',
+  label = "API Platform",
+  comingSoonText = "Coming soon",
+  align = "start",
   className,
 }: AnimatedComingSoonTextProps) {
   const ref = useRef<HTMLSpanElement>(null);
@@ -340,19 +369,25 @@ export function AnimatedComingSoonText({
     const el = ref.current;
     if (!el) return;
     const parent =
-      el.closest('button') ||
+      el.closest("button") ||
       el.closest('[role="button"]') ||
-      el.closest('a') ||
+      el.closest("a") ||
       el.parentElement ||
       el;
 
     const onEnter = () => {
-      if (typeof window !== 'undefined' && window.matchMedia('(hover: hover)').matches) {
+      if (
+        typeof window !== "undefined" &&
+        window.matchMedia("(hover: hover)").matches
+      ) {
         setHovered(true);
       }
     };
     const onLeave = () => {
-      if (typeof window !== 'undefined' && window.matchMedia('(hover: hover)').matches) {
+      if (
+        typeof window !== "undefined" &&
+        window.matchMedia("(hover: hover)").matches
+      ) {
         setHovered(false);
         setClicked(false);
       }
@@ -362,14 +397,14 @@ export function AnimatedComingSoonText({
       setClicked(true);
     };
 
-    parent.addEventListener('mouseenter', onEnter);
-    parent.addEventListener('mouseleave', onLeave);
-    parent.addEventListener('click', onClick);
+    parent.addEventListener("mouseenter", onEnter);
+    parent.addEventListener("mouseleave", onLeave);
+    parent.addEventListener("click", onClick);
 
     return () => {
-      parent.removeEventListener('mouseenter', onEnter);
-      parent.removeEventListener('mouseleave', onLeave);
-      parent.removeEventListener('click', onClick);
+      parent.removeEventListener("mouseenter", onEnter);
+      parent.removeEventListener("mouseleave", onLeave);
+      parent.removeEventListener("click", onClick);
     };
   }, []);
 
@@ -384,9 +419,9 @@ export function AnimatedComingSoonText({
       if (!target) return;
 
       const parent =
-        el.closest('button') ||
+        el.closest("button") ||
         el.closest('[role="button"]') ||
-        el.closest('a') ||
+        el.closest("a") ||
         el.parentElement ||
         el;
 
@@ -396,14 +431,14 @@ export function AnimatedComingSoonText({
     };
 
     const timer = setTimeout(() => {
-      document.addEventListener('click', handleOutsideClick, true);
-      document.addEventListener('touchstart', handleOutsideClick, true);
+      document.addEventListener("click", handleOutsideClick, true);
+      document.addEventListener("touchstart", handleOutsideClick, true);
     }, 50);
 
     return () => {
       clearTimeout(timer);
-      document.removeEventListener('click', handleOutsideClick, true);
-      document.removeEventListener('touchstart', handleOutsideClick, true);
+      document.removeEventListener("click", handleOutsideClick, true);
+      document.removeEventListener("touchstart", handleOutsideClick, true);
     };
   }, [clicked]);
 
@@ -415,18 +450,18 @@ export function AnimatedComingSoonText({
     motionVal.set(+!!isActive);
   }, [isActive, motionVal]);
 
-  const labelY = useTransform(spring, [0, 1], ['0%', '-120%']);
+  const labelY = useTransform(spring, [0, 1], ["0%", "-120%"]);
   const labelOpacity = useTransform(spring, [0, 0.6, 1], [1, 0.2, 0]);
 
-  const comingY = useTransform(spring, [0, 1], ['120%', '0%']);
+  const comingY = useTransform(spring, [0, 1], ["120%", "0%"]);
   const comingOpacity = useTransform(spring, [0, 0.4, 1], [0, 0.8, 1]);
 
   return (
     <span
       ref={ref}
       className={cn(
-        'relative inline-grid grid-cols-1 grid-rows-1 overflow-hidden select-none align-middle py-0.5',
-        align === 'center' ? 'px-1' : 'pl-0 pr-1',
+        "relative inline-grid grid-cols-1 grid-rows-1 overflow-hidden select-none align-middle py-0.5",
+        align === "center" ? "px-1" : "pl-0 pr-1",
         className
       )}
     >
@@ -448,8 +483,8 @@ export function AnimatedComingSoonText({
       <motion.span
         style={{ y: labelY, opacity: labelOpacity }}
         className={cn(
-          'col-start-1 row-start-1 flex items-center whitespace-nowrap',
-          align === 'center' ? 'justify-center' : 'justify-start'
+          "col-start-1 row-start-1 flex items-center whitespace-nowrap",
+          align === "center" ? "justify-center" : "justify-start"
         )}
       >
         {label}
@@ -459,8 +494,8 @@ export function AnimatedComingSoonText({
       <motion.span
         style={{ y: comingY, opacity: comingOpacity }}
         className={cn(
-          'col-start-1 row-start-1 flex items-center whitespace-nowrap text-muted-foreground/90 font-medium',
-          align === 'center' ? 'justify-center' : 'justify-start'
+          "col-start-1 row-start-1 flex items-center whitespace-nowrap text-muted-foreground/90 font-medium",
+          align === "center" ? "justify-center" : "justify-start"
         )}
       >
         {comingSoonText}
@@ -468,5 +503,87 @@ export function AnimatedComingSoonText({
     </span>
   );
 }
+
+export interface AnimatedCheckboxProps
+  extends React.ComponentPropsWithoutRef<typeof CheckboxPrimitive.Root> {
+  size?: number;
+  strokeWidth?: number;
+}
+
+export const AnimatedCheckbox = React.forwardRef<
+  React.ElementRef<typeof CheckboxPrimitive.Root>,
+  AnimatedCheckboxProps
+>(({ className, size = 18, strokeWidth = 2, checked, ...props }, ref) => {
+  const active = Boolean(checked);
+  const motionVal = useMotionValue(+active);
+  const spring = useSpring(motionVal, {
+    stiffness: 500,
+    damping: 32,
+    mass: 0.6,
+  });
+
+  useEffect(() => {
+    motionVal.set(+active);
+  }, [active, motionVal]);
+
+  // Box scale: slight overshoot settle, matching the snappy spring feel of the other icons
+  const boxScale = useTransform(spring, [0, 0.6, 1], [0.85, 1.04, 1]);
+  const shortLen = 6;
+  const longLen = 11.3;
+  const shortOffset = useTransform(
+    spring,
+    [0, 0.5, 1],
+    [shortLen, shortLen, 0]
+  );
+  const longOffset = useTransform(spring, [0, 0.5, 1], [longLen, longLen, 0]);
+  const checkOpacity = useTransform(spring, [0, 0.15, 1], [0, 1, 1]);
+
+  return (
+    <CheckboxPrimitive.Root
+      ref={ref}
+      checked={checked}
+      className={cn(
+        "peer shrink-0 rounded-[5px] border border-border bg-secondary ring-offset-background focus:outline-none focus-visible:outline-none focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50 data-[state=checked]:bg-foreground data-[state=checked]:text-background data-[state=checked]:border-foreground transition-colors cursor-pointer overflow-hidden",
+        className
+      )}
+      style={{ width: size, height: size }}
+      {...props}
+    >
+      <CheckboxPrimitive.Indicator
+        forceMount
+        className="flex items-center justify-center text-current w-full h-full"
+      >
+        <motion.svg
+          viewBox="0 0 16 16"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth={strokeWidth}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          style={{ scale: boxScale }}
+          className="w-3.5 h-3.5 overflow-visible"
+        >
+          <motion.polyline
+            points="3.5,8.5 6.5,11.5"
+            style={{
+              opacity: checkOpacity,
+              strokeDasharray: shortLen,
+              strokeDashoffset: shortOffset,
+            }}
+          />
+          <motion.polyline
+            points="6.5,11.5 12.5,4.7"
+            style={{
+              opacity: checkOpacity,
+              strokeDasharray: longLen,
+              strokeDashoffset: longOffset,
+            }}
+          />
+        </motion.svg>
+      </CheckboxPrimitive.Indicator>
+    </CheckboxPrimitive.Root>
+  );
+});
+AnimatedCheckbox.displayName = "AnimatedCheckbox";
 
 export default AnimatedArrow;

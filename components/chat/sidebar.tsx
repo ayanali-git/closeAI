@@ -628,10 +628,10 @@ export function Sidebar({
 
         {/* Status indicators when not hovered */}
         {chat.starred && !isHovered && (
-          <PinOff className="w-4 h-4 text-muted-foreground/70 shrink-0 ml-1.5" />
+          <PinOff className="w-4 h-4 text-muted-foreground shrink-0 ml-1.5" />
         )}
         {chat.archived && !chat.starred && !isHovered && (
-          <ArchiveX className="w-4 h-4 text-muted-foreground/70 shrink-0 ml-1.5" />
+          <ArchiveX className="w-4 h-4 text-muted-foreground shrink-0 ml-1.5" />
         )}
 
         {/* Hover Actions with Smooth Fade */}
@@ -998,8 +998,8 @@ export function Sidebar({
                         open={!collapsedSections['Pinned']}
                         disableHover
                         orientation="right-down"
-                        size={16}
-                        className="text-muted-foreground/70 group-hover/section:text-foreground shrink-0"
+                        size={18}
+                        className="text-muted-foreground group-hover/section:text-foreground shrink-0"
                       />
                     </button>
                     {!collapsedSections['Pinned'] && (
@@ -1027,8 +1027,8 @@ export function Sidebar({
                         open={!collapsedSections['Archived']}
                         disableHover
                         orientation="right-down"
-                        size={16}
-                        className="text-muted-foreground/70 group-hover/section:text-foreground shrink-0"
+                        size={18}
+                        className="text-muted-foreground group-hover/section:text-foreground shrink-0"
                       />
                     </button>
                     {!collapsedSections['Archived'] && (

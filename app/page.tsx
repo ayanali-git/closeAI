@@ -3,10 +3,21 @@
 import React, { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { MarketingHeader } from "@/components/marketing/header";
 import { Footer } from "@/components/ui/footer";
-import { AnimatedArrow, AnimatedComingSoonText } from "@/components/ui/animated";
-import { ArrowUpRight, ArrowRight, Sparkles, ArrowUp, Search, Loader } from "lucide-react";
+import {
+  AnimatedArrow,
+  AnimatedComingSoonText,
+} from "@/components/ui/animated";
+import {
+  ArrowUpRight,
+  ArrowRight,
+  Sparkles,
+  ArrowUp,
+  Search,
+  Loader,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -33,12 +44,54 @@ export default function LandingPage() {
   };
 
   const quickPills = [
-    { label: "Research", prompt: "Summarize recent breakthrough papers in AI alignment and safety" },
-    { label: "Talk with CloseAI", prompt: "Explain the latest frontier AI models and reasoning capabilities" },
-    { label: "Stories", prompt: "Showcase customer success stories and real-world applications" },
-    { label: "API Platform", prompt: "How do I get started with the API and developer platform?", disabled: true, hoverText: "Coming soon" },
-    { label: "More", prompt: "Explore all closeAI features, enterprise solutions, and tools" },
+    {
+      label: "Research",
+      prompt: "Summarize recent breakthrough papers in AI alignment and safety",
+    },
+    {
+      label: "Talk with CloseAI",
+      prompt:
+        "Explain the latest frontier AI models and reasoning capabilities",
+    },
+    {
+      label: "Business",
+      prompt: "How does closeAI help enterprises with secure AI solutions?",
+    },
+    {
+      label: "API Platform",
+      prompt: "How do I get started with the API and developer platform?",
+      disabled: true,
+      hoverText: "Coming soon",
+    },
+    {
+      label: "More",
+      prompt: "Explore all closeAI features, enterprise solutions, and tools",
+    },
   ];
+
+  // Recent News: glass avatars (seeded per-article so each card gets a distinct pattern)
+  const newsAvatar = (seed: string) =>
+    `https://api.dicebear.com/10.x/glass/svg?seed=${encodeURIComponent(seed)}`;
+
+  // Latest Research: constellation avatars, light/dark variants
+  const researchAvatarDark = (seed: string) =>
+    `https://api.dicebear.com/10.x/constellation/svg?backgroundColor=07080d,0a0b12&constellationColor=eaf2ff,d8e6f5&seed=${encodeURIComponent(
+      seed
+    )}`;
+  const researchAvatarLight = (seed: string) =>
+    `https://api.dicebear.com/10.x/constellation/svg?backgroundColor=eef2f7,e8eef5&constellationColor=2a3550&seed=${encodeURIComponent(
+      seed
+    )}`;
+
+  // closeAI for Business: planets avatars, light/dark variants
+  const businessAvatarDark = (seed: string) =>
+    `https://api.dicebear.com/10.x/planets/svg?backgroundColor=0a0b0f&planetColor=ff2e88,00e5ff,ffe600,7cff00,b400ff&seed=${encodeURIComponent(
+      seed
+    )}`;
+  const businessAvatarLight = (seed: string) =>
+    `https://api.dicebear.com/10.x/planets/svg?backgroundColor=e6ecf5,eef1f7&moonColor=8c93a3&seed=${encodeURIComponent(
+      seed
+    )}`;
 
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col select-none antialiased">
@@ -54,9 +107,14 @@ export default function LandingPage() {
           </h1>
 
           {/* Hero Input Card */}
-          <form onSubmit={handleHeroSubmit} className="relative w-full max-w-3xl mx-auto mb-6">
-            <div 
-              onClick={() => textareaRef.current?.focus({ preventScroll: true })}
+          <form
+            onSubmit={handleHeroSubmit}
+            className="relative w-full max-w-3xl mx-auto mb-6"
+          >
+            <div
+              onClick={() =>
+                textareaRef.current?.focus({ preventScroll: true })
+              }
               className="relative w-full rounded-3xl bg-white/50 dark:bg-[#212121]/50 border border-border/80 dark:border-none backdrop-blur-sm p-4 min-h-[100px] flex flex-col justify-between transition-all cursor-text"
             >
               <textarea
@@ -64,7 +122,7 @@ export default function LandingPage() {
                 value={heroPrompt}
                 onChange={(e) => setHeroPrompt(e.target.value)}
                 onKeyDown={(e) => {
-                  if (e.key === 'Enter' && !e.shiftKey) {
+                  if (e.key === "Enter" && !e.shiftKey) {
                     e.preventDefault();
                     handleHeroSubmit(e);
                   }
@@ -74,7 +132,10 @@ export default function LandingPage() {
                 disabled={isSubmitting}
                 className="w-full bg-transparent resize-none text-[17px] font-normal text-foreground placeholder:text-muted-foreground focus:placeholder:text-foreground transition-colors outline-none border-none ring-0 leading-relaxed"
               />
-              <div className="flex items-center justify-end pt-3" onClick={(e) => e.stopPropagation()}>
+              <div
+                className="flex items-center justify-end pt-3"
+                onClick={(e) => e.stopPropagation()}
+              >
                 <button
                   type="submit"
                   disabled={!heroPrompt.trim() || isSubmitting}
@@ -99,7 +160,8 @@ export default function LandingPage() {
           {/* Suggestion Pills */}
           <div className="flex flex-wrap items-center justify-center gap-2 max-w-2xl mx-auto">
             {quickPills.map((pill, i) => {
-              const isSelected = !pill.disabled && heroPrompt.trim() === pill.prompt;
+              const isSelected =
+                !pill.disabled && heroPrompt.trim() === pill.prompt;
               return (
                 <button
                   key={i}
@@ -115,7 +177,8 @@ export default function LandingPage() {
                       : "cursor-pointer bg-white/50 dark:bg-[#212121]/50 hover:bg-secondary dark:hover:bg-[#2f2f2f]",
                     isSelected
                       ? "bg-secondary text-foreground border border-border/80 dark:border-none"
-                      : !pill.disabled && "bg-white/50 dark:bg-[#212121]/50 border border-border/80 dark:border-none backdrop-blur-sm hover:bg-secondary text-muted-foreground hover:text-foreground"
+                      : !pill.disabled &&
+                          "bg-white/50 dark:bg-[#212121]/50 border border-border/80 dark:border-none backdrop-blur-sm hover:bg-secondary text-muted-foreground hover:text-foreground"
                   )}
                 >
                   {pill.disabled ? (
@@ -137,79 +200,67 @@ export default function LandingPage() {
         {/* FEATURED SPOTLIGHT (Sticky Left + Scrolling Right) */}
         {/* ---------------------------------------------------------------- */}
         <section className="px-6 sm:px-8 max-w-[1400px] mx-auto pt-6 pb-28">
-          <div className="relative flex flex-col lg:flex-row gap-8 lg:gap-14">
-            
+          <div className="group/spotlight relative flex flex-col lg:flex-row gap-8 lg:gap-14">
             {/* STICKY LEFT COLUMN TRACK: Astra GPT-6 Spotlight */}
             <div className="w-full lg:w-[62%] relative">
               <div className="lg:sticky lg:top-24">
-                <Link href="/research/overview" className="group block">
-                {/* Big Cosmic Image Card with Astra GPT-6 */}
-                <div className="relative w-full aspect-[16/10] rounded-3xl overflow-hidden bg-black transition-all duration-300">
-                  {/* Space Planet, Earth Crescent & Cosmic Sun Flare Background */}
-                  <div
-                    className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105"
-                    style={{
-                      backgroundImage: `url('https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=1600&auto=format&fit=crop')`,
-                    }}
-                  />
-                  {/* Planet Crescent Graphic Layer */}
-                  <div className="absolute inset-0 bg-gradient-to-tr from-black/80 via-transparent to-amber-500/20" />
-                  <div className="absolute -bottom-16 -left-16 w-80 h-80 rounded-full bg-slate-900/90 border border-slate-700/50 blur-sm pointer-events-none" />
-                  <div className="absolute top-1/4 right-1/4 w-96 h-96 rounded-full bg-amber-400/20 blur-3xl pointer-events-none" />
-
-                  {/* Top-Left: Bold Giant "Astra" */}
-                  <div className="absolute top-6 sm:top-10 left-6 sm:left-10 z-10">
-                    <span className="text-6xl sm:text-8xl md:text-9xl font-black tracking-tighter text-muted-foreground group-hover:text-foreground select-none leading-none drop-shadow-2xl">
-                      Astra
-                    </span>
+                <Link
+                  href="/research/overview"
+                  className="group/card block transition-opacity duration-200 group-hover/spotlight:opacity-50 hover:!opacity-100"
+                >
+                  {/* Big Card */}
+                  <div className="relative w-full aspect-[16/10] rounded-3xl overflow-hidden bg-black transition-all duration-300">
+                    <Image
+                      src="/assets/images/gpt-6.png"
+                      alt="GPT-6 Astra"
+                      fill
+                      className="object-cover"
+                      priority
+                    />
                   </div>
 
-                  {/* Bottom-Right: Bold Giant "GPT-6" */}
-                  <div className="absolute bottom-6 sm:bottom-10 right-6 sm:right-10 z-10">
-                    <span className="text-6xl sm:text-8xl md:text-9xl font-black tracking-tighter text-muted-foreground group-hover:text-foreground select-none leading-none drop-shadow-2xl">
-                      GPT-6
-                    </span>
+                  {/* Left Title & Tag Below Card */}
+                  <div className="mt-4 flex flex-col justify-between h-[92px] max-w-2xl">
+                    <h2 className="text-xl sm:text-2xl md:text-3xl font-bold tracking-tight text-muted-foreground group-hover/card:text-foreground leading-snug">
+                      GPT-6 Astra: A new generation of intelligence
+                    </h2>
+                    <div className="flex items-center gap-2 mb-5 text-md text-muted-foreground">
+                      <span className="font-semibold text-foreground">
+                        Product
+                      </span>
+                      <span>·</span>
+                      <span>Jan 05, 2026</span>
+                      <span>·</span>
+                      <span>18 min read</span>
+                    </div>
                   </div>
-                </div>
-
-                {/* Left Title & Tag Below Card */}
-                <div className="mt-4 flex flex-col justify-between h-[92px] max-w-2xl">
-                  <h2 className="text-xl sm:text-2xl md:text-3xl font-bold tracking-tight text-muted-foreground group-hover:text-foreground leading-snug">
-                    Astra GPT-6: Frontier intelligence that scales with your ambition
-                  </h2>
-                  <div className="flex items-center gap-2 text-md text-muted-foreground">
-                    <span className="font-semibold text-foreground">Product</span>
-                    <span>·</span>
-                    <span>Jan 05, 2026</span>
-                    <span>·</span>
-                    <span>18 min read</span>
-                  </div>
-                </div>
-              </Link>
+                </Link>
+              </div>
             </div>
-          </div>
 
             {/* SCROLLING RIGHT COLUMN: 3 Items Stream (one by one) */}
             <div className="w-full lg:w-[38%] flex flex-col gap-8 lg:gap-10">
-              {/* Item 1: Expanding Daybreak Horizon */}
-              <Link href="/company/blog" className="group block">
+              {/* Item 1 */}
+              <Link
+                href="/company/blog"
+                className="group/card block transition-opacity duration-200 group-hover/spotlight:opacity-50 hover:!opacity-100"
+              >
                 <div className="relative w-full aspect-[4/3] rounded-2xl overflow-hidden bg-black">
-                  <div
-                    className="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-105"
-                    style={{
-                      backgroundImage: `url('https://images.unsplash.com/photo-1506703719100-a0f3a48c0f86?q=80&w=800&auto=format&fit=crop')`,
-                    }}
+                  <Image
+                    src="/assets/images/images-2.5.png"
+                    alt="Introducing CloseAI images 2.5"
+                    fill
+                    className="object-cover"
                   />
-                  {/* Glowing Solar Arc Horizon */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
-                  <div className="absolute bottom-0 inset-x-0 h-1/2 bg-gradient-to-t from-amber-600/30 via-orange-500/10 to-transparent" />
                 </div>
                 <div className="mt-4 flex flex-col justify-between h-[92px]">
-                  <h3 className="text-base sm:text-lg font-semibold text-muted-foreground group-hover:text-foreground leading-snug">
-                    Expanding Daybreak as the Cyber Defense Window Narrows
+                  <h3 className="text-lg sm:text-xl md:text-2xl font-semibold text-muted-foreground group-hover/card:text-foreground leading-snug">
+                    Introducing CloseAI images 2.5
                   </h3>
-                  <div className="flex items-center gap-2 text-md text-muted-foreground">
-                    <span className="font-semibold text-foreground">Security</span>
+                  <div className="flex items-center gap-2 mb-5 text-md text-muted-foreground">
+                    <span className="font-semibold text-foreground">
+                      Security
+                    </span>
                     <span>·</span>
                     <span>Feb 10, 2026</span>
                     <span>·</span>
@@ -218,40 +269,27 @@ export default function LandingPage() {
                 </div>
               </Link>
 
-              {/* Item 2: Mobile Interface Sol */}
-              <Link href="/product/features" className="group block">
-                <div className="relative w-full aspect-[4/3] rounded-2xl overflow-hidden bg-[#0a0a0f] flex items-center justify-center p-4">
-                  <div
-                    className="absolute inset-0 bg-cover bg-center opacity-30 transition-transform duration-500 group-hover:scale-105"
-                    style={{
-                      backgroundImage: `url('https://images.unsplash.com/photo-1534447677768-be436bb09401?q=80&w=800&auto=format&fit=crop')`,
-                    }}
+              {/* Item 2 */}
+              <Link
+                href="/product/features"
+                className="group/card block transition-opacity duration-200 group-hover/spotlight:opacity-50 hover:!opacity-100"
+              >
+                <div className="relative w-full aspect-[4/3] rounded-2xl overflow-hidden bg-black">
+                  <Image
+                    src="/assets/images/system-card.png"
+                    alt="GPT-6 Astra System Cards"
+                    fill
+                    className="object-cover"
                   />
-                  {/* Floating App Mockup Card with Phone Look */}
-                  <div className="relative z-10 w-[74%] bg-white/95 dark:bg-[#1f1f22] backdrop-blur-md rounded-2xl p-4 border border-white/20 dark:border-neutral-700/50">
-                    <div className="text-md font-semibold text-center text-muted-foreground mb-2.5">
-                      5.6 Medium
-                    </div>
-                    <div className="flex items-center justify-between bg-neutral-100 dark:bg-neutral-800 rounded-full px-3 py-1.5 text-md mb-2">
-                      <span className="font-medium text-foreground">5.6 Sol</span>
-                      <div className="w-7 h-4 bg-blue-600 rounded-full relative">
-                        <div className="w-3 h-3 bg-white rounded-full absolute right-0.5 top-0.5" />
-                      </div>
-                    </div>
-                    {/* Fake typing row */}
-                    <div className="flex gap-1 justify-center py-1">
-                      <div className="w-1.5 h-1.5 rounded-full bg-neutral-400 animate-pulse" />
-                      <div className="w-1.5 h-1.5 rounded-full bg-neutral-400 animate-pulse delay-100" />
-                      <div className="w-1.5 h-1.5 rounded-full bg-neutral-400 animate-pulse delay-200" />
-                    </div>
-                  </div>
                 </div>
                 <div className="mt-4 flex flex-col justify-between h-[92px]">
-                  <h3 className="text-base sm:text-lg font-semibold text-muted-foreground group-hover:text-foreground leading-snug">
-                    Improving GPT-5.6 Sol in CloseAI — and expanding access to GPT-5.6 Luna for free users
+                  <h3 className="text-lg sm:text-xl md:text-2xl font-semibold text-muted-foreground group-hover/card:text-foreground leading-snug">
+                    GPT-6 Astra System Cards
                   </h3>
-                  <div className="flex items-center gap-2 text-md text-muted-foreground">
-                    <span className="font-semibold text-foreground">Product</span>
+                  <div className="flex items-center gap-2 mb-5 text-md text-muted-foreground">
+                    <span className="font-semibold text-foreground">
+                      Product
+                    </span>
                     <span>·</span>
                     <span>Mar 15, 2026</span>
                     <span>·</span>
@@ -260,39 +298,27 @@ export default function LandingPage() {
                 </div>
               </Link>
 
-              {/* Item 3: Health in CloseAI (White Squircle + Red Flower Heart Badge matching Image 3) */}
-              <Link href="/product/features" className="group block">
-                <div className="relative w-full aspect-[4/3] rounded-2xl overflow-hidden bg-gradient-to-br from-[#fed1d8] via-[#fee5d4] to-[#fbcfe0] dark:from-[#32161d] dark:via-[#261612] dark:to-[#221019] flex items-center justify-center p-6">
-                  {/* Soft Warm Blurred Background Glow */}
-                  <div className="absolute inset-0 bg-gradient-to-tr from-pink-300/30 via-amber-200/20 to-rose-300/30 blur-xl pointer-events-none" />
-
-                  {/* Center Crisp White Squircle Card */}
-                  <div className="relative z-10 w-28 h-28 sm:w-32 sm:h-32 rounded-[28px] bg-white flex items-center justify-center transition-transform duration-500 group-hover:scale-105">
-                    <svg viewBox="0 0 100 100" className="w-16 h-16 sm:w-18 sm:h-18" xmlns="http://www.w3.org/2000/svg">
-                      {/* Red Scalloped Flower / Petals */}
-                      <g fill="#e50914">
-                        <circle cx="50" cy="50" r="24" />
-                        <circle cx="50" cy="27" r="14" />
-                        <circle cx="69.9" cy="38.5" r="14" />
-                        <circle cx="69.9" cy="61.5" r="14" />
-                        <circle cx="50" cy="73" r="14" />
-                        <circle cx="30.1" cy="61.5" r="14" />
-                        <circle cx="30.1" cy="38.5" r="14" />
-                      </g>
-                      {/* Crisp White Heart in Center */}
-                      <path
-                        d="M50 63.5 C50 63.5 35 52 35 41 C35 34.5 40 30.5 45.5 30.5 C48.5 30.5 50 32.5 50 32.5 C50 32.5 51.5 30.5 54.5 30.5 C60 30.5 65 34.5 65 41 C65 52 50 63.5 50 63.5 Z"
-                        fill="#ffffff"
-                      />
-                    </svg>
-                  </div>
+              {/* Item 3 */}
+              <Link
+                href="/product/features"
+                className="group/card block transition-opacity duration-200 group-hover/spotlight:opacity-50 hover:!opacity-100"
+              >
+                <div className="relative w-full aspect-[4/3] rounded-2xl overflow-hidden bg-black">
+                  <Image
+                    src="/assets/images/hugging-face.png"
+                    alt="Improving GPT-5.6 Sol in CloseAI"
+                    fill
+                    className="object-cover"
+                  />
                 </div>
                 <div className="mt-4 flex flex-col justify-between h-[92px]">
-                  <h3 className="text-base sm:text-lg font-semibold text-muted-foreground group-hover:text-foreground leading-snug">
+                  <h3 className="text-lg sm:text-xl md:text-2xl font-semibold text-muted-foreground group-hover/card:text-foreground leading-snug">
                     Launching Health in CloseAI
                   </h3>
-                  <div className="flex items-center gap-2 text-md text-muted-foreground">
-                    <span className="font-semibold text-foreground">Product</span>
+                  <div className="flex items-center gap-2 mb-5 text-md text-muted-foreground">
+                    <span className="font-semibold text-foreground">
+                      Product
+                    </span>
                     <span>·</span>
                     <span>Apr 20, 2026</span>
                     <span>·</span>
@@ -301,7 +327,6 @@ export default function LandingPage() {
                 </div>
               </Link>
             </div>
-
           </div>
         </section>
 
@@ -311,13 +336,13 @@ export default function LandingPage() {
         <section className="px-6 sm:px-8 max-w-[1400px] mx-auto py-12 border-t border-border/80">
           <div className="flex items-center justify-between mb-8 ">
             <h2 className="text-xl sm:text-2xl font-semibold tracking-tight text-foreground">
-              Latest News
+              Recent News
             </h2>
             <Link
               href="/company/blog"
-              className="group inline-flex items-center text-md font-semibold text-foreground uppercase tracking-wider"
+              className="group inline-flex items-center text-md font-semibold text-foreground tracking-tight"
             >
-              <span>View news</span>
+              <span>View more</span>
               <AnimatedArrow size={18} />
             </Link>
           </div>
@@ -325,115 +350,64 @@ export default function LandingPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {[
               {
-                title: "Global partnership for frontier AI research infrastructure",
+                title:
+                  "Global partnership for frontier AI research infrastructure",
                 category: "Company",
                 date: "May 05, 2026",
-                color: "from-blue-600 via-indigo-600 to-purple-800",
               },
               {
-                title: "Frontier safety commitments and verifiable alignment benchmarks",
+                title:
+                  "Frontier safety commitments and verifiable alignment benchmarks",
                 category: "Research",
                 date: "Jun 10, 2026",
-                color: "from-amber-500 via-orange-600 to-red-700",
               },
               {
-                title: "New benchmark records on SWE-bench and Olympiad mathematics",
+                title:
+                  "New benchmark records on SWE-bench and Olympiad mathematics",
                 category: "Research",
                 date: "Jul 15, 2026",
-                color: "from-emerald-500 via-teal-600 to-cyan-800",
               },
               {
-                title: "Advancements in live audio synthesis and spatial perception",
+                title:
+                  "Advancements in live audio synthesis and spatial perception",
                 category: "Product",
                 date: "Aug 20, 2026",
-                color: "from-cyan-500 via-sky-600 to-blue-800",
               },
               {
-                title: "Enterprise privacy safeguards with zero unauthorized retention",
+                title:
+                  "Enterprise privacy safeguards with zero unauthorized retention",
                 category: "Company",
                 date: "Sep 25, 2026",
-                color: "from-fuchsia-500 via-pink-600 to-rose-800",
               },
               {
                 title: "Expanding developer grants for open frontier research",
                 category: "Foundation",
                 date: "Nov 30, 2026",
-                color: "from-violet-500 via-purple-600 to-indigo-900",
               },
             ].map((news, i) => (
               <Link
                 key={i}
                 href="/company/blog"
-                className="group flex flex-col rounded-2xl overflow-hidden bg-card border border-border/80 dark:border-none hover:border-border transition-all"
+                className="group flex flex-col rounded-2xl overflow-hidden bg-card border border-border/80 dark:border-none transition-all"
               >
-                {/* Visual Thumbnail */}
-                <div className={`h-40 w-full bg-gradient-to-br ${news.color} opacity-85 group-hover:opacity-100 transition-opacity flex items-end p-4`}>
-                  <span className="text-[15px] font-semibold text-white/90 uppercase tracking-wider bg-black/40 px-2.5 py-1 rounded-full backdrop-blur-md">
+                {/* Visual Thumbnail: DiceBear glass avatar */}
+                <div className="relative h-40 w-full bg-secondary overflow-hidden flex items-end p-4">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={newsAvatar(news.title)}
+                    alt=""
+                    aria-hidden="true"
+                    className="absolute inset-0 h-full w-full object-cover opacity-85 group-hover:opacity-100 transition-opacity"
+                  />
+                  <span className="relative text-[15px] font-semibold text-white/90 uppercase tracking-wider bg-black/40 px-2.5 py-1 rounded-full backdrop-blur-md">
                     {news.category}
                   </span>
                 </div>
                 <div className="p-5 flex-1 flex flex-col justify-between">
-                  <h3 className="text-base font-medium text-muted-foreground group-hover:text-foreground leading-snug mb-3">
+                  <h3 className="text-base sm:text-lg md:text-xl font-medium text-muted-foreground group-hover:text-foreground leading-snug mb-3">
                     {news.title}
                   </h3>
                   <p className="text-md text-muted-foreground">{news.date}</p>
-                </div>
-              </Link>
-            ))}
-          </div>
-        </section>
-
-        {/* ---------------------------------------------------------------- */}
-        {/* STORIES & REAL-WORLD IMPACT */}
-        {/* ---------------------------------------------------------------- */}
-        <section className="px-6 sm:px-8 max-w-[1400px] mx-auto py-12 border-t border-border/80">
-          <div className="flex items-center justify-between mb-8">
-            <h2 className="text-xl sm:text-2xl font-semibold tracking-tight text-foreground">
-              Stories
-            </h2>
-            <Link
-              href="/company/blog"
-              className="group inline-flex items-center text-md font-semibold text-foreground uppercase tracking-wider"
-            >
-              <span>View all</span>
-              <AnimatedArrow size={18} />
-            </Link>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {[
-              {
-                title: "Scaling exploration across polar science & climate dynamics",
-                category: "Science",
-                gradient: "from-sky-900 via-indigo-950 to-black",
-              },
-              {
-                title: "Coding intelligence accelerated in high-velocity teams",
-                category: "Engineering",
-                gradient: "from-stone-900 via-neutral-900 to-black",
-              },
-              {
-                title: "Next-generation motorsport aerodynamic engineering with closeAI",
-                category: "Industry",
-                gradient: "from-red-950 via-neutral-950 to-black",
-              },
-            ].map((story, i) => (
-              <Link
-                key={i}
-                href="/company/blog"
-                className="group rounded-3xl overflow-hidden bg-[#0f0f11] text-white border border-border/80 dark:border-none flex flex-col justify-between min-h-[360px] p-7 relative transition-all hover:border-border"
-              >
-                <div className={`absolute inset-0 bg-gradient-to-b ${story.gradient} opacity-90 z-0`} />
-                <div className="relative z-10 flex items-center justify-between">
-                  <span className="text-md font-semibold text-neutral-300 uppercase tracking-wider">
-                    {story.category}
-                  </span>
-                </div>
-                <div className="relative z-10">
-                  <h3 className="text-xl font-semibold text-muted-foreground group-hover:text-foreground leading-snug mb-2">
-                    {story.title}
-                  </h3>
-                  <p className="text-md text-neutral-400">Individual Articles</p>
                 </div>
               </Link>
             ))}
@@ -446,53 +420,67 @@ export default function LandingPage() {
         <section className="px-6 sm:px-8 max-w-[1400px] mx-auto py-12 border-t border-border/80">
           <div className="flex items-center justify-between mb-8">
             <h2 className="text-xl sm:text-2xl font-semibold tracking-tight text-foreground">
-              Frontier Research
+              Latest Research
             </h2>
             <Link
               href="/research/overview"
-              className="group inline-flex items-center text-md font-semibold text-foreground uppercase tracking-wider"
+              className="group inline-flex items-center text-md font-semibold text-foreground tracking-tight"
             >
-              <span>View research</span>
+              <span>View all</span>
               <AnimatedArrow size={18} />
             </Link>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <Link
-              href="/research/overview"
-              className="group rounded-3xl p-7 bg-[#0e1118] text-white border border-border/80 dark:border-none flex flex-col justify-end min-h-[300px] hover:border-border transition-all"
-            >
-              <div>
-                <h3 className="text-lg font-semibold text-muted-foreground group-hover:text-foreground leading-snug mb-2">
-                  The next generation model architecture and self-verifying chains
-                </h3>
-                <p className="text-md text-neutral-400">Research Paper</p>
-              </div>
-            </Link>
-
-            <Link
-              href="/research/overview"
-              className="group rounded-3xl p-7 bg-[#16140e] text-white border border-border/80 dark:border-none flex flex-col justify-end min-h-[300px] hover:border-border transition-all"
-            >
-              <div>
-                <h3 className="text-lg font-semibold text-muted-foreground group-hover:text-foreground leading-snug mb-2">
-                  Unit Distance Problem & Discrete Mathematics Optimization
-                </h3>
-                <p className="text-md text-neutral-400">Research Paper</p>
-              </div>
-            </Link>
-
-            <Link
-              href="/research/overview"
-              className="group rounded-3xl p-7 bg-[#0e1713] text-white border border-border/80 dark:border-none flex flex-col justify-end min-h-[300px] hover:border-border transition-all"
-            >
-              <div>
-                <h3 className="text-lg font-semibold text-muted-foreground group-hover:text-foreground leading-snug mb-2">
-                  Introducing closeAI-Rosalind for Molecular Biology & Therapeutics
-                </h3>
-                <p className="text-md text-neutral-400">Research Paper</p>
-              </div>
-            </Link>
+            {[
+              {
+                title:
+                  "The next generation model architecture and self-verifying chains",
+                seed: "The",
+              },
+              {
+                title:
+                  "Unit Distance Problem & Discrete Mathematics Optimization",
+                seed: "Unit",
+              },
+              {
+                title:
+                  "Introducing closeAI-Rosalind for Molecular Biology & Therapeutics",
+                seed: "Introducing",
+              },
+            ].map((paper, i) => (
+              <Link
+                key={i}
+                href="/research/overview"
+                className="group flex flex-col rounded-2xl overflow-hidden bg-card border border-border/80 dark:border-none transition-all"
+              >
+                {/* Visual Thumbnail: DiceBear constellation avatar (theme-aware) */}
+                <div className="relative h-44 w-full overflow-hidden">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={researchAvatarLight(paper.seed)}
+                    alt=""
+                    aria-hidden="true"
+                    className="absolute inset-0 h-full w-full object-cover block dark:hidden"
+                  />
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={researchAvatarDark(paper.seed)}
+                    alt=""
+                    aria-hidden="true"
+                    className="absolute inset-0 h-full w-full object-cover hidden dark:block"
+                  />
+                </div>
+                <div className="p-5 flex-1 flex flex-col justify-between">
+                  <h3 className="text-base sm:text-lg md:text-xl font-semibold text-muted-foreground group-hover:text-foreground leading-snug mb-3">
+                    {paper.title}
+                  </h3>
+                  <p className="text-md text-muted-foreground">
+                    Research Paper
+                  </p>
+                </div>
+              </Link>
+            ))}
           </div>
         </section>
 
@@ -506,49 +494,61 @@ export default function LandingPage() {
             </h2>
             <Link
               href="/business/enterprise"
-              className="group inline-flex items-center text-md font-semibold text-foreground uppercase tracking-wider"
+              className="group inline-flex items-center text-md font-semibold text-foreground tracking-tight"
             >
-              <span>Explore enterprise</span>
+              <span>View all</span>
               <AnimatedArrow size={18} />
             </Link>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <Link
-              href="/business/enterprise"
-              className="group rounded-3xl p-8 bg-gradient-to-br from-[#7a6438] via-[#4d3d1f] to-[#1e1709] text-white border border-border/80 dark:border-none flex flex-col justify-end min-h-[280px] transition-all"
-            >
-              <div>
-                <p className="text-md font-medium text-muted-foreground group-hover:text-foreground mb-1">
-                  Accelerating deep learning experimentation with closeAI infrastructure
-                </p>
-                <p className="text-md text-neutral-300">Case study</p>
-              </div>
-            </Link>
-
-            <Link
-              href="/business/enterprise"
-              className="group rounded-3xl p-8 bg-gradient-to-br from-[#2e333d] via-[#1a1d24] to-[#0c0e12] text-white border border-border/80 dark:border-none flex flex-col justify-end min-h-[280px] transition-all"
-            >
-              <div>
-                <p className="text-md font-medium text-muted-foreground group-hover:text-foreground mb-1">
-                  Scaling private institutional financial analysis with frontier security
-                </p>
-                <p className="text-md text-neutral-300">Case study</p>
-              </div>
-            </Link>
-
-            <Link
-              href="/business/enterprise"
-              className="group rounded-3xl p-8 bg-gradient-to-br from-[#d95d1e] via-[#8c350a] to-[#2b0f02] text-white border border-border/80 dark:border-none flex flex-col justify-end min-h-[280px] transition-all"
-            >
-              <div>
-                <p className="text-md font-medium text-muted-foreground group-hover:text-foreground mb-1">
-                  Empowering millions with autonomous multi-agent task execution
-                </p>
-                <p className="text-md text-neutral-300">Case study</p>
-              </div>
-            </Link>
+            {[
+              {
+                title:
+                  "Accelerating deep learning experimentation with closeAI infrastructure",
+                seed: "Accelerating",
+              },
+              {
+                title:
+                  "Scaling private institutional financial analysis with frontier security",
+                seed: "Scaling",
+              },
+              {
+                title:
+                  "Empowering millions with autonomous multi-agent task execution",
+                seed: "Empowering",
+              },
+            ].map((study, i) => (
+              <Link
+                key={i}
+                href="/business/enterprise"
+                className="group flex flex-col rounded-2xl overflow-hidden bg-card border border-border/80 dark:border-none transition-all"
+              >
+                {/* Visual Thumbnail: DiceBear planets avatar (theme-aware) */}
+                <div className="relative h-40 w-full overflow-hidden">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={businessAvatarLight(study.seed)}
+                    alt=""
+                    aria-hidden="true"
+                    className="absolute inset-0 h-full w-full object-cover block dark:hidden"
+                  />
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={businessAvatarDark(study.seed)}
+                    alt=""
+                    aria-hidden="true"
+                    className="absolute inset-0 h-full w-full object-cover hidden dark:block"
+                  />
+                </div>
+                <div className="p-5 flex-1 flex flex-col justify-between">
+                  <p className="text-base sm:text-lg md:text-xl font-medium text-muted-foreground group-hover:text-foreground mb-1">
+                    {study.title}
+                  </p>
+                  <p className="text-md text-muted-foreground">Case study</p>
+                </div>
+              </Link>
+            ))}
           </div>
         </section>
 
@@ -560,8 +560,9 @@ export default function LandingPage() {
             <h2 className="text-3xl sm:text-5xl font-semibold tracking-tight text-foreground">
               Get started with closeAI
             </h2>
-            <p className="text-muted-foreground text-md sm:text-base max-w-md">
-              Experience the frontier intelligence designed to think, create, and build alongside you.
+            <p className="text-muted-foreground text-base sm:text-lg md:text-xl max-w-md">
+              Experience the frontier intelligence designed to think, create,
+              and build alongside you.
             </p>
             <div className="pt-2">
               <Button
@@ -571,7 +572,7 @@ export default function LandingPage() {
               >
                 <Link href="/c" className="flex items-center">
                   <span>Explore Now</span>
-                  <AnimatedArrow size={15} />
+                  <AnimatedArrow size={18} />
                 </Link>
               </Button>
             </div>

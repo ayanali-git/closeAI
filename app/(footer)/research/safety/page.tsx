@@ -55,7 +55,7 @@ export default function SafetyPage() {
           return (
             <div
               key={i}
-              className="p-8 rounded-3xl border border-border/50 bg-card hover:border-border transition-all flex flex-col justify-between"
+              className="p-8 rounded-3xl border border-border/50 bg-card transition-all flex flex-col justify-between"
             >
               <div>
                 <div className="w-12 h-12 rounded-2xl bg-secondary flex items-center justify-center mb-6">

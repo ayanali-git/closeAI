@@ -1,24 +1,24 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { supabase } from '@/lib/supabase';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Label } from '@/components/ui/label';
-import { Eye, EyeOff } from 'lucide-react';
-import { CloseAIIcon } from '@/components/brand/logo';
-import toast from '@/lib/toast';
-import { getAuthCallbackUrl } from '@/lib/url';
+import { useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { supabase } from "@/lib/supabase";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
+import { Eye, EyeOff } from "lucide-react";
+import { CloseAIIcon } from "@/components/brand/logo";
+import toast from "@/lib/toast";
+import { getAuthCallbackUrl } from "@/lib/url";
 
 export default function SignupPage() {
   const router = useRouter();
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [agreed, setAgreed] = useState(false);
@@ -26,18 +26,18 @@ export default function SignupPage() {
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name || !email || !password || !confirmPassword) {
-      toast.error('Please fill in all fields');
+      toast.error("Please fill in all fields");
       return;
     }
     if (password !== confirmPassword) {
-      toast.error('Passwords do not match');
+      toast.error("Passwords do not match");
       return;
     }
     if (!agreed) {
-      toast.error('Please agree to the Terms of Service');
+      toast.error("Please agree to the Terms of Service");
       return;
     }
-    
+
     setLoading(true);
     try {
       const { data, error } = await supabase.auth.signUp({
@@ -47,21 +47,23 @@ export default function SignupPage() {
           data: {
             full_name: name,
           },
-          emailRedirectTo: getAuthCallbackUrl('/c'),
-        }
+          emailRedirectTo: getAuthCallbackUrl("/c"),
+        },
       });
 
       if (error) throw error;
 
       if (data?.user && !data?.session) {
-        toast.success('Account created! Please check your email to confirm your account.');
-        router.push('/auth/login');
+        toast.success(
+          "Account created! Please check your email to confirm your account."
+        );
+        router.push("/auth/login");
       } else {
-        toast.success('Account created successfully');
-        window.location.href = '/c';
+        toast.success("Account created successfully");
+        window.location.href = "/c";
       }
     } catch (error: any) {
-      toast.error(error.message || 'Failed to create account');
+      toast.error(error.message || "Failed to create account");
       setLoading(false);
     }
   };
@@ -69,32 +71,32 @@ export default function SignupPage() {
   const handleGoogleSignup = async () => {
     try {
       const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
+        provider: "google",
         options: {
-          redirectTo: getAuthCallbackUrl('/c'),
+          redirectTo: getAuthCallbackUrl("/c"),
           queryParams: {
-            prompt: 'select_account',
-            access_type: 'offline',
+            prompt: "select_account",
+            access_type: "offline",
           },
         },
       });
       if (error) throw error;
     } catch (error: any) {
-      toast.error(error.message || 'Failed to sign up with Google');
+      toast.error(error.message || "Failed to sign up with Google");
     }
   };
 
   const handleGithubSignup = async () => {
     try {
       const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'github',
+        provider: "github",
         options: {
-          redirectTo: getAuthCallbackUrl('/c'),
+          redirectTo: getAuthCallbackUrl("/c"),
         },
       });
       if (error) throw error;
     } catch (error: any) {
-      toast.error(error.message || 'Failed to sign up with GitHub');
+      toast.error(error.message || "Failed to sign up with GitHub");
     }
   };
 
@@ -106,15 +108,19 @@ export default function SignupPage() {
           <div className="w-12 h-12 rounded-2xl bg-secondary flex items-center justify-center mb-4 border border-border/80 dark:border-none">
             <CloseAIIcon size={26} />
           </div>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground mb-1">Create your account</h1>
-          <p className="text-md text-muted-foreground">Start using closeAI in seconds</p>
+          <h1 className="text-2xl font-bold tracking-tight text-foreground mb-1">
+            Create your account
+          </h1>
+          <p className="text-md text-muted-foreground">
+            Start using closeAI in seconds
+          </p>
         </div>
 
         {/* OAuth Buttons */}
         <div className="space-y-2.5 mb-5">
-          <Button 
-            variant="outline" 
-            type="button" 
+          <Button
+            variant="outline"
+            type="button"
             className="w-full h-11 rounded-xl border border-border font-medium hover:bg-secondary text-foreground transition-colors flex items-center justify-center gap-2.5"
             onClick={handleGoogleSignup}
           >
@@ -140,14 +146,18 @@ export default function SignupPage() {
             <span className="text-md">Continue with Google</span>
           </Button>
 
-          <Button 
-            variant="outline" 
-            type="button" 
+          <Button
+            variant="outline"
+            type="button"
             className="w-full h-11 rounded-xl border border-border font-medium hover:bg-secondary text-foreground transition-colors flex items-center justify-center gap-2.5"
             onClick={handleGithubSignup}
           >
             <svg className="w-4 h-4 shrink-0 fill-current" viewBox="0 0 24 24">
-              <path fillRule="evenodd" clipRule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" />
+              <path
+                fillRule="evenodd"
+                clipRule="evenodd"
+                d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"
+              />
             </svg>
             <span className="text-md">Continue with GitHub</span>
           </Button>
@@ -168,89 +178,120 @@ export default function SignupPage() {
         {/* Form */}
         <form onSubmit={handleSignup} className="space-y-3.5">
           <div className="space-y-1.5">
-            <Label htmlFor="name" className="text-md font-semibold text-foreground">
+            <Label
+              htmlFor="name"
+              className="text-md font-semibold text-foreground"
+            >
               Full Name
             </Label>
-            <Input 
-              id="name" 
-              type="text" 
+            <Input
+              id="name"
+              type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Enter your name"
-              required 
+              required
               className="h-10 rounded-xl border-border text-foreground placeholder:text-muted-foreground focus:placeholder:text-foreground transition-colors"
             />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="email" className="text-md font-semibold text-foreground">
+            <Label
+              htmlFor="email"
+              className="text-md font-semibold text-foreground"
+            >
               Email address
             </Label>
-            <Input 
-              id="email" 
-              type="email" 
+            <Input
+              id="email"
+              type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="Enter your email"
-              required 
+              required
               className="h-10 rounded-xl border-border text-foreground placeholder:text-muted-foreground focus:placeholder:text-foreground transition-colors"
             />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="password" className="text-md font-semibold text-foreground">
+            <Label
+              htmlFor="password"
+              className="text-md font-semibold text-foreground"
+            >
               Password
             </Label>
             <div className="relative">
-              <Input 
+              <Input
                 id="password"
-                type={showPassword ? 'text' : 'password'}
+                type={showPassword ? "text" : "password"}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Enter your password"
-                required 
+                required
                 className="h-10 rounded-xl border-border text-foreground placeholder:text-muted-foreground focus:placeholder:text-foreground transition-colors"
               />
             </div>
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="confirmPassword" className="text-md font-semibold text-foreground">
+            <Label
+              htmlFor="confirmPassword"
+              className="text-md font-semibold text-foreground"
+            >
               Confirm Password
             </Label>
-            <Input 
+            <Input
               id="confirmPassword"
-              type={showPassword ? 'text' : 'password'}
+              type={showPassword ? "text" : "password"}
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               placeholder="Enter your password again"
-              required 
+              required
               className="h-10 rounded-xl border-border text-foreground placeholder:text-muted-foreground focus:placeholder:text-foreground transition-colors"
             />
           </div>
-          
+
           <div className="flex items-start space-x-2.5 pt-1">
             <Checkbox
-              id="terms" 
+              id="terms"
               checked={agreed}
               onCheckedChange={(checked) => setAgreed(checked === true)}
               className="mt-0.5"
             />
-            <label htmlFor="terms" className="text-md text-muted-foreground leading-snug cursor-pointer select-none">
-              I agree to the <Link href="/support/terms" className="text-muted-foreground hover:text-foreground font-medium">Terms of uses</Link> and <Link href="/support/privacy" className="text-muted-foreground hover:text-foreground font-medium">Privacy policy</Link>
+            <label
+              htmlFor="terms"
+              className="text-md text-muted-foreground leading-snug cursor-pointer select-none"
+            >
+              I agree to the{" "}
+              <Link
+                href="/support/terms"
+                className="text-muted-foreground hover:text-foreground font-medium"
+              >
+                Terms of uses
+              </Link>{" "}
+              and{" "}
+              <Link
+                href="/support/privacy"
+                className="text-muted-foreground hover:text-foreground font-medium"
+              >
+                Privacy policy
+              </Link>
             </label>
           </div>
 
-          <Button 
-            type="submit" 
-            disabled={loading} 
+          <Button
+            type="submit"
+            disabled={loading}
             className="w-full h-11 bg-foreground text-background hover:bg-foreground/90 font-medium rounded-xl mt-3 transition-all cursor-pointer"
           >
-            {loading ? 'Creating account...' : 'Create account'}
+            {loading ? "Creating account..." : "Create account"}
           </Button>
         </form>
 
         {/* Footer */}
         <p className="text-center text-md text-muted-foreground mt-6">
-          Already have an account?{' '}
-          <Link href="/auth/login" className="font-semibold text-muted-foreground hover:text-foreground">
+          Already have an account?{" "}
+          <Link
+            href="/auth/login"
+            className="font-semibold text-muted-foreground hover:text-foreground"
+          >
             Log in
           </Link>
         </p>

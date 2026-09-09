@@ -264,7 +264,7 @@ export default function UpgradePage() {
                 className={`relative rounded-3xl p-8 flex flex-col justify-between border transition-all ${
                   plan.popular || (isCurrentPlan && plan.id !== 'free')
                     ? "bg-card border-foreground/30"
-                    : "bg-card/60 border-border/70 hover:border-border"
+                    : "bg-card/60 border-border/70"
                 }`}
               >
                 {isCurrentPlan ? (

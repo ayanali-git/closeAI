@@ -47,7 +47,7 @@ export default function FoundationPage() {
           return (
             <div
               key={i}
-              className="p-8 rounded-3xl border border-border/50 bg-card hover:border-border transition-all flex flex-col justify-between"
+              className="p-8 rounded-3xl border border-border/80 dark:border-none bg-card transition-all flex flex-col justify-between"
             >
               <div>
                 <div className="w-12 h-12 rounded-2xl bg-secondary flex items-center justify-center mb-6">
@@ -62,7 +62,7 @@ export default function FoundationPage() {
       </div>
 
       {/* Grant Application Box */}
-      <div className="rounded-3xl border border-border/60 bg-gradient-to-br from-card via-card to-secondary/30 p-10 sm:p-14 text-center flex flex-col items-center">
+      <div className="rounded-3xl border border-border/80 dark:border-none bg-gradient-to-br from-card via-card to-secondary/30 p-10 sm:p-14 text-center flex flex-col items-center">
         <h2 className="text-2xl sm:text-4xl font-semibold text-foreground mb-4">
           Apply for Academic & Non-Profit Grants
         </h2>

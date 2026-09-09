@@ -3,11 +3,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import {
-  ArrowUpRight,
-  ArrowUp,
-  ArrowLeft,
-} from "lucide-react";
+import { ArrowUpRight, ArrowUp, ArrowLeft } from "lucide-react";
 import { CloseAIIcon } from "@/components/brand/logo";
 import {
   AnimatedArrow,
@@ -458,7 +454,8 @@ export function MarketingHeader() {
     }
 
     const sbWidth =
-      window.innerWidth - document.documentElement.clientWidth || scrollbarWidth;
+      window.innerWidth - document.documentElement.clientWidth ||
+      scrollbarWidth;
     if (sbWidth > 0 && sbWidth !== scrollbarWidth) {
       setScrollbarWidth(sbWidth);
     }
@@ -541,7 +538,10 @@ export function MarketingHeader() {
         )}
         style={{
           right: isLocked && scrollbarWidth > 0 ? `${scrollbarWidth}px` : 0,
-          width: isLocked && scrollbarWidth > 0 ? `calc(100% - ${scrollbarWidth}px)` : "100%",
+          width:
+            isLocked && scrollbarWidth > 0
+              ? `calc(100% - ${scrollbarWidth}px)`
+              : "100%",
         }}
         onClick={() => setActiveMenu(null)}
       />
@@ -552,7 +552,8 @@ export function MarketingHeader() {
           className="fixed inset-y-0 left-0 top-14 z-40 bg-background/98 backdrop-blur-2xl overflow-y-auto overscroll-contain px-6 sm:px-8 py-12 sm:py-16 select-none"
           style={{
             right: scrollbarWidth > 0 ? `${scrollbarWidth}px` : 0,
-            width: scrollbarWidth > 0 ? `calc(100% - ${scrollbarWidth}px)` : "100%",
+            width:
+              scrollbarWidth > 0 ? `calc(100% - ${scrollbarWidth}px)` : "100%",
           }}
           onClick={(e) => {
             if (e.target === e.currentTarget) {
@@ -717,7 +718,10 @@ export function MarketingHeader() {
         className="fixed top-0 left-0 z-50 w-full bg-background select-none transition-colors duration-200"
         style={{
           right: isLocked && scrollbarWidth > 0 ? `${scrollbarWidth}px` : 0,
-          width: isLocked && scrollbarWidth > 0 ? `calc(100% - ${scrollbarWidth}px)` : "100%",
+          width:
+            isLocked && scrollbarWidth > 0
+              ? `calc(100% - ${scrollbarWidth}px)`
+              : "100%",
         }}
         onMouseLeave={handleMouseLeave}
       >
@@ -766,7 +770,10 @@ export function MarketingHeader() {
                 <AnimatedChevron
                   open={activeMenu === "research"}
                   size={18}
-                  className="text-muted-foreground group-hover:text-foreground transition-colors"
+                  className={cn(
+                    getNavButtonColor("research"),
+                    "transition-colors"
+                  )}
                 />
               </button>
 
@@ -789,7 +796,10 @@ export function MarketingHeader() {
                 <AnimatedChevron
                   open={activeMenu === "products"}
                   size={18}
-                  className="text-muted-foreground group-hover:text-foreground transition-colors"
+                  className={cn(
+                    getNavButtonColor("products"),
+                    "transition-colors"
+                  )}
                 />
               </button>
 
@@ -812,7 +822,10 @@ export function MarketingHeader() {
                 <AnimatedChevron
                   open={activeMenu === "business"}
                   size={18}
-                  className="text-muted-foreground group-hover:text-foreground transition-colors"
+                  className={cn(
+                    getNavButtonColor("business"),
+                    "transition-colors"
+                  )}
                 />
               </button>
 
@@ -837,7 +850,10 @@ export function MarketingHeader() {
                 <AnimatedChevron
                   open={activeMenu === "developers"}
                   size={18}
-                  className="text-muted-foreground group-hover:text-foreground transition-colors"
+                  className={cn(
+                    getNavButtonColor("developers"),
+                    "transition-colors"
+                  )}
                 />
               </button>
 
@@ -860,7 +876,10 @@ export function MarketingHeader() {
                 <AnimatedChevron
                   open={activeMenu === "company"}
                   size={18}
-                  className="text-muted-foreground group-hover:text-foreground transition-colors"
+                  className={cn(
+                    getNavButtonColor("company"),
+                    "transition-colors"
+                  )}
                 />
               </button>
 
@@ -980,7 +999,7 @@ export function MarketingHeader() {
                 >
                   <Link href="/c" className="flex items-center gap-1">
                     <span>Chat Now</span>
-                    <AnimatedArrow size={16} />
+                    <AnimatedArrow size={18} />
                   </Link>
                 </Button>
               </>
@@ -1618,7 +1637,10 @@ export function MarketingHeader() {
             className="lg:hidden fixed inset-y-0 left-0 top-14 bg-background border-b border-border p-6 flex flex-col justify-between overflow-y-auto overscroll-contain scrollbar-none z-50 select-none"
             style={{
               right: scrollbarWidth > 0 ? `${scrollbarWidth}px` : 0,
-              width: scrollbarWidth > 0 ? `calc(100% - ${scrollbarWidth}px)` : "100%",
+              width:
+                scrollbarWidth > 0
+                  ? `calc(100% - ${scrollbarWidth}px)`
+                  : "100%",
             }}
           >
             {mobileSubMenu === null ? (

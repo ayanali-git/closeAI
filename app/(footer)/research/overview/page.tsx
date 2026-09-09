@@ -53,7 +53,7 @@ export default function ResearchOverviewPage() {
       </div>
 
       {/* Hero Research Spotlight */}
-      <div className="rounded-3xl border border-border/60 bg-gradient-to-br from-indigo-950/40 via-card to-background p-8 sm:p-12 mb-16">
+      <div className="rounded-3xl border border-border/80 dark:border-none bg-gradient-to-br from-indigo-950/40 via-card to-background p-8 sm:p-12 mb-16">
         <div className="flex items-center gap-2 mb-4">
           <span className="w-2.5 h-2.5 rounded-full bg-indigo-400" />
           <span className="text-md font-semibold uppercase tracking-wider text-indigo-400">
@@ -88,7 +88,7 @@ export default function ResearchOverviewPage() {
           {researchPapers.map((paper, i) => (
             <div
               key={i}
-              className="p-6 rounded-2xl border border-border/50 bg-card hover:border-border transition-all flex flex-col justify-between group"
+              className="p-6 rounded-2xl border border-border/80 dark:border-none bg-card transition-all flex flex-col justify-between group"
             >
               <div className="flex items-center justify-between mb-3">
                 <span className="text-[15px] font-semibold tracking-wider uppercase bg-secondary px-2.5 py-1 rounded-full text-foreground">

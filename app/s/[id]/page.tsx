@@ -931,7 +931,6 @@ export default function PublicSharedChatPage() {
                     isTyping={false}
                     pendingMessage={null}
                     showMessageActions={false}
-                    stickyCodeHeaderClass="top-0"
                   />
                 </div>
               )}

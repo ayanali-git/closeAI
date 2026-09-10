@@ -357,7 +357,6 @@ export function MarketingHeader() {
   const [accountMenuOpen, setAccountMenuOpen] = useState(false);
   const [loginMenuOpen, setLoginMenuOpen] = useState(false);
   const [tryMenuOpen, setTryMenuOpen] = useState(false);
-  const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [hoveredNav, setHoveredNav] = useState<string | null>(null);
   const [scrollbarWidth, setScrollbarWidth] = useState(0);
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -366,7 +365,19 @@ export function MarketingHeader() {
   const loginTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const tryTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const headerRef = useRef<HTMLElement>(null);
-  const isLocked = isSearchOpen || mobileNavOpen;
+ const [logoutModalOpen, setLogoutModalOpen] = useState(false);
+const [logoutModalRendered, setLogoutModalRendered] = useState(false);
+
+const isLocked = isSearchOpen || mobileNavOpen || logoutModalRendered;
+
+  useEffect(() => {
+  if (logoutModalOpen) {
+    setLogoutModalRendered(true);
+  } else if (logoutModalRendered) {
+    const t = setTimeout(() => setLogoutModalRendered(false), 350); // matches DRAWER duration
+    return () => clearTimeout(t);
+  }
+}, [logoutModalOpen, logoutModalRendered]);
 
   const searchResults = React.useMemo(() => {
     const q = submittedQuery.trim().toLowerCase();
@@ -475,7 +486,7 @@ export function MarketingHeader() {
       document.body.style.overflow = prevBodyOverflow;
       document.body.style.paddingRight = prevBodyPaddingRight;
     };
-  }, [isLocked, isSearchOpen]);
+  }, [isLocked, isSearchOpen, logoutModalRendered]);
 
   // Handle escape key to close menu/search
   useEffect(() => {
@@ -762,7 +773,7 @@ export function MarketingHeader() {
                   setActiveMenu(activeMenu === "research" ? null : "research");
                 }}
                 className={cn(
-                  "group text-[15px] font-medium transition-colors py-1 cursor-pointer flex items-center gap-1",
+                  "group text-[15px] transition-colors py-1 cursor-pointer flex items-center gap-1",
                   getNavButtonColor("research")
                 )}
               >
@@ -788,7 +799,7 @@ export function MarketingHeader() {
                   setActiveMenu(activeMenu === "products" ? null : "products");
                 }}
                 className={cn(
-                  "group text-[15px] font-medium transition-colors py-1 cursor-pointer flex items-center gap-1",
+                  "group text-[15px] transition-colors py-1 cursor-pointer flex items-center gap-1",
                   getNavButtonColor("products")
                 )}
               >
@@ -814,7 +825,7 @@ export function MarketingHeader() {
                   setActiveMenu(activeMenu === "business" ? null : "business");
                 }}
                 className={cn(
-                  "group text-[15px] font-medium transition-colors py-1 cursor-pointer flex items-center gap-1",
+                  "group text-[15px] transition-colors py-1 cursor-pointer flex items-center gap-1",
                   getNavButtonColor("business")
                 )}
               >
@@ -842,7 +853,7 @@ export function MarketingHeader() {
                   );
                 }}
                 className={cn(
-                  "group text-[15px] font-medium transition-colors py-1 cursor-pointer flex items-center gap-1",
+                  "group text-[15px] transition-colors py-1 cursor-pointer flex items-center gap-1",
                   getNavButtonColor("developers")
                 )}
               >
@@ -868,7 +879,7 @@ export function MarketingHeader() {
                   setActiveMenu(activeMenu === "company" ? null : "company");
                 }}
                 className={cn(
-                  "group text-[15px] font-medium transition-colors py-1 cursor-pointer flex items-center gap-1",
+                  "group text-[15px] transition-colors py-1 cursor-pointer flex items-center gap-1",
                   getNavButtonColor("company")
                 )}
               >
@@ -896,7 +907,7 @@ export function MarketingHeader() {
                   setIsSearchOpen(false);
                 }}
                 className={cn(
-                  "text-[15px] font-medium transition-colors py-1",
+                  "text-[15px] transition-colors py-1",
                   getNavButtonColor("foundation")
                 )}
               >
@@ -945,7 +956,7 @@ export function MarketingHeader() {
                     onMouseEnter={handleAccountEnter}
                     onMouseLeave={handleAccountLeave}
                     onClick={() => setAccountMenuOpen(!accountMenuOpen)}
-                    className="group flex rounded-full bg-white/50 dark:bg-[#212121]/50 hover:bg-secondary dark:hover:bg-[#2f2f2f] border border-border/80 dark:border-none items-center gap-1.5 text-[15px] font-medium text-foreground transition-colors px-4 py-2 cursor-pointer outline-none select-none"
+                    className="group flex rounded-full bg-white/50 dark:bg-[#212121]/50 hover:bg-secondary dark:hover:bg-[#2f2f2f] border border-border/80 dark:border-none items-center gap-1.5 text-[15px] text-foreground transition-colors px-4 py-2 cursor-pointer outline-none select-none"
                   >
                     <span>Account</span>
                     <AnimatedChevron
@@ -962,18 +973,18 @@ export function MarketingHeader() {
                       onMouseLeave={handleAccountLeave}
                       className="absolute right-0 top-full pt-2 z-50"
                     >
-                      <div className="w-40 rounded-2xl font-medium p-1.5 bg-white/50 dark:bg-[#212121]/50 border border-border/80 dark:border-none backdrop-blur-sm">
+                      <div className="w-40 rounded-2xl p-1.5 bg-white/50 dark:bg-[#212121]/50 border border-border/80 dark:border-none backdrop-blur-sm">
                         <Link
                           href="/c"
                           onClick={() => setAccountMenuOpen(false)}
-                          className="flex items-center gap-2 px-4 py-2 text-md rounded-xl text-foreground hover:bg-secondary dark:hover:bg-[#2f2f2f] transition-colors"
+                          className="flex items-center gap-2 px-4 py-2 text-[15px] rounded-xl text-foreground hover:bg-secondary dark:hover:bg-[#2f2f2f] transition-colors"
                         >
                           Open Chat
                         </Link>
                         <Link
                           href="/settings"
                           onClick={() => setAccountMenuOpen(false)}
-                          className="flex items-center gap-2 px-4 py-2 text-md rounded-xl text-foreground hover:bg-secondary dark:hover:bg-[#2f2f2f] transition-colors"
+                          className="flex items-center gap-2 px-4 py-2 text-[15px] rounded-xl text-foreground hover:bg-secondary dark:hover:bg-[#2f2f2f] transition-colors"
                         >
                           Settings
                         </Link>
@@ -982,9 +993,9 @@ export function MarketingHeader() {
                           type="button"
                           onClick={() => {
                             setAccountMenuOpen(false);
-                            setShowLogoutModal(true);
+                            setLogoutModalOpen(true);
                           }}
-                          className="w-full flex items-center gap-2 px-4 py-2 text-md rounded-xl text-foreground hover:bg-secondary dark:hover:bg-[#2f2f2f] transition-colors text-left cursor-pointer"
+                          className="w-full flex items-center gap-2 px-4 py-2 text-[15px] rounded-xl text-foreground hover:bg-secondary dark:hover:bg-[#2f2f2f] transition-colors text-left cursor-pointer"
                         >
                           Log Out
                         </button>
@@ -995,7 +1006,7 @@ export function MarketingHeader() {
 
                 <Button
                   asChild
-                  className="group rounded-full px-4 h-9 text-[15px] font-medium bg-foreground text-background hover:opacity-90 transition-opacity cursor-pointer"
+                  className="group rounded-full px-4 h-9 text-[15px] bg-foreground text-background hover:opacity-90 transition-opacity cursor-pointer"
                 >
                   <Link href="/c" className="flex items-center gap-1">
                     <span>Chat Now</span>
@@ -1011,7 +1022,7 @@ export function MarketingHeader() {
                     onMouseEnter={handleLoginEnter}
                     onMouseLeave={handleLoginLeave}
                     onClick={() => setLoginMenuOpen(!loginMenuOpen)}
-                    className="group flex rounded-full bg-white/50 dark:bg-[#212121]/50 hover:bg-secondary dark:hover:bg-[#2f2f2f] border border-border/80 dark:border-none items-center gap-1.5 text-[15px] font-medium text-foreground transition-colors px-4 py-2 cursor-pointer outline-none select-none"
+                    className="group flex rounded-full bg-white/50 dark:bg-[#212121]/50 hover:bg-secondary dark:hover:bg-[#2f2f2f] border border-border/80 dark:border-none items-center gap-1.5 text-[15px] text-foreground transition-colors px-4 py-2 cursor-pointer outline-none select-none"
                   >
                     <span>Log In</span>
                     <AnimatedChevron
@@ -1028,11 +1039,11 @@ export function MarketingHeader() {
                       onMouseLeave={handleLoginLeave}
                       className="absolute right-0 top-full pt-2 z-50"
                     >
-                      <div className="w-48 rounded-2xl font-medium p-1.5 bg-white/50 dark:bg-[#212121]/50 border border-border/80 dark:border-none backdrop-blur-sm">
+                      <div className="w-48 rounded-2xl p-1.5 bg-white/50 dark:bg-[#212121]/50 border border-border/80 dark:border-none backdrop-blur-sm">
                         <Link
                           href="/auth/login"
                           onClick={() => setLoginMenuOpen(false)}
-                          className="flex items-center gap-2 px-4 py-2 text-md rounded-xl text-foreground hover:bg-secondary dark:hover:bg-[#2f2f2f] transition-colors"
+                          className="flex items-center gap-2 px-4 py-2 text-[15px] rounded-xl text-foreground hover:bg-secondary dark:hover:bg-[#2f2f2f] transition-colors"
                         >
                           CloseAI Chat
                         </Link>
@@ -1043,7 +1054,7 @@ export function MarketingHeader() {
                             e.preventDefault();
                             e.stopPropagation();
                           }}
-                          className="flex items-center gap-2 px-4 py-2 text-md rounded-xl text-muted-foreground hover:text-foreground hover:bg-secondary dark:hover:bg-[#2f2f2f] transition-colors cursor-not-allowed select-none"
+                          className="flex items-center gap-2 px-4 py-2 text-[15px] rounded-xl text-muted-foreground hover:text-foreground hover:bg-secondary dark:hover:bg-[#2f2f2f] transition-colors cursor-not-allowed select-none"
                         >
                           <AnimatedComingSoonText
                             label="API Platform"
@@ -1058,7 +1069,7 @@ export function MarketingHeader() {
 
                 <Button
                   asChild
-                  className="group rounded-full px-4 h-9 text-[15px] font-medium bg-foreground text-background hover:opacity-90 transition-opacity cursor-pointer hidden sm:inline-flex"
+                  className="group rounded-full px-4 h-9 text-[15px] bg-foreground text-background hover:opacity-90 transition-opacity cursor-pointer hidden sm:inline-flex"
                 >
                   <Link
                     href="/auth/signup"
@@ -2088,7 +2099,7 @@ export function MarketingHeader() {
                           type="button"
                           onClick={() => {
                             setMobileNavOpen(false);
-                            setShowLogoutModal(true);
+                            setLogoutModalOpen(true);
                           }}
                           className="block text-xl font-medium text-red-500 hover:opacity-80 transition-opacity py-1 cursor-pointer"
                         >
@@ -2106,10 +2117,10 @@ export function MarketingHeader() {
 
       {/* Logout Confirmation Modal */}
       <LogoutModal
-        open={showLogoutModal}
-        onOpenChange={setShowLogoutModal}
+        open={logoutModalOpen}
+        onOpenChange={setLogoutModalOpen}
         onConfirm={async () => {
-          setShowLogoutModal(false);
+          setLogoutModalOpen(false);
           await signOut();
           router.push("/");
         }}

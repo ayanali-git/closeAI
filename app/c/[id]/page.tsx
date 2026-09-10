@@ -655,7 +655,7 @@ export default function ActiveChatPage() {
         currentChatId={chatId}
         onChatSelect={(id) => router.push(`/c/${id}`)}
         onNewChat={() => {
-          if (typeof window !== "undefined" && window.innerWidth < 1280) {
+          if (typeof window !== "undefined" && window.innerWidth < 1024) {
             setSidebarOpen(false);
           }
           router.push("/c");
@@ -685,6 +685,8 @@ export default function ActiveChatPage() {
       <div className="flex-1 flex flex-col min-w-0 h-full relative overflow-hidden">
         {/* Transparent Floating Header - Buttons float cleanly on top, no background bar/patti */}
         <header className="absolute top-0 left-0 right-0 z-30 h-14 pt-[env(safe-area-inset-top,0px)] px-3 sm:px-4 flex items-center justify-between select-none pointer-events-none bg-transparent">
+          {/* Top gradient overlay — fades scrolled text behind header buttons */}
+          <div className="absolute top-0 left-0 right-4 sm:right-5 h-20 pointer-events-none bg-gradient-to-b from-background via-background to-transparent -z-10" />
           <div className="flex items-center gap-2 pointer-events-auto mt-3 pl-3 sm:pl-0">
             {!sidebarOpen && (
               <Tooltip>
@@ -889,7 +891,7 @@ export default function ActiveChatPage() {
             {/* Floating Input Dock inside scroll container for 100% scrollbar-aware width alignment */}
             <div
               ref={dockRef}
-              className="sticky bottom-0 left-0 right-0 z-20 pointer-events-none pb-[max(env(safe-area-inset-bottom,0px),0.5rem)] bg-gradient-to-t from-background via-background/90 to-transparent pt-4 mt-auto"
+              className="sticky bottom-0 left-0 right-4 sm:right-5 z-20 pointer-events-none pb-[max(env(safe-area-inset-bottom,0px),0.5rem)] bg-gradient-to-t from-background via-background/80 to-transparent pt-4 mt-auto"
             >
               <div className="pointer-events-auto">
                 <ChatInput

@@ -187,7 +187,7 @@ export default function LandingPage() {
                     handlePillClick(pill.prompt);
                   }}
                   className={cn(
-                    "px-4 py-3 rounded-full font-medium text-md sm:text-[15px] transition-all outline-none focus:outline-none focus-visible:outline-none focus:ring-0 focus-visible:ring-0 ring-0",
+                    "px-4 py-3 rounded-full text-md sm:text-[15px] transition-all outline-none focus:outline-none focus-visible:outline-none focus:ring-0 focus-visible:ring-0 ring-0",
                     pill.disabled
                       ? "cursor-not-allowed select-none bg-white/50 dark:bg-[#212121]/50 hover:bg-secondary dark:hover:bg-[#2f2f2f] border border-border/80 dark:border-none backdrop-blur-sm text-muted-foreground hover:text-foreground group/pill"
                       : "cursor-pointer bg-white/50 dark:bg-[#212121]/50 hover:bg-secondary dark:hover:bg-[#2f2f2f]",

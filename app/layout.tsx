@@ -11,7 +11,7 @@ import { ThemeProvider } from '@/components/theme-provider';
 import { TooltipProvider } from '@/components/ui/tooltip';
 
 export const metadata: Metadata = {
-  title: 'CloseAI',
+  title: 'CloseAI | Research & More',
   description: 'AI assistant for research, coding, writing, and creating.',
   keywords: 'AI assistant, artificial intelligence, chat, productivity, generative AI',
   authors: [{ name: 'CloseAI' }],

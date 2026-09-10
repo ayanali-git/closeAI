@@ -55,7 +55,7 @@ export function BottomSheet({
   useEffect(() => {
     setMounted(true);
     const checkMobile = () => {
-      setIsMobileScreen(window.innerWidth < 768);
+      setIsMobileScreen(window.innerWidth < 1024);
     };
     checkMobile();
     window.addEventListener("resize", checkMobile);
@@ -66,40 +66,17 @@ export function BottomSheet({
     if (open) setSnap(defaultSnap);
   }, [open, defaultSnap]);
 
-  // Lock background scroll while open, matching the header search pattern.
-  // Uses overflow:hidden + padding-right compensation instead of position:fixed
-  // so the page content and header don't shift when the scrollbar disappears.
-  useEffect(() => {
-    if (!open) return;
-    const html = document.documentElement;
-    const body = document.body;
-    // Measure scrollbar width before hiding it
-    const scrollbarWidth = window.innerWidth - html.clientWidth;
-    const prevHtmlOverflow = html.style.overflow;
-    const prevBodyOverflow = body.style.overflow;
-    const prevBodyPaddingRight = body.style.paddingRight;
-
-    html.style.overflow = "hidden";
-    body.style.overflow = "hidden";
-    if (scrollbarWidth > 0) {
-      body.style.paddingRight = `${scrollbarWidth}px`;
+useEffect(() => {
+  if (!open) return;
+  const onKey = (event: KeyboardEvent) => {
+    if (event.key === "Escape") {
+      event.preventDefault();
+      onOpenChange(false);
     }
-
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        event.preventDefault();
-        onOpenChange(false);
-      }
-    };
-    window.addEventListener("keydown", onKey);
-
-    return () => {
-      window.removeEventListener("keydown", onKey);
-      html.style.overflow = prevHtmlOverflow;
-      body.style.overflow = prevBodyOverflow;
-      body.style.paddingRight = prevBodyPaddingRight;
-    };
-  }, [open, onOpenChange]);
+  };
+  window.addEventListener("keydown", onKey);
+  return () => window.removeEventListener("keydown", onKey);
+}, [open, onOpenChange]);
 
   const onDragEnd = (_: unknown, info: PanInfo) => {
     if (!isMobileScreen) return;

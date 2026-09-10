@@ -163,6 +163,8 @@ function preprocessContent(text: string): string {
 
 function CodeBlock({ language, code }: { language: string; code: string }) {
   const [copied, setCopied] = useState(false);
+  const [isStuck, setIsStuck] = useState(false);
+  const sentinelRef = useRef<HTMLDivElement>(null);
 
   const handleCopy = () => {
     navigator.clipboard.writeText(code);
@@ -191,6 +193,27 @@ function CodeBlock({ language, code }: { language: string; code: string }) {
     return highlightCode(code, displayLang);
   }, [code, displayLang]);
 
+  // Detect when the sticky header is actually "stuck" vs in its normal flow position
+  useEffect(() => {
+    const sentinel = sentinelRef.current;
+    if (!sentinel) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        // When the sentinel (placed just above the header) scrolls out of view,
+        // the header has become stuck to the top.
+        setIsStuck(!entry.isIntersecting);
+      },
+      {
+        threshold: 0,
+        rootMargin: "0px 0px 0px 0px",
+      }
+    );
+
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, []);
+
   return (
     <div
       className="
@@ -202,25 +225,28 @@ function CodeBlock({ language, code }: { language: string; code: string }) {
         overflow-visible
       "
     >
+      {/* Sentinel: sits right before the header, used to detect stuck state */}
       <div
-        className="
-          sticky -top-14 z-10
+        ref={sentinelRef}
+        className="absolute -top-10 h-px w-full"
+        aria-hidden="true"
+      />
+
+      <div
+        className={cn(
+          `
+          sticky -top-3.5 z-10
           flex items-center justify-between
           px-4 py-2
-          bg-bubble dark:bg-[#2F2F2F]
+          bg-bubble/50 dark:bg-[#2F2F2F]/50 backdrop-blur-sm
           text-xs font-sans
-          text-neutral-600 dark:text-neutral-300
+        text-neutral-600 dark:text-neutral-300
           select-none
-          rounded-t-2xl sm:rounded-t-3xl
-
-          after:absolute
-          after:left-4
-          after:right-4
-          after:bottom-0
-          after:h-px
-          after:bg-neutral-200/80
-          dark:after:bg-neutral-700/60
-        "
+          `,
+          isStuck
+            ? "rounded-b-2xl sm:rounded-b-3xl shadow-[0_1px_0_0_rgba(229,229,229,0.8)] dark:shadow-[0_1px_0_0_rgba(64,64,64,0.6)]"
+            : "rounded-t-2xl sm:rounded-t-3xl"
+        )}
       >
         <span className="font-mono text-base lowercase font-medium tracking-wide text-muted-foreground hover:text-foreground">
           {displayLang}
@@ -258,35 +284,25 @@ function CodeBlock({ language, code }: { language: string; code: string }) {
       </div>
 
       {/* Code content */}
-      <div
-        className="
-          p-3.5 sm:p-4
-          overflow-x-auto
-          code-scroll
-          text-[15px] sm:text-[14px]
-          font-mono
-          leading-relaxed
-          bg-bubble dark:bg-[#2F2F2F]
-          select-text
-          rounded-b-2xl sm:rounded-b-3xl
-        "
-      >
-        <pre
+      <div className="rounded-b-2xl sm:rounded-b-3xl overflow-hidden bg-bubble dark:bg-[#2F2F2F]">
+        <div
           className="
-            !m-0 !p-0
-            bg-transparent
-            border-0
+           p-3.5 sm:p-4
+            overflow-x-auto
+            code-scroll
+            text-[15px] sm:text-[14px]
             font-mono
-            whitespace-pre
-            w-max
-            min-w-full
+            leading-relaxed
+            select-text
           "
         >
-          <code
-            className={`!bg-transparent !p-0 font-mono whitespace-pre block language-${displayLang}`}
-            dangerouslySetInnerHTML={{ __html: highlightedHtml }}
-          />
-        </pre>
+          <pre className="!m-0 !p-0 bg-transparent border-0 font-mono whitespace-pre w-max min-w-full">
+            <code
+              className={`!bg-transparent !p-0 font-mono whitespace-pre block language-${displayLang}`}
+              dangerouslySetInnerHTML={{ __html: highlightedHtml }}
+            />
+          </pre>
+        </div>
       </div>
     </div>
   );

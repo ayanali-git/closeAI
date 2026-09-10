@@ -473,7 +473,7 @@ export function AnimatedComingSoonText({
         {label}
       </span>
       <span
-        className="col-start-1 row-start-1 invisible pointer-events-none select-none whitespace-nowrap font-medium"
+        className="col-start-1 row-start-1 invisible pointer-events-none select-none whitespace-nowrap"
         aria-hidden="true"
       >
         {comingSoonText}
@@ -494,7 +494,7 @@ export function AnimatedComingSoonText({
       <motion.span
         style={{ y: comingY, opacity: comingOpacity }}
         className={cn(
-          "col-start-1 row-start-1 flex items-center whitespace-nowrap text-muted-foreground/90 font-medium",
+          "col-start-1 row-start-1 flex items-center whitespace-nowrap text-muted-foreground/90",
           align === "center" ? "justify-center" : "justify-start"
         )}
       >

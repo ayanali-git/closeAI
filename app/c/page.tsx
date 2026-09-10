@@ -201,7 +201,7 @@ function NewChatContent() {
         onNewChat={() => {
           setMessage("");
           setUploadedFiles([]);
-          if (typeof window !== 'undefined' && window.innerWidth < 1280) {
+          if (typeof window !== 'undefined' && window.innerWidth < 1024) {
             setSidebarOpen(false);
           }
         }}

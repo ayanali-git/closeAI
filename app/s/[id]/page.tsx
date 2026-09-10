@@ -825,7 +825,7 @@ export default function PublicSharedChatPage() {
 
       {/* Transparent Floating Header - Buttons float cleanly on top, matching c/[id] exactly */}
       <header className="absolute top-0 left-0 right-0 z-30 h-14 pt-[env(safe-area-inset-top,0px)] px-3 sm:px-4 flex items-center justify-between select-none pointer-events-none bg-transparent">
-        <div className="absolute top-0 left-0 right-4 sm:right-5 h-16 pointer-events-none bg-gradient-to-b from-background via-background/90 to-transparent -z-10" />
+        <div className="absolute top-0 left-0 right-4 sm:right-5 h-20 pointer-events-none bg-gradient-to-b from-background via-background/95 to-transparent -z-10" />
         <div className="flex items-center gap-2 sm:gap-2.5 min-w-0 pointer-events-auto ml-3 mt-3 mr-3 sm:ml-0.5">
           <Link
             href="/"
@@ -899,14 +899,11 @@ export default function PublicSharedChatPage() {
         <div className="flex-1 flex flex-col min-h-full items-center">
           {isError ? (
             <div className="flex-1 w-full flex flex-col items-center justify-center p-6 text-center space-y-4">
-              <div className="w-12 h-12 rounded-full bg-secondary flex items-center justify-center text-muted-foreground text-xl">
-                ?
-              </div>
               <div className="space-y-1">
-                <h2 className="text-lg font-semibold">
+                <p className="text-2xl font-semibold">
                   Conversation not found
-                </h2>
-                <p className="text-sm text-muted-foreground max-w-sm">
+                </p>
+                <p className="text-base text-muted-foreground max-w-base">
                   This shared link may have been deleted or is unavailable.
                 </p>
               </div>
@@ -938,7 +935,7 @@ export default function PublicSharedChatPage() {
               {/* Floating Input Dock inside scroll container */}
               <div
                 ref={dockRef}
-                className="sticky bottom-0 left-0 right-0 z-20 pointer-events-none pb-[max(env(safe-area-inset-bottom,0px),0.5rem)] bg-gradient-to-t from-background via-background/90 to-transparent pt-4 mt-auto w-full"
+                className="sticky bottom-0 left-0 right-4 sm:right-5 z-20 pointer-events-none pb-[max(env(safe-area-inset-bottom,0px),0.5rem)] bg-gradient-to-t from-background via-background to-transparent pt-4 mt-auto w-full"
               >
                 <div className="pointer-events-auto">
                   <SharedChatInputPill

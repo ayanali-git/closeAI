@@ -124,7 +124,7 @@ export function SharePromptModal({
   // where BottomSheet renders as a centered modal with no other close affordance.
   // On mobile it renders as a bottom sheet with a drag handle + backdrop tap to dismiss.
   useEffect(() => {
-    const checkMobile = () => setIsMobileScreen(window.innerWidth < 768);
+    const checkMobile = () => setIsMobileScreen(window.innerWidth < 1024);
     checkMobile();
     window.addEventListener("resize", checkMobile);
     return () => window.removeEventListener("resize", checkMobile);

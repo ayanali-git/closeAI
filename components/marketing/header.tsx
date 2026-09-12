@@ -365,19 +365,46 @@ export function MarketingHeader() {
   const loginTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const tryTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const headerRef = useRef<HTMLElement>(null);
- const [logoutModalOpen, setLogoutModalOpen] = useState(false);
-const [logoutModalRendered, setLogoutModalRendered] = useState(false);
+  const logoRef = useRef<HTMLAnchorElement>(null);
+  const foundationRef = useRef<HTMLAnchorElement>(null);
+  const [foundationOffset, setFoundationOffset] = useState<number | null>(null);
 
-const isLocked = isSearchOpen || mobileNavOpen || logoutModalRendered;
+  const updateFoundationOffset = () => {
+    if (logoRef.current && foundationRef.current) {
+      const logoRect = logoRef.current.getBoundingClientRect();
+      const foundationRect = foundationRef.current.getBoundingClientRect();
+      const offset = foundationRect.left - logoRect.left;
+      if (offset > 0) {
+        setFoundationOffset(offset);
+      }
+    }
+  };
 
   useEffect(() => {
-  if (logoutModalOpen) {
-    setLogoutModalRendered(true);
-  } else if (logoutModalRendered) {
-    const t = setTimeout(() => setLogoutModalRendered(false), 350); // matches DRAWER duration
-    return () => clearTimeout(t);
-  }
-}, [logoutModalOpen, logoutModalRendered]);
+    updateFoundationOffset();
+    window.addEventListener("resize", updateFoundationOffset);
+    return () => window.removeEventListener("resize", updateFoundationOffset);
+  }, []);
+
+  useEffect(() => {
+    if (activeMenu) {
+      updateFoundationOffset();
+    }
+  }, [activeMenu]);
+
+  const [logoutModalOpen, setLogoutModalOpen] = useState(false);
+  const [logoutModalRendered, setLogoutModalRendered] = useState(false);
+
+  const isLocked = isSearchOpen || mobileNavOpen || logoutModalRendered;
+
+  useEffect(() => {
+    if (logoutModalOpen) {
+      setLogoutModalRendered(true);
+    } else if (logoutModalRendered) {
+      const t = setTimeout(() => setLogoutModalRendered(false), 350); // matches DRAWER duration
+      return () => clearTimeout(t);
+    }
+  }, [logoutModalOpen, logoutModalRendered]);
 
   const searchResults = React.useMemo(() => {
     const q = submittedQuery.trim().toLowerCase();
@@ -736,10 +763,11 @@ const isLocked = isSearchOpen || mobileNavOpen || logoutModalRendered;
         }}
         onMouseLeave={handleMouseLeave}
       >
-        <div className="max-w-[1400px] mx-auto px-6 sm:px-8 h-14 flex items-center justify-between relative">
+        <div className="max-w-[1500px] mx-auto px-6 sm:px-8 h-14 flex items-center justify-between relative">
           {/* Left Brand Logo & Main Nav Items */}
           <div className="flex items-center gap-8">
             <Link
+              ref={logoRef}
               href="/"
               onMouseEnter={() => {
                 setActiveMenu(null);
@@ -896,6 +924,7 @@ const isLocked = isSearchOpen || mobileNavOpen || logoutModalRendered;
 
               {/* Foundation (Non-dropdown link: closes menu immediately on hover) */}
               <Link
+                ref={foundationRef}
                 href="/foundation"
                 onMouseEnter={() => {
                   setHoveredNav("foundation");
@@ -1123,10 +1152,17 @@ const isLocked = isSearchOpen || mobileNavOpen || logoutModalRendered;
             }}
             onMouseLeave={handleMouseLeave}
           >
-            <div className="max-w-[1400px] mx-auto px-12 py-10">
+            <div className="max-w-[1500px] mx-auto px-6 sm:px-8 py-10">
               {/* RESEARCH MEGA MENU */}
               {activeMenu === "research" && (
-                <div className="grid grid-cols-2 gap-16">
+                <div
+                  className="grid"
+                  style={{
+                    gridTemplateColumns: foundationOffset
+                      ? `${foundationOffset}px 1fr`
+                      : "minmax(280px, 1fr) 1fr",
+                  }}
+                >
                   <div>
                     <p className="text-md font-semibold text-muted-foreground tracking-wider uppercase mb-5">
                       Explore Research
@@ -1228,7 +1264,14 @@ const isLocked = isSearchOpen || mobileNavOpen || logoutModalRendered;
 
               {/* PRODUCTS MEGA MENU (Matching Screenshot 1) */}
               {activeMenu === "products" && (
-                <div className="grid grid-cols-2 gap-16">
+                <div
+                  className="grid"
+                  style={{
+                    gridTemplateColumns: foundationOffset
+                      ? `${foundationOffset}px 1fr`
+                      : "minmax(280px, 1fr) 1fr",
+                  }}
+                >
                   <div>
                     <p className="text-md font-semibold text-muted-foreground tracking-wider uppercase mb-5">
                       Explore Products
@@ -1297,7 +1340,14 @@ const isLocked = isSearchOpen || mobileNavOpen || logoutModalRendered;
 
               {/* BUSINESS MEGA MENU (Matching Screenshot 2) */}
               {activeMenu === "business" && (
-                <div className="grid grid-cols-2 gap-16">
+                <div
+                  className="grid"
+                  style={{
+                    gridTemplateColumns: foundationOffset
+                      ? `${foundationOffset}px 1fr`
+                      : "minmax(280px, 1fr) 1fr",
+                  }}
+                >
                   <div>
                     <p className="text-md font-semibold text-muted-foreground tracking-wider uppercase mb-5">
                       Explore Business
@@ -1426,7 +1476,14 @@ const isLocked = isSearchOpen || mobileNavOpen || logoutModalRendered;
 
               {/* DEVELOPERS MEGA MENU (Matching Screenshot 3) */}
               {activeMenu === "developers" && (
-                <div className="grid grid-cols-2 gap-16">
+                <div
+                  className="grid"
+                  style={{
+                    gridTemplateColumns: foundationOffset
+                      ? `${foundationOffset}px 1fr`
+                      : "minmax(280px, 1fr) 1fr",
+                  }}
+                >
                   <div>
                     <p className="text-md font-semibold text-muted-foreground tracking-wider uppercase mb-5">
                       Explore Developers
@@ -1552,7 +1609,14 @@ const isLocked = isSearchOpen || mobileNavOpen || logoutModalRendered;
 
               {/* COMPANY MEGA MENU (Matching Screenshot 4) */}
               {activeMenu === "company" && (
-                <div className="grid grid-cols-2 gap-16">
+                <div
+                  className="grid"
+                  style={{
+                    gridTemplateColumns: foundationOffset
+                      ? `${foundationOffset}px 1fr`
+                      : "minmax(280px, 1fr) 1fr",
+                  }}
+                >
                   <div>
                     <p className="text-md font-semibold text-muted-foreground tracking-wider uppercase mb-5">
                       Explore Company

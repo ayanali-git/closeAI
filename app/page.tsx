@@ -27,6 +27,9 @@ export default function LandingPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
+  // "More" pill state: when clicked, converts to "Search with CloseAI" (like API platform type)
+  const [isMoreExpanded, setIsMoreExpanded] = useState(false);
+
   // Hover-dims-siblings state, one per grid section
   const [hoveredSpotlight, setHoveredSpotlight] = useState<number | null>(null);
   const [hoveredNews, setHoveredNews] = useState<number | null>(null);
@@ -61,51 +64,56 @@ export default function LandingPage() {
 
   const quickPills = [
     {
+      id: "research",
       label: "Research",
       prompt: "Summarize recent breakthrough papers in AI alignment and safety",
     },
     {
+      id: "talk",
       label: "Talk with CloseAI",
       prompt:
         "Explain the latest frontier AI models and reasoning capabilities",
     },
     {
+      id: "business",
       label: "Business",
       prompt: "How does closeAI help enterprises with secure AI solutions?",
     },
     {
+      id: "api",
       label: "API Platform",
       prompt: "How do I get started with the API and developer platform?",
       disabled: true,
       hoverText: "Coming soon",
     },
-    {
-      label: "More",
-      prompt: "Explore all closeAI features, enterprise solutions, and tools",
-    },
+    isMoreExpanded
+      ? {
+          id: "more",
+          label: "Search with CloseAI",
+          prompt:
+            "Explore all closeAI features, enterprise solutions, and tools",
+          disabled: true,
+          hoverText: "Coming soon",
+        }
+      : {
+          id: "more",
+          label: "More",
+          prompt:
+            "Explore all closeAI features, enterprise solutions, and tools",
+        },
   ];
 
-  // Recent News: glass avatars (seeded per-article so each card gets a distinct pattern)
+  // Recent News: blobs avatars
   const newsAvatar = (seed: string) =>
-    `https://api.dicebear.com/10.x/glass/svg?seed=${encodeURIComponent(seed)}`;
+    `https://api.dicebear.com/10.x/blobs/svg?seed=${encodeURIComponent(seed)}`;
 
-  // Latest Research: constellation avatars, light/dark variants
-  const researchAvatarDark = (seed: string) =>
-    `https://api.dicebear.com/10.x/constellation/svg?backgroundColor=07080d,0a0b12&constellationColor=eaf2ff,d8e6f5&seed=${encodeURIComponent(
-      seed
-    )}`;
-  const researchAvatarLight = (seed: string) =>
-    `https://api.dicebear.com/10.x/constellation/svg?backgroundColor=eef2f7,e8eef5&constellationColor=2a3550&seed=${encodeURIComponent(
-      seed
-    )}`;
+  // Latest Research: waves avatars
+  const researchAvatar = (seed: string) =>
+    `https://api.dicebear.com/10.x/waves/svg?seed=${encodeURIComponent(seed)}`;
 
-  // closeAI for Business: planets avatars, light/dark variants
-  const businessAvatarDark = (seed: string) =>
-    `https://api.dicebear.com/10.x/planets/svg?backgroundColor=0a0b0f&planetColor=ff2e88,00e5ff,ffe600,7cff00,b400ff&seed=${encodeURIComponent(
-      seed
-    )}`;
-  const businessAvatarLight = (seed: string) =>
-    `https://api.dicebear.com/10.x/planets/svg?backgroundColor=e6ecf5,eef1f7&moonColor=8c93a3&seed=${encodeURIComponent(
+  // closeAI for Business: squircles avatars
+  const businessAvatar = (seed: string) =>
+    `https://api.dicebear.com/10.x/squircles/svg?seed=${encodeURIComponent(
       seed
     )}`;
 
@@ -175,14 +183,30 @@ export default function LandingPage() {
 
           {/* Suggestion Pills */}
           <div className="flex flex-wrap items-center justify-center gap-2 max-w-2xl mx-auto">
-            {quickPills.map((pill, i) => {
+            {quickPills.map((pill) => {
               const isSelected =
-                !pill.disabled && heroPrompt.trim() === pill.prompt;
+                !pill.disabled &&
+                pill.id !== "talk" &&
+                pill.id !== "more" &&
+                heroPrompt.trim() === pill.prompt;
+
               return (
                 <button
-                  key={i}
+                  key={pill.id}
                   type="button"
-                  onClick={() => {
+                  onClick={(e) => {
+                    if (pill.id === "talk") {
+                      if (e.metaKey || e.ctrlKey) {
+                        window.open("/c", "_blank");
+                      } else {
+                        router.push("/c");
+                      }
+                      return;
+                    }
+                    if (pill.id === "more" && !isMoreExpanded) {
+                      setIsMoreExpanded(true);
+                      return;
+                    }
                     if (pill.disabled) return;
                     handlePillClick(pill.prompt);
                   }}
@@ -216,11 +240,12 @@ export default function LandingPage() {
         {/* FEATURED SPOTLIGHT (Sticky Left + Scrolling Right) */}
         {/* ---------------------------------------------------------------- */}
         <section className="px-6 sm:px-8 max-w-[2000px] mx-auto pt-6 pb-28">
-          <div className="relative flex flex-col lg:flex-row justify-center gap-8 lg:gap-14"
+          <div
+            className="relative flex flex-col lg:flex-row justify-center gap-8 lg:gap-14"
             onMouseLeave={() => setHoveredSpotlight(null)}
           >
             {/* STICKY LEFT COLUMN TRACK: Astra GPT-6 Spotlight */}
-            <div className="w-full lg:w-[46.5%] relative">
+            <div className="w-full lg:w-[52%] relative">
               <div className="lg:sticky lg:top-24">
                 <Link
                   href="/research/overview"
@@ -387,7 +412,7 @@ export default function LandingPage() {
         {/* ---------------------------------------------------------------- */}
         {/* LATEST NEWS & UPDATES */}
         {/* ---------------------------------------------------------------- */}
-        <section className="px-6 sm:px-8 max-w-[1400px] mx-auto py-12 border-t border-border/80">
+        <section className="px-6 sm:px-8 max-w-[1500px] mx-auto py-12 border-t border-border/80">
           <div className="flex items-center justify-between mb-8 ">
             <h2 className="text-xl sm:text-2xl font-semibold tracking-tight text-foreground">
               Recent News
@@ -448,13 +473,12 @@ export default function LandingPage() {
                 onMouseEnter={() => setHoveredNews(i)}
                 className="flex flex-col rounded-md overflow-hidden bg-card border border-border/80 dark:border-none transition-all"
               >
-                {/* Visual Thumbnail: DiceBear glass avatar */}
+                {/* Visual Thumbnail: DiceBear blobs avatar */}
                 <div className="relative h-40 w-full bg-secondary overflow-hidden flex items-end p-4">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={newsAvatar(news.title)}
-                    alt=""
-                    aria-hidden="true"
+                    alt="avatar"
                     className={cn(
                       "absolute inset-0 h-full w-full object-cover transition-opacity",
                       hoveredNews === null || hoveredNews === i
@@ -485,7 +509,7 @@ export default function LandingPage() {
         {/* ---------------------------------------------------------------- */}
         {/* FRONTIER RESEARCH SHOWCASE                                       */}
         {/* ---------------------------------------------------------------- */}
-        <section className="px-6 sm:px-8 max-w-[1400px] mx-auto py-12 border-t border-border/80">
+        <section className="px-6 sm:px-8 max-w-[1500px] mx-auto py-12 border-t border-border/80">
           <div className="flex items-center justify-between mb-8">
             <h2 className="text-xl sm:text-2xl font-semibold tracking-tight text-foreground">
               Latest Research
@@ -506,18 +530,18 @@ export default function LandingPage() {
             {[
               {
                 title:
-                  "The next generation model architecture and self-verifying chains",
-                seed: "The",
+                  "The next generation model architecture and self-verifying chain",
+                seed: "The next generation model architecture and self-verifying chain",
               },
               {
                 title:
                   "Unit Distance Problem & Discrete Mathematics Optimization",
-                seed: "Unit",
+                seed: "Unit Distance Problem & Discrete Mathematics Optimization",
               },
               {
                 title:
                   "Introducing closeAI-Rosalind for Molecular Biology & Therapeutics",
-                seed: "Introducing",
+                seed: "Introducing closeAI-Rosalind for Molecular Biology & Therapeutics",
               },
             ].map((paper, i) => (
               <Link
@@ -526,21 +550,13 @@ export default function LandingPage() {
                 onMouseEnter={() => setHoveredResearch(i)}
                 className="flex flex-col rounded-md overflow-hidden bg-card border border-border/80 dark:border-none transition-all"
               >
-                {/* Visual Thumbnail: DiceBear constellation avatar (theme-aware) */}
+                {/* Visual Thumbnail: DiceBear waves avatar */}
                 <div className="relative h-44 w-full overflow-hidden">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
-                    src={researchAvatarLight(paper.seed)}
-                    alt=""
-                    aria-hidden="true"
-                    className="absolute inset-0 h-full w-full object-cover block dark:hidden"
-                  />
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={researchAvatarDark(paper.seed)}
-                    alt=""
-                    aria-hidden="true"
-                    className="absolute inset-0 h-full w-full object-cover hidden dark:block"
+                    src={researchAvatar(paper.seed)}
+                    alt="avatar"
+                    className="absolute inset-0 h-full w-full object-cover"
                   />
                 </div>
                 <div className="p-5 flex-1 flex flex-col justify-between">
@@ -564,7 +580,7 @@ export default function LandingPage() {
         {/* ---------------------------------------------------------------- */}
         {/* BUSINESS & ENTERPRISE PARTNERS */}
         {/* ---------------------------------------------------------------- */}
-        <section className="px-6 sm:px-8 max-w-[1400px] mx-auto py-12 border-t border-border/80">
+        <section className="px-6 sm:px-8 max-w-[1500px] mx-auto py-12 border-t border-border/80">
           <div className="flex items-center justify-between mb-8">
             <h2 className="text-xl sm:text-2xl font-semibold tracking-tight text-foreground">
               closeAI for Business
@@ -586,17 +602,17 @@ export default function LandingPage() {
               {
                 title:
                   "Accelerating deep learning experimentation with closeAI infrastructure",
-                seed: "Accelerating",
+                seed: "Accelerating deep learning experimentation with closeAI infrastructure",
               },
               {
                 title:
                   "Scaling private institutional financial analysis with frontier security",
-                seed: "Scaling",
+                seed: "Scaling private institutional financial analysis with frontier security",
               },
               {
                 title:
                   "Empowering millions with autonomous multi-agent task execution",
-                seed: "Empowering",
+                seed: "Empowering millions with autonomous multi-agent task execution",
               },
             ].map((study, i) => (
               <Link
@@ -605,21 +621,13 @@ export default function LandingPage() {
                 onMouseEnter={() => setHoveredBusiness(i)}
                 className="flex flex-col rounded-md overflow-hidden bg-card border border-border/80 dark:border-none transition-all"
               >
-                {/* Visual Thumbnail: DiceBear planets avatar (theme-aware) */}
+                {/* Visual Thumbnail: DiceBear squircles avatar */}
                 <div className="relative h-40 w-full overflow-hidden">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
-                    src={businessAvatarLight(study.seed)}
-                    alt=""
-                    aria-hidden="true"
-                    className="absolute inset-0 h-full w-full object-cover block dark:hidden"
-                  />
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={businessAvatarDark(study.seed)}
-                    alt=""
-                    aria-hidden="true"
-                    className="absolute inset-0 h-full w-full object-cover hidden dark:block"
+                    src={businessAvatar(study.seed)}
+                    alt="avatar"
+                    className="absolute inset-0 h-full w-full object-cover"
                   />
                 </div>
                 <div className="p-5 flex-1 flex flex-col justify-between">
@@ -641,7 +649,7 @@ export default function LandingPage() {
         {/* ---------------------------------------------------------------- */}
         {/* BOTTOM CALL TO ACTION BANNER */}
         {/* ---------------------------------------------------------------- */}
-        <section className="px-6 sm:px-8 max-w-[1400px] mx-auto py-16">
+        <section className="px-6 sm:px-8 max-w-[1500px] mx-auto py-16">
           <div className="rounded-md bg-card border border-border/80 dark:border-none p-12 sm:p-16 text-center flex flex-col items-center justify-center space-y-6">
             <h2 className="text-3xl sm:text-5xl font-semibold tracking-tight text-foreground">
               Get started with closeAI

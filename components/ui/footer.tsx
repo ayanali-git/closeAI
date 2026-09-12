@@ -42,6 +42,11 @@ export function Footer() {
                 Latest Advancements
               </h4>
               <ul className="group/footer space-y-2.5 text-md">
+              <li>
+                  <Link href="/research/overview" className="inline-flex items-center gap-1 text-foreground transition-colors group-hover/footer:text-muted-foreground hover:!text-foreground">
+                    GPT-6 Astra
+                  </Link>
+                </li>
                 <li>
                   <Link href="/research/overview" className="inline-flex items-center gap-1 text-foreground transition-colors group-hover/footer:text-muted-foreground hover:!text-foreground">
                     GPT-5.6
@@ -50,11 +55,6 @@ export function Footer() {
                 <li>
                   <Link href="/research/overview" className="inline-flex items-center gap-1 text-foreground transition-colors group-hover/footer:text-muted-foreground hover:!text-foreground">
                     GPT-5.5
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/research/overview" className="inline-flex items-center gap-1 text-foreground transition-colors group-hover/footer:text-muted-foreground hover:!text-foreground">
-                    GPT-5.4
                   </Link>
                 </li>
               </ul>

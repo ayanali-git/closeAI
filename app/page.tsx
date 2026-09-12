@@ -380,7 +380,7 @@ export default function LandingPage() {
                 <div className="relative w-full aspect-[4/3] rounded-md overflow-hidden bg-black">
                   <Image
                     src="/assets/images/hugging-face.png"
-                    alt="Improving GPT-5.6 Sol in CloseAI"
+                    alt="The Hugging Face Incident"
                     fill
                     className="object-cover"
                   />

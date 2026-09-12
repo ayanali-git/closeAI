@@ -1857,9 +1857,9 @@ export function MarketingHeader() {
                         </div>
                         <div className="space-y-2.5">
                           {[
+                            { label: "GPT-6 Astra", href: "/research/overview" },
                             { label: "GPT-5.6", href: "/research/overview" },
                             { label: "GPT-5.5", href: "/research/overview" },
-                            { label: "GPT-5.4", href: "/research/overview" },
                             {
                               label: "GPT-5.3 Instant",
                               href: "/research/overview",

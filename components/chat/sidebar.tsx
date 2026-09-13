@@ -348,7 +348,7 @@ export function Sidebar({
             className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-md text-foreground [@media(hover:hover)]:hover:bg-secondary active:bg-secondary/80 transition-colors outline-none focus:outline-none focus:bg-transparent focus-visible:outline-none"
           >
             <FileText className="w-4 h-4 text-muted-foreground" />
-            <span>Terms of Service</span>
+            <span>Terms of Use</span>
           </Link>
           <Link
             href="/support/privacy"
@@ -659,7 +659,7 @@ export function Sidebar({
                   className="flex items-center gap-2.5 px-3 py-2 cursor-pointer rounded-xl text-md"
                 >
                   <FileText className="w-4 h-4 text-muted-foreground group-hover:text-foreground" />
-                  <span>Terms of Service</span>
+                  <span>Terms of Use</span>
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>

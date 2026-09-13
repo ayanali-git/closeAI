@@ -332,7 +332,7 @@ const SITE_SEARCH_INDEX: SiteSearchItem[] = [
   {
     id: "supp-terms",
     category: "Page",
-    title: "Terms of Service",
+    title: "Terms of Use",
     description:
       "Terms and conditions governing the use of CloseAI services, websites, APIs, and subscriptions.",
     url: "/support/terms",
@@ -1303,34 +1303,43 @@ export function MarketingHeader() {
 
                   <div>
                     <p className="text-md font-semibold text-muted-foreground tracking-wider uppercase mb-5">
-                      Resources
+                      Products
                     </p>
                     <ul className="space-y-3 text-md text-muted-foreground">
                       <li>
                         <Link
-                          href="/company/blog"
+                          href="/business/enterprise"
                           onClick={() => setActiveMenu(null)}
                           className="hover:text-foreground transition-colors"
                         >
-                          Release Notes
+                          CloseAI Work & Teams
                         </Link>
                       </li>
                       <li>
                         <Link
-                          href="/product/api-docs"
+                          href="/business/enterprise"
                           onClick={() => setActiveMenu(null)}
                           className="hover:text-foreground transition-colors"
                         >
-                          API Platform
+                          Codex Enterprise
                         </Link>
                       </li>
                       <li>
                         <Link
-                          href="/product/pricing"
+                          href="/business/enterprise"
                           onClick={() => setActiveMenu(null)}
                           className="hover:text-foreground transition-colors"
                         >
-                          closeAI Academy & Guides
+                          CloseAI Frontier
+                        </Link>
+                      </li>
+                      <li>
+                        <Link
+                          href="/business/enterprise"
+                          onClick={() => setActiveMenu(null)}
+                          className="hover:text-foreground transition-colors"
+                        >
+                          CloseAI Presence
                         </Link>
                       </li>
                     </ul>
@@ -1412,25 +1421,16 @@ export function MarketingHeader() {
 
                   <div>
                     <p className="text-md font-semibold text-muted-foreground tracking-wider uppercase mb-5">
-                      Products
+                      Resources
                     </p>
                     <ul className="space-y-3 text-md text-muted-foreground">
                       <li>
                         <Link
-                          href="/business/enterprise"
+                          href="/company/blog"
                           onClick={() => setActiveMenu(null)}
                           className="hover:text-foreground transition-colors"
                         >
-                          CloseAI Work & Teams
-                        </Link>
-                      </li>
-                      <li>
-                        <Link
-                          href="/business/enterprise"
-                          onClick={() => setActiveMenu(null)}
-                          className="hover:text-foreground transition-colors"
-                        >
-                          Codex Enterprise
+                          Release Notes
                         </Link>
                       </li>
                       <li>
@@ -1444,29 +1444,11 @@ export function MarketingHeader() {
                       </li>
                       <li>
                         <Link
-                          href="/business/enterprise"
+                          href="/product/pricing"
                           onClick={() => setActiveMenu(null)}
                           className="hover:text-foreground transition-colors"
                         >
-                          CloseAI Frontier
-                        </Link>
-                      </li>
-                      <li>
-                        <Link
-                          href="/business/enterprise"
-                          onClick={() => setActiveMenu(null)}
-                          className="hover:text-foreground transition-colors"
-                        >
-                          CloseAI Presence
-                        </Link>
-                      </li>
-                      <li>
-                        <Link
-                          href="/business/enterprise"
-                          onClick={() => setActiveMenu(null)}
-                          className="hover:text-foreground transition-colors"
-                        >
-                          Daybreak
+                          CloseAI Academy & Guides
                         </Link>
                       </li>
                     </ul>
@@ -1684,7 +1666,7 @@ export function MarketingHeader() {
                           onClick={() => setActiveMenu(null)}
                           className="hover:text-foreground transition-colors"
                         >
-                          Terms of Service
+                          Terms of Use
                         </Link>
                       </li>
                       <li>
@@ -2087,7 +2069,7 @@ export function MarketingHeader() {
                         <div className="space-y-2.5">
                           {[
                             {
-                              label: "Terms of Service",
+                              label: "Terms of Use",
                               href: "/support/terms",
                             },
                             {

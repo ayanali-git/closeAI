@@ -12,25 +12,25 @@ export function Footer() {
         {/* Multi-Tier 5-Column Links Grid matching */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-8 lg:gap-12 pb-16 border-b border-border/80">
           
-          {/* Column 1: Research, Latest Advancements, Safety */}
+          {/* Column 1: Research & Latest Advancements */}
           <div className="space-y-8">
             <div className="space-y-3">
               <h4 className="text-md font-semibold text-muted-foreground uppercase tracking-wider">
                 Research
               </h4>
-              <ul className="group/footer space-y-2.5 text-md">
+              <ul className="footer-group space-y-2.5 text-md">
                 <li>
-                  <Link href="/research/overview" className="inline-flex items-center gap-1 text-foreground transition-colors group-hover/footer:text-muted-foreground hover:!text-foreground">
+                  <Link href="/research/overview" className="inline-flex items-center gap-1 text-foreground transition-colors">
                     Research Index
                   </Link>
                 </li>
                 <li>
-                  <Link href="/research/overview" className="inline-flex items-center gap-1 text-foreground transition-colors group-hover/footer:text-muted-foreground hover:!text-foreground">
+                  <Link href="/research/overview" className="inline-flex items-center gap-1 text-foreground transition-colors">
                     Research Overview
                   </Link>
                 </li>
                 <li>
-                  <Link href="/research/overview" className="inline-flex items-center gap-1 text-foreground transition-colors group-hover/footer:text-muted-foreground hover:!text-foreground">
+                  <Link href="/research/overview" className="inline-flex items-center gap-1 text-foreground transition-colors">
                     Economic Research
                   </Link>
                 </li>
@@ -41,101 +41,72 @@ export function Footer() {
               <h4 className="text-md font-semibold text-muted-foreground uppercase tracking-wider">
                 Latest Advancements
               </h4>
-              <ul className="group/footer space-y-2.5 text-md">
+              <ul className="footer-group space-y-2.5 text-md">
               <li>
-                  <Link href="/research/overview" className="inline-flex items-center gap-1 text-foreground transition-colors group-hover/footer:text-muted-foreground hover:!text-foreground">
+                  <Link href="/research/overview" className="inline-flex items-center gap-1 text-foreground transition-colors">
                     GPT-6 Astra
                   </Link>
                 </li>
                 <li>
-                  <Link href="/research/overview" className="inline-flex items-center gap-1 text-foreground transition-colors group-hover/footer:text-muted-foreground hover:!text-foreground">
+                  <Link href="/research/overview" className="inline-flex items-center gap-1 text-foreground transition-colors">
                     GPT-5.6
                   </Link>
                 </li>
                 <li>
-                  <Link href="/research/overview" className="inline-flex items-center gap-1 text-foreground transition-colors group-hover/footer:text-muted-foreground hover:!text-foreground">
+                  <Link href="/research/overview" className="inline-flex items-center gap-1 text-foreground transition-colors">
                     GPT-5.5
                   </Link>
                 </li>
                 <li>
-                  <Link href="/research/overview" className="inline-flex items-center gap-1 text-foreground transition-colors group-hover/footer:text-muted-foreground hover:!text-foreground">
+                  <Link href="/research/overview" className="inline-flex items-center gap-1 text-foreground transition-colors">
                     GPT-5.3 Instant
                   </Link>
                 </li>
                 <li>
-                  <Link href="/research/overview" className="inline-flex items-center gap-1 text-foreground transition-colors group-hover/footer:text-muted-foreground hover:!text-foreground">
+                  <Link href="/research/overview" className="inline-flex items-center gap-1 text-foreground transition-colors">
                     GPT-5.3-Codex
-                  </Link>
-                </li>
-              </ul>
-            </div>
-
-            <div className="space-y-3">
-              <h4 className="text-md font-semibold text-muted-foreground uppercase tracking-wider">
-                Safety
-              </h4>
-              <ul className="group/footer space-y-2.5 text-md">
-                <li>
-                  <Link href="/research/safety" className="inline-flex items-center gap-1 text-foreground transition-colors group-hover/footer:text-muted-foreground hover:!text-foreground">
-                    Safety Approach
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/research/safety" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-foreground transition-colors group-hover/footer:text-muted-foreground hover:!text-foreground">
-                    <span>Deployment Safety</span>
-                    <ArrowUpRight className="w-4 h-4 stroke-[2.5]" />
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/research/safety" className="inline-flex items-center gap-1 text-foreground transition-colors group-hover/footer:text-muted-foreground hover:!text-foreground">
-                    Security & Privacy
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/research/safety" className="inline-flex items-center gap-1 text-foreground transition-colors group-hover/footer:text-muted-foreground hover:!text-foreground">
-                    Trust & Transparency
                   </Link>
                 </li>
               </ul>
             </div>
           </div>
 
-          {/* Column 2: Products, API Platform */}
+          {/* Column 2: Products & API Platform */}
           <div className="space-y-8">
             <div className="space-y-3">
               <h4 className="text-md font-semibold text-muted-foreground uppercase tracking-wider">
                 Products
               </h4>
-              <ul className="group/footer space-y-2.5 text-md">
+              <ul className="footer-group space-y-2.5 text-md">
                 <li>
-                  <Link href="/c" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-foreground transition-colors group-hover/footer:text-muted-foreground hover:!text-foreground">
+                  <Link href="/c" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-foreground transition-colors">
                     <span>CloseAI Chat</span>
                     <ArrowUpRight className="w-4 h-4 stroke-[2.5]" />
                   </Link>
                 </li>
                 <li>
-                  <Link href="/business/enterprise" className="inline-flex items-center gap-1 text-foreground transition-colors group-hover/footer:text-muted-foreground hover:!text-foreground">
+                  <Link href="/business/enterprise" className="inline-flex items-center gap-1 text-foreground transition-colors">
                     <span>CloseAI Business</span>
                   </Link>
                 </li>
                 <li>
-                  <Link href="/business/enterprise" className="inline-flex items-center gap-1 text-foreground transition-colors group-hover/footer:text-muted-foreground hover:!text-foreground">
+                  <Link href="/business/enterprise" className="inline-flex items-center gap-1 text-foreground transition-colors">
                     <span>CloseAI Education</span>
                   </Link>
                 </li>
                 <li>
-                  <Link href="/business/enterprise" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-foreground transition-colors group-hover/footer:text-muted-foreground hover:!text-foreground">
+                  <Link href="/business/enterprise" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-foreground transition-colors">
                     <span>CloseAI Enterprise</span>
                     <ArrowUpRight className="w-4 h-4 stroke-[2.5]" />
                   </Link>
                 </li>
                 <li>
-                  <Link href="/product/features" className="inline-flex items-center gap-1 text-foreground transition-colors group-hover/footer:text-muted-foreground hover:!text-foreground">
+                  <Link href="/product/features" className="inline-flex items-center gap-1 text-foreground transition-colors">
                     Codex
                   </Link>
                 </li>
                 <li>
-                  <Link href="/company/blog" className="inline-flex items-center gap-1 text-foreground transition-colors group-hover/footer:text-muted-foreground hover:!text-foreground">
+                  <Link href="/company/blog" className="inline-flex items-center gap-1 text-foreground transition-colors">
                     Release Notes
                   </Link>
                 </li>
@@ -146,14 +117,14 @@ export function Footer() {
               <h4 className="text-md font-semibold text-muted-foreground uppercase tracking-wider">
                 API Platform
               </h4>
-              <ul className="group/footer space-y-2.5 text-md">
+              <ul className="footer-group space-y-2.5 text-md">
                 <li>
-                  <Link href="/product/api-docs" className="inline-flex items-center gap-1 text-foreground transition-colors group-hover/footer:text-muted-foreground hover:!text-foreground">
+                  <Link href="/product/api-docs" className="inline-flex items-center gap-1 text-foreground transition-colors">
                     Overview
                   </Link>
                 </li>
                 <li>
-                  <Link href="/product/api-docs" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-foreground transition-colors group-hover/footer:text-muted-foreground hover:!text-foreground">
+                  <Link href="/product/api-docs" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-foreground transition-colors">
                     <span>Docs</span>
                     <ArrowUpRight className="w-4 h-4 stroke-[2.5]" />
                   </Link>
@@ -162,40 +133,40 @@ export function Footer() {
             </div>
           </div>
 
-          {/* Column 3: Business, Developers */}
+          {/* Column 3: Business & Developers */}
           <div className="space-y-8">
             <div className="space-y-3">
               <h4 className="text-md font-semibold text-muted-foreground uppercase tracking-wider">
                 Business
               </h4>
-              <ul className="group/footer space-y-2.5 text-md">
+              <ul className="footer-group space-y-2.5 text-md">
                 <li>
-                  <Link href="/business/enterprise" className="inline-flex items-center gap-1 text-foreground transition-colors group-hover/footer:text-muted-foreground hover:!text-foreground">
+                  <Link href="/business/enterprise" className="inline-flex items-center gap-1 text-foreground transition-colors">
                     Overview
                   </Link>
                 </li>
                 <li>
-                  <Link href="/business/enterprise" className="inline-flex items-center gap-1 text-foreground transition-colors group-hover/footer:text-muted-foreground hover:!text-foreground">
+                  <Link href="/business/enterprise" className="inline-flex items-center gap-1 text-foreground transition-colors">
                     Solutions
                   </Link>
                 </li>
                 <li>
-                  <Link href="/business/enterprise" className="inline-flex items-center gap-1 text-foreground transition-colors group-hover/footer:text-muted-foreground hover:!text-foreground">
+                  <Link href="/business/enterprise" className="inline-flex items-center gap-1 text-foreground transition-colors">
                     Resources
                   </Link>
                 </li>
                 <li>
-                  <Link href="/business/enterprise" className="inline-flex items-center gap-1 text-foreground transition-colors group-hover/footer:text-muted-foreground hover:!text-foreground">
+                  <Link href="/business/enterprise" className="inline-flex items-center gap-1 text-foreground transition-colors">
                     Customer Stories
                   </Link>
                 </li>
                 <li>
-                  <Link href="/business/enterprise" className="inline-flex items-center gap-1 text-foreground transition-colors group-hover/footer:text-muted-foreground hover:!text-foreground">
+                  <Link href="/business/enterprise" className="inline-flex items-center gap-1 text-foreground transition-colors">
                     Partner Network
                   </Link>
                 </li>
                 <li>
-                  <Link href="/company/contact" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-foreground transition-colors group-hover/footer:text-muted-foreground hover:!text-foreground">
+                  <Link href="/company/contact" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-foreground transition-colors">
                     <span>Contact Sales</span>
                     <ArrowUpRight className="w-4 h-4 stroke-[2.5]" />
                   </Link>
@@ -207,32 +178,32 @@ export function Footer() {
               <h4 className="text-md font-semibold text-muted-foreground uppercase tracking-wider">
                 Developers
               </h4>
-              <ul className="group/footer space-y-2.5 text-md">
+              <ul className="footer-group space-y-2.5 text-md">
                 <li>
-                  <Link href="/product/api-docs" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-foreground transition-colors group-hover/footer:text-muted-foreground hover:!text-foreground">
+                  <Link href="/product/api-docs" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-foreground transition-colors">
                     <span>Apps SDK</span>
                     <ArrowUpRight className="w-4 h-4 stroke-[2.5]" />
                   </Link>
                 </li>
                 <li>
-                  <Link href="/research/overview" className="inline-flex items-center gap-1 text-foreground transition-colors group-hover/footer:text-muted-foreground hover:!text-foreground">
+                  <Link href="/research/overview" className="inline-flex items-center gap-1 text-foreground transition-colors">
                     Open Models
                   </Link>
                 </li>
                 <li>
-                  <Link href="/product/api-docs" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-foreground transition-colors group-hover/footer:text-muted-foreground hover:!text-foreground">
+                  <Link href="/product/api-docs" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-foreground transition-colors">
                     <span>Docs</span>
                     <ArrowUpRight className="w-4 h-4 stroke-[2.5]" />
                   </Link>
                 </li>
                 <li>
-                  <Link href="/product/api-docs" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-foreground transition-colors group-hover/footer:text-muted-foreground hover:!text-foreground">
+                  <Link href="/product/api-docs" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-foreground transition-colors">
                     <span>Resources</span>
                     <ArrowUpRight className="w-4 h-4 stroke-[2.5]" />
                   </Link>
                 </li>
                 <li>
-                  <Link href="/product/api-docs" className="inline-flex items-center gap-1 text-foreground transition-colors group-hover/footer:text-muted-foreground hover:!text-foreground">
+                  <Link href="/product/api-docs" className="inline-flex items-center gap-1 text-foreground transition-colors">
                     <span>Developer Forum</span>
                   </Link>
                 </li>
@@ -240,32 +211,61 @@ export function Footer() {
             </div>
           </div>
 
-          {/* Column 4: Company, Support */}
+          {/* Column 4: Company, More & Support */}
           <div className="space-y-8">
             <div className="space-y-3">
               <h4 className="text-md font-semibold text-muted-foreground uppercase tracking-wider">
                 Company
               </h4>
-              <ul className="group/footer space-y-2.5 text-md">
+              <ul className="footer-group space-y-2.5 text-md">
                 <li>
-                  <Link href="/company/about" className="inline-flex items-center gap-1 text-foreground transition-colors group-hover/footer:text-muted-foreground hover:!text-foreground">
+                  <Link href="/company/about" className="inline-flex items-center gap-1 text-foreground transition-colors">
                     About Us
                   </Link>
                 </li>
                 <li>
-                  <Link href="/foundation" className="inline-flex items-center gap-1 text-foreground transition-colors group-hover/footer:text-muted-foreground hover:!text-foreground">
+                  <Link href="/foundation" className="inline-flex items-center gap-1 text-foreground transition-colors">
                     Our Charter
                   </Link>
                 </li>
                 <li>
-                  <Link href="/company/careers" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-foreground transition-colors group-hover/footer:text-muted-foreground hover:!text-foreground">
+                  <Link href="/company/careers" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-foreground transition-colors">
                     <span>Careers</span>
                     <ArrowUpRight className="w-4 h-4 stroke-[2.5]" />
                   </Link>
                 </li>
                 <li>
-                  <Link href="/company/blog" className="inline-flex items-center gap-1 text-foreground transition-colors group-hover/footer:text-muted-foreground hover:!text-foreground">
+                  <Link href="/company/blog" className="inline-flex items-center gap-1 text-foreground transition-colors">
                     News
+                  </Link>
+                </li>
+              </ul>
+            </div>
+
+            <div className="space-y-3">
+              <h4 className="text-md font-semibold text-muted-foreground uppercase tracking-wider">
+                More
+              </h4>
+              <ul className="footer-group space-y-2.5 text-md">
+                <li>
+                  <Link href="/company/blog" className="inline-flex items-center gap-1 text-foreground transition-colors">
+                    Stories
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/foundation" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-foreground transition-colors">
+                    Academy
+                    <ArrowUpRight className="w-4 h-4 stroke-[2.5]" />
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/company/blog" className="inline-flex items-center gap-1 text-foreground transition-colors">
+                    Livestreams
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/company/blog" className="inline-flex items-center gap-1 text-foreground transition-colors">
+                    Podcast
                   </Link>
                 </li>
               </ul>
@@ -275,9 +275,9 @@ export function Footer() {
               <h4 className="text-md font-semibold text-muted-foreground uppercase tracking-wider">
                 Support
               </h4>
-              <ul className="group/footer space-y-2.5 text-md">
+              <ul className="footer-group space-y-2.5 text-md">
                 <li>
-                  <Link href="/support/help" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-foreground transition-colors group-hover/footer:text-muted-foreground hover:!text-foreground">
+                  <Link href="/support/help" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-foreground transition-colors">
                     <span>Help Center</span>
                     <ArrowUpRight className="w-4 h-4 stroke-[2.5]" />
                   </Link>
@@ -286,32 +286,32 @@ export function Footer() {
             </div>
           </div>
 
-          {/* Column 5: More, Terms & Policies */}
+          {/* Column 5: Safety, Terms & Policies */}
           <div className="space-y-8">
             <div className="space-y-3">
               <h4 className="text-md font-semibold text-muted-foreground uppercase tracking-wider">
-                More
+                Safety
               </h4>
-              <ul className="group/footer space-y-2.5 text-md">
+              <ul className="footer-group space-y-2.5 text-md">
                 <li>
-                  <Link href="/company/blog" className="inline-flex items-center gap-1 text-foreground transition-colors group-hover/footer:text-muted-foreground hover:!text-foreground">
-                    Stories
+                  <Link href="/research/safety" className="inline-flex items-center gap-1 text-foreground transition-colors">
+                    Safety Approach
                   </Link>
                 </li>
                 <li>
-                  <Link href="/foundation" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-foreground transition-colors group-hover/footer:text-muted-foreground hover:!text-foreground">
-                    Academy
+                  <Link href="/research/safety" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-foreground transition-colors">
+                    <span>Deployment Safety</span>
                     <ArrowUpRight className="w-4 h-4 stroke-[2.5]" />
                   </Link>
                 </li>
                 <li>
-                  <Link href="/company/blog" className="inline-flex items-center gap-1 text-foreground transition-colors group-hover/footer:text-muted-foreground hover:!text-foreground">
-                    Livestreams
+                  <Link href="/research/safety" className="inline-flex items-center gap-1 text-foreground transition-colors">
+                    Security & Privacy
                   </Link>
                 </li>
                 <li>
-                  <Link href="/company/blog" className="inline-flex items-center gap-1 text-foreground transition-colors group-hover/footer:text-muted-foreground hover:!text-foreground">
-                    Podcast
+                  <Link href="/research/safety" className="inline-flex items-center gap-1 text-foreground transition-colors">
+                    Trust & Transparency
                   </Link>
                 </li>
               </ul>
@@ -321,14 +321,14 @@ export function Footer() {
               <h4 className="text-md font-semibold text-muted-foreground uppercase tracking-wider">
                 Terms & Policies
               </h4>
-              <ul className="group/footer space-y-2.5 text-md">
+              <ul className="footer-group space-y-2.5 text-md">
                 <li>
-                  <Link href="/support/terms" className="inline-flex items-center gap-1 text-foreground transition-colors group-hover/footer:text-muted-foreground hover:!text-foreground">
+                  <Link href="/support/terms" className="inline-flex items-center gap-1 text-foreground transition-colors">
                     Terms of Use
                   </Link>
                 </li>
                 <li>
-                  <Link href="/support/privacy" className="inline-flex items-center gap-1 text-foreground transition-colors group-hover/footer:text-muted-foreground hover:!text-foreground">
+                  <Link href="/support/privacy" className="inline-flex items-center gap-1 text-foreground transition-colors">
                     Privacy Policy
                   </Link>
                 </li>
@@ -367,12 +367,12 @@ export function Footer() {
           </div>
 
           {/* Right / Middle: Social Links with ArrowUpRight Icons */}
-          <div className="group/social flex flex-wrap text-base items-center justify-center md:justify-end gap-x-5 gap-y-2">
+          <div className="footer-group flex flex-wrap text-base items-center justify-center md:justify-end gap-x-5 gap-y-2">
             <a
               href="https://x.com"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 text-foreground transition-colors group-hover/social:text-muted-foreground hover:!text-foreground whitespace-nowrap"
+              className="inline-flex items-center gap-1 text-foreground transition-colors whitespace-nowrap"
             >
               <span>X</span>
               <ArrowUpRight className="w-4 h-4 stroke-[2.5]" />
@@ -381,7 +381,7 @@ export function Footer() {
               href="https://github.com"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 text-foreground transition-colors group-hover/social:text-muted-foreground hover:!text-foreground whitespace-nowrap"
+              className="inline-flex items-center gap-1 text-foreground transition-colors whitespace-nowrap"
             >
               <span>GitHub</span>
               <ArrowUpRight className="w-4 h-4 stroke-[2.5]" />
@@ -390,7 +390,7 @@ export function Footer() {
               href="https://linkedin.com"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 text-foreground transition-colors group-hover/social:text-muted-foreground hover:!text-foreground whitespace-nowrap"
+              className="inline-flex items-center gap-1 text-foreground transition-colors whitespace-nowrap"
             >
               <span>LinkedIn</span>
               <ArrowUpRight className="w-4 h-4 stroke-[2.5]" />
@@ -399,7 +399,7 @@ export function Footer() {
               href="https://discord.com"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 text-foreground transition-colors group-hover/social:text-muted-foreground hover:!text-foreground whitespace-nowrap"
+              className="inline-flex items-center gap-1 text-foreground transition-colors whitespace-nowrap"
             >
               <span>Discord</span>
               <ArrowUpRight className="w-4 h-4 stroke-[2.5]" />

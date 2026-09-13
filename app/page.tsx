@@ -64,20 +64,15 @@ export default function LandingPage() {
 
   const quickPills = [
     {
-      id: "research",
-      label: "Research",
-      prompt: "Summarize recent breakthrough papers in AI alignment and safety",
-    },
-    {
       id: "talk",
       label: "Talk with CloseAI",
       prompt:
         "Explain the latest frontier AI models and reasoning capabilities",
     },
     {
-      id: "business",
-      label: "Business",
-      prompt: "How does closeAI help enterprises with secure AI solutions?",
+      id: "research",
+      label: "Research",
+      prompt: "Summarize recent breakthrough papers in AI alignment and safety",
     },
     {
       id: "api",
@@ -85,6 +80,11 @@ export default function LandingPage() {
       prompt: "How do I get started with the API and developer platform?",
       disabled: true,
       hoverText: "Coming soon",
+    },
+    {
+      id: "business",
+      label: "Business",
+      prompt: "How does closeAI help enterprises with secure AI solutions?",
     },
     isMoreExpanded
       ? {

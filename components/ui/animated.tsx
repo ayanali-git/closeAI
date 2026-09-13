@@ -397,13 +397,34 @@ export function AnimatedComingSoonText({
       setClicked(true);
     };
 
+    // Check if parent or element is already hovered upon mount
+    const checkHover = () => {
+      try {
+        if (
+          typeof window !== "undefined" &&
+          window.matchMedia("(hover: hover)").matches &&
+          (parent.matches(":hover") || el.matches(":hover"))
+        ) {
+          setHovered(true);
+        }
+      } catch (e) {}
+    };
+
+    checkHover();
+    const rafId = requestAnimationFrame(checkHover);
+    const timerId = setTimeout(checkHover, 40);
+
     parent.addEventListener("mouseenter", onEnter);
     parent.addEventListener("mouseleave", onLeave);
+    parent.addEventListener("mousemove", onEnter);
     parent.addEventListener("click", onClick);
 
     return () => {
+      cancelAnimationFrame(rafId);
+      clearTimeout(timerId);
       parent.removeEventListener("mouseenter", onEnter);
       parent.removeEventListener("mouseleave", onLeave);
+      parent.removeEventListener("mousemove", onEnter);
       parent.removeEventListener("click", onClick);
     };
   }, []);

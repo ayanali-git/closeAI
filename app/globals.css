@@ -447,3 +447,10 @@ html:not(.dark) .token.important {
   text-rendering: auto;
 }
 
+.footer-group:has(a:hover) a {
+  color: hsl(var(--muted-foreground)) !important;
+}
+
+.footer-group:has(a:hover) a:hover {
+  color: hsl(var(--foreground)) !important;
+}

@@ -48,14 +48,14 @@ const SITE_SEARCH_INDEX: SiteSearchItem[] = [
   {
     id: "res-56",
     category: "Research",
-    title: "CloseAI-5.6 Frontier Model & Safety",
+    title: "GPT-5.6 Frontier Model & Safety",
     description:
       "Our newest flagship model featuring enhanced multi-step reasoning, real-time multimodal processing, and breakthrough code synthesis capabilities.",
     url: "/research/overview",
     date: "Sep 2026",
     keywords: [
       "5.6",
-      "closeai-5.6",
+      "GPT-5.6",
       "flagship",
       "model",
       "multimodal",
@@ -66,7 +66,7 @@ const SITE_SEARCH_INDEX: SiteSearchItem[] = [
   {
     id: "res-55",
     category: "Research",
-    title: "CloseAI-5.5 Deep Reasoning Architecture",
+    title: "GPT-5.5 Deep Reasoning Architecture",
     description:
       "In-depth analysis of high-efficiency reasoning models with step-by-step chain of thought verification.",
     url: "/research/overview",
@@ -713,9 +713,9 @@ export function MarketingHeader() {
                     </p>
                     <p className="text-muted-foreground">
                       At this time, it may not cover all topics, including some
-                      closeAI-related ones we don't yet fully support. You can
+                      GPT-related ones we don't yet fully support. You can
                       try asking a different question related to
-                      closeAI-specific content, or use closeAI chat for broader
+                      GPT-specific content, or use closeAI chat for broader
                       topics or creative prompts.
                     </p>
                   </div>
@@ -1218,7 +1218,7 @@ export function MarketingHeader() {
                           onClick={() => setActiveMenu(null)}
                           className="hover:text-foreground transition-colors"
                         >
-                          CloseAI-5.6
+                          GPT-5.6
                         </Link>
                       </li>
                       <li>
@@ -1227,7 +1227,7 @@ export function MarketingHeader() {
                           onClick={() => setActiveMenu(null)}
                           className="hover:text-foreground transition-colors"
                         >
-                          CloseAI-5.5
+                          GPT-5.5
                         </Link>
                       </li>
                       <li>
@@ -1236,7 +1236,7 @@ export function MarketingHeader() {
                           onClick={() => setActiveMenu(null)}
                           className="hover:text-foreground transition-colors"
                         >
-                          CloseAI-5.4
+                          GPT-5.4
                         </Link>
                       </li>
                       <li>
@@ -1245,7 +1245,7 @@ export function MarketingHeader() {
                           onClick={() => setActiveMenu(null)}
                           className="hover:text-foreground transition-colors"
                         >
-                          CloseAI-5.3 Instant
+                          GPT-5.3 Instant
                         </Link>
                       </li>
                       <li>
@@ -1254,7 +1254,7 @@ export function MarketingHeader() {
                           onClick={() => setActiveMenu(null)}
                           className="hover:text-foreground transition-colors"
                         >
-                          CloseAI-5.3-Codex
+                          GPT-5.3-Codex
                         </Link>
                       </li>
                     </ul>

@@ -57,6 +57,16 @@ export function Footer() {
                     GPT-5.5
                   </Link>
                 </li>
+                <li>
+                  <Link href="/research/overview" className="inline-flex items-center gap-1 text-foreground transition-colors group-hover/footer:text-muted-foreground hover:!text-foreground">
+                    GPT-5.3 Instant
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/research/overview" className="inline-flex items-center gap-1 text-foreground transition-colors group-hover/footer:text-muted-foreground hover:!text-foreground">
+                    GPT-5.3-Codex
+                  </Link>
+                </li>
               </ul>
             </div>
 

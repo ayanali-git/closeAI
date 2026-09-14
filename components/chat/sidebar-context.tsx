@@ -66,7 +66,7 @@ export function SidebarProvider({
 
   // Sync state on client mount strictly for desktop from localStorage/cookie; mobile is always closed
   useEffect(() => {
-    const isDesktop = window.innerWidth >= 1024;
+    const isDesktop = window.innerWidth >= 1025;
     if (!isDesktop) {
       setSidebarOpen(false);
     } else {
@@ -80,9 +80,9 @@ export function SidebarProvider({
     setMounted(true);
   }, []);
 
-  // Whenever user navigates on small screens (< 1024px), automatically close the sidebar
+  // Whenever user navigates on small screens (< 1025px), automatically close the sidebar
   useEffect(() => {
-    if (typeof window !== 'undefined' && window.innerWidth < 1024) {
+    if (typeof window !== 'undefined' && window.innerWidth < 1025) {
       setSidebarOpen(false);
     }
   }, [pathname]);
@@ -90,7 +90,7 @@ export function SidebarProvider({
   // Handle window resize between mobile and desktop
   useEffect(() => {
     const handleResize = () => {
-      if (window.innerWidth < 1024) {
+      if (window.innerWidth < 1025) {
         setSidebarOpen(false);
       }
     };
@@ -98,9 +98,9 @@ export function SidebarProvider({
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // Save to localStorage AND document.cookie on desktop (>= 1024px)
+  // Save to localStorage AND document.cookie on desktop (>= 1025px)
   useEffect(() => {
-    if (mounted && typeof window !== 'undefined' && window.innerWidth >= 1024) {
+    if (mounted && typeof window !== 'undefined' && window.innerWidth >= 1025) {
       try {
         localStorage.setItem('sidebar_open', String(sidebarOpen));
         document.cookie = `sidebar_open=${sidebarOpen}; path=/; max-age=31536000; SameSite=Lax`;

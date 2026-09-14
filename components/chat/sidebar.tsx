@@ -35,6 +35,8 @@ import {
   ChevronLeft,
   Archive,
   ArchiveX,
+  Download,
+  ArrowUpRight,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -58,7 +60,11 @@ import {
 import { useTheme } from "next-themes";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
-import { AnimatedChevron, AnimatedSearchClose } from "@/components/ui/animated";
+import {
+  AnimatedChevron,
+  AnimatedSearchClose,
+  AnimatedComingSoonText,
+} from "@/components/ui/animated";
 import { LogoutModal } from "@/components/modals/logout-modal";
 import { DeleteModal } from "@/components/modals/delete-modal";
 
@@ -245,7 +251,7 @@ export function Sidebar({
   useEffect(() => {
     setMounted(true);
     const checkMobile = () => {
-      setIsMobileScreen(window.innerWidth <= 1024);
+      setIsMobileScreen(window.innerWidth <= 1025);
     };
     checkMobile();
     window.addEventListener("resize", checkMobile);
@@ -328,13 +334,12 @@ export function Sidebar({
             <PenLine className="w-4 h-4 text-muted-foreground" />
             <span>Release notes</span>
           </Link>
-          <Link
-            href="/product/docs"
-            className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-md text-foreground [@media(hover:hover)]:hover:bg-secondary active:bg-secondary/80 transition-colors outline-none focus:outline-none focus:bg-transparent focus-visible:outline-none"
+          <div
+            className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-md text-muted-foreground [@media(hover:hover)]:hover:bg-secondary active:bg-secondary/80 transition-colors outline-none focus:outline-none select-none cursor-pointer"
           >
-            <ArrowDownCircle className="w-4 h-4 text-muted-foreground" />
-            <span>Download apps</span>
-          </Link>
+            <Download className="w-4 h-4 text-muted-foreground shrink-0" />
+            <AnimatedComingSoonText label="Download apps" comingSoonText="Coming soon" />
+          </div>
           <Link
             href="/settings"
             className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-md text-foreground [@media(hover:hover)]:hover:bg-secondary active:bg-secondary/80 transition-colors outline-none focus:outline-none focus:bg-transparent focus-visible:outline-none"
@@ -345,24 +350,39 @@ export function Sidebar({
           <div className="h-[1px] bg-neutral-200 dark:bg-[#383838] my-1" />
           <Link
             href="/support/terms"
-            className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-md text-foreground [@media(hover:hover)]:hover:bg-secondary active:bg-secondary/80 transition-colors outline-none focus:outline-none focus:bg-transparent focus-visible:outline-none"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="group flex items-center justify-between px-3 py-2 rounded-xl text-md text-foreground [@media(hover:hover)]:hover:bg-secondary active:bg-secondary/80 transition-colors outline-none focus:outline-none focus:bg-transparent focus-visible:outline-none"
           >
-            <FileText className="w-4 h-4 text-muted-foreground" />
-            <span>Terms of Use</span>
+            <div className="flex items-center gap-2.5">
+              <FileText className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors shrink-0" />
+              <span>Terms of Use</span>
+            </div>
+            <ArrowUpRight className="w-4 h-4 text-muted-foreground group-hover:text-foreground shrink-0 ml-auto transition-opacity duration-150 opacity-100 min-[1025px]:opacity-0 min-[1025px]:group-hover:opacity-100" />
           </Link>
           <Link
             href="/support/privacy"
-            className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-md text-foreground [@media(hover:hover)]:hover:bg-secondary active:bg-secondary/80 transition-colors outline-none focus:outline-none focus:bg-transparent focus-visible:outline-none"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="group flex items-center justify-between px-3 py-2 rounded-xl text-md text-foreground [@media(hover:hover)]:hover:bg-secondary active:bg-secondary/80 transition-colors outline-none focus:outline-none focus:bg-transparent focus-visible:outline-none"
           >
-            <Info className="w-4 h-4 text-muted-foreground" />
-            <span>Privacy Policy</span>
+            <div className="flex items-center gap-2.5">
+              <Info className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors shrink-0" />
+              <span>Privacy Policy</span>
+            </div>
+            <ArrowUpRight className="w-4 h-4 text-muted-foreground group-hover:text-foreground shrink-0 ml-auto transition-opacity duration-150 opacity-100 min-[1025px]:opacity-0 min-[1025px]:group-hover:opacity-100" />
           </Link>
           <Link
             href="/company/contact"
-            className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-md text-foreground [@media(hover:hover)]:hover:bg-secondary active:bg-secondary/80 transition-colors outline-none focus:outline-none focus:bg-transparent focus-visible:outline-none"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="group flex items-center justify-between px-3 py-2 rounded-xl text-md text-foreground [@media(hover:hover)]:hover:bg-secondary active:bg-secondary/80 transition-colors outline-none focus:outline-none focus:bg-transparent focus-visible:outline-none"
           >
-            <Bug className="w-4 h-4 text-muted-foreground" />
-            <span>Report a bug</span>
+            <div className="flex items-center gap-2.5">
+              <Bug className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors shrink-0" />
+              <span>Report a bug</span>
+            </div>
+            <ArrowUpRight className="w-4 h-4 text-muted-foreground group-hover:text-foreground shrink-0 ml-auto transition-opacity duration-150 opacity-100 min-[1025px]:opacity-0 min-[1025px]:group-hover:opacity-100" />
           </Link>
         </div>
       );
@@ -463,7 +483,7 @@ export function Sidebar({
             <DropdownMenuSubContent
               sideOffset={2}
               alignOffset={-97}
-              className="w-64 rounded-2xl p-1.5 bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/80 dark:border-neutral-700/80"
+              className="w-64 rounded-2xl p-1.5 bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/80 dark:border-none"
             >
               <div className="flex items-center gap-2 px-3 py-2 text-md text-muted-foreground hover:text-foreground select-none">
                 <UserIcon className="w-4 h-4 shrink-0" />
@@ -574,7 +594,7 @@ export function Sidebar({
             <DropdownMenuSubContent
               sideOffset={2}
               alignOffset={-89}
-              className="w-40 rounded-2xl p-1.5 bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/80 dark:border-neutral-700/80"
+              className="w-40 rounded-2xl p-1.5 bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/80 dark:border-none"
             >
               <DropdownMenuRadioGroup value={theme} onValueChange={setTheme}>
                 <DropdownMenuRadioItem value="light">
@@ -614,7 +634,7 @@ export function Sidebar({
             <DropdownMenuSubContent
               sideOffset={2}
               alignOffset={-261}
-              className="w-56 rounded-2xl p-1.5 bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/80 dark:border-neutral-700/80"
+              className="w-56 rounded-2xl p-1.5 bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/80 dark:border-none"
             >
               <DropdownMenuItem asChild>
                 <Link
@@ -634,14 +654,12 @@ export function Sidebar({
                   <span>Release notes</span>
                 </Link>
               </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link
-                  href="/product/docs"
-                  className="flex items-center gap-2.5 px-3 py-2 cursor-pointer rounded-xl text-md"
-                >
-                  <ArrowDownCircle className="w-4 h-4 text-muted-foreground group-hover:text-foreground" />
-                  <span>Download apps</span>
-                </Link>
+              <DropdownMenuItem
+                onClick={(e) => e.preventDefault()}
+                className="flex items-center gap-2.5 px-3 py-2 cursor-pointer rounded-xl text-md text-muted-foreground select-none outline-none"
+              >
+                <Download className="w-4 h-4 text-muted-foreground group-hover:text-foreground shrink-0" />
+                <AnimatedComingSoonText label="Download apps" comingSoonText="Coming soon" />
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
                 <Link
@@ -656,28 +674,43 @@ export function Sidebar({
               <DropdownMenuItem asChild>
                 <Link
                   href="/support/terms"
-                  className="flex items-center gap-2.5 px-3 py-2 cursor-pointer rounded-xl text-md"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group flex items-center justify-between px-3 py-2 cursor-pointer rounded-xl text-md text-foreground"
                 >
-                  <FileText className="w-4 h-4 text-muted-foreground group-hover:text-foreground" />
-                  <span>Terms of Use</span>
+                  <div className="flex items-center gap-2.5">
+                    <FileText className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors shrink-0" />
+                    <span>Terms of Use</span>
+                  </div>
+                  <ArrowUpRight className="w-4 h-4 text-muted-foreground group-hover:text-foreground shrink-0 ml-auto transition-opacity duration-150 opacity-100 min-[1025px]:opacity-0 min-[1025px]:group-hover:opacity-100" />
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
                 <Link
                   href="/support/privacy"
-                  className="flex items-center gap-2.5 px-3 py-2 cursor-pointer rounded-xl text-md"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group flex items-center justify-between px-3 py-2 cursor-pointer rounded-xl text-md text-foreground"
                 >
-                  <Info className="w-4 h-4 text-muted-foreground group-hover:text-foreground" />
-                  <span>Privacy Policy</span>
+                  <div className="flex items-center gap-2.5">
+                    <Info className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors shrink-0" />
+                    <span>Privacy Policy</span>
+                  </div>
+                  <ArrowUpRight className="w-4 h-4 text-muted-foreground group-hover:text-foreground shrink-0 ml-auto transition-opacity duration-150 opacity-100 min-[1025px]:opacity-0 min-[1025px]:group-hover:opacity-100" />
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
                 <Link
                   href="/company/contact"
-                  className="flex items-center gap-2.5 px-3 py-2 cursor-pointer rounded-xl text-md"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group flex items-center justify-between px-3 py-2 cursor-pointer rounded-xl text-md text-foreground"
                 >
-                  <Bug className="w-4 h-4 text-muted-foreground group-hover:text-foreground" />
-                  <span>Report a bug</span>
+                  <div className="flex items-center gap-2.5">
+                    <Bug className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors shrink-0" />
+                    <span>Report a bug</span>
+                  </div>
+                  <ArrowUpRight className="w-4 h-4 text-muted-foreground group-hover:text-foreground shrink-0 ml-auto transition-opacity duration-150 opacity-100 min-[1025px]:opacity-0 min-[1025px]:group-hover:opacity-100" />
                 </Link>
               </DropdownMenuItem>
             </DropdownMenuSubContent>
@@ -707,7 +740,7 @@ export function Sidebar({
         key={chat.id}
         onClick={() => {
           onChatSelect(chat.id);
-          if (typeof window !== "undefined" && window.innerWidth < 1024) {
+          if (typeof window !== "undefined" && window.innerWidth < 1025) {
             onToggle();
           }
         }}
@@ -882,7 +915,7 @@ export function Sidebar({
                     onNewChat();
                     if (
                       typeof window !== "undefined" &&
-                      window.innerWidth < 1024
+                      window.innerWidth < 1025
                     ) {
                       onToggle();
                     }
@@ -968,7 +1001,7 @@ export function Sidebar({
                   align="start"
                   alignOffset={-4}
                   sideOffset={6}
-                  className="w-64 rounded-2xl p-1.5 bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/80 dark:border-neutral-700/80 outline-none focus:outline-none ring-0"
+                  className="w-64 rounded-2xl p-1.5 bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/80 dark:border-none outline-none focus:outline-none ring-0"
                 >
                   {renderAccountMenuItems()}
                 </DropdownMenuContent>
@@ -1077,7 +1110,7 @@ export function Sidebar({
                   onNewChat();
                   if (
                     typeof window !== "undefined" &&
-                    window.innerWidth < 1024
+                    window.innerWidth < 1025
                   ) {
                     onToggle();
                   }
@@ -1247,7 +1280,7 @@ export function Sidebar({
                     align="start"
                     alignOffset={0}
                     sideOffset={6}
-                    className="w-[var(--radix-dropdown-menu-trigger-width)] min-w-[var(--radix-dropdown-menu-trigger-width)] max-w-[calc(100vw-24px)] max-h-[calc(100dvh-5rem)] overflow-y-auto rounded-2xl p-1.5 bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/80 dark:border-neutral-700/80 outline-none focus:outline-none ring-0"
+                    className="w-[var(--radix-dropdown-menu-trigger-width)] min-w-[var(--radix-dropdown-menu-trigger-width)] max-w-[calc(100vw-24px)] max-h-[calc(100dvh-5rem)] overflow-y-auto rounded-2xl p-1.5 bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/80 dark:border-none outline-none focus:outline-none ring-0"
                   >
                     {renderAccountMenuItems()}
                   </DropdownMenuContent>

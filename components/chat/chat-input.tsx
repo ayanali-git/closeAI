@@ -342,7 +342,7 @@ export const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(function Cha
     if (plusButtonRef.current && pillRef.current) {
       const buttonRect = plusButtonRef.current.getBoundingClientRect();
       const pillRect = pillRef.current.getBoundingClientRect();
-      const isMobile = window.innerWidth < 1024;
+      const isMobile = window.innerWidth < 1025;
 
       // Distance from top of the + button to the top of the chat input pill:
       const distToPillTop = Math.max(0, buttonRect.top - pillRect.top);
@@ -576,7 +576,7 @@ export const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(function Cha
         avoidCollisions={true}
         collisionPadding={12}
         className={cn(
-          "rounded-2xl p-1.5 bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/80 dark:border-neutral-700/80 select-none outline-none",
+          "rounded-2xl p-1.5 bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/80 dark:border-none select-none outline-none",
           menuWidth ? "" : "w-[244px] max-w-[calc(100vw-24px)]"
         )}
         style={{
@@ -697,8 +697,8 @@ export const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(function Cha
         {...getRootProps()}
         ref={pillRef}
         className={cn(
-          "relative bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/80 dark:border-neutral-700/80 transition-all duration-200",
-          "hover:bg-background dark:hover:bg-background focus-within:text-foreground dark:focus-within:text-foreground",
+          "relative bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/80 dark:border-none transition-all duration-200",
+          "focus-within:text-foreground dark:focus-within:text-foreground",
           "rounded-3xl",
           isExpandedLayout
             ? "p-3.5 sm:p-4"

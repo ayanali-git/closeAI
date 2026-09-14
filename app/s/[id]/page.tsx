@@ -371,7 +371,7 @@ function SharedChatInputPill({
     if (plusButtonRef.current && pillRef.current) {
       const buttonRect = plusButtonRef.current.getBoundingClientRect();
       const pillRect = pillRef.current.getBoundingClientRect();
-      const isMobile = window.innerWidth < 1024;
+      const isMobile = window.innerWidth < 1025;
 
       const distToPillTop = Math.max(0, buttonRect.top - pillRect.top);
       setMenuSideOffset(Math.round(distToPillTop + 10));
@@ -440,7 +440,7 @@ function SharedChatInputPill({
         avoidCollisions={true}
         collisionPadding={12}
         className={cn(
-          "rounded-2xl p-1.5 bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/80 dark:border-neutral-700/80 select-none outline-none z-50",
+          "rounded-2xl p-1.5 bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/80 dark:border-none select-none outline-none z-50",
           menuWidth ? "" : "w-[244px] max-w-[calc(100vw-24px)]"
         )}
         style={{
@@ -528,7 +528,7 @@ function SharedChatInputPill({
                   <button
                     type="button"
                     onClick={onScrollToBottom}
-                    className="group w-10 h-10 rounded-full bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/80 dark:border-neutral-700/80 text-neutral-700 dark:text-neutral-200 hover:text-foreground dark:hover:text-foreground hover:bg-background dark:hover:bg-background hover:border-border/80 dark:hover:border-neutral-700/80 flex items-center justify-center transition-all cursor-pointer"
+                    className="group w-10 h-10 rounded-full bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/80 dark:border-none text-neutral-700 dark:text-neutral-200 hover:text-foreground dark:hover:text-foreground hover:border-border/80 dark:hover:border-neutral-700/80 flex items-center justify-center transition-all cursor-pointer"
                     aria-label="Scroll to bottom"
                   >
                     <ArrowDown className="w-5 h-5 text-muted-foreground group-hover:text-foreground shrink-0" />
@@ -546,8 +546,8 @@ function SharedChatInputPill({
       <div
         ref={pillRef}
         className={cn(
-          "relative bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/80 dark:border-neutral-700/80 transition-all duration-200",
-          "hover:bg-background dark:hover:bg-background focus-within:text-foreground dark:focus-within:text-foreground",
+          "relative bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/80 dark:border-none transition-all duration-200",
+          "focus-within:text-foreground dark:focus-within:text-foreground",
           "rounded-3xl",
           isExpandedLayout
             ? "p-3.5 sm:p-4"
@@ -851,7 +851,7 @@ export default function PublicSharedChatPage() {
                 type="button"
                 disabled={isSharing}
                 onClick={handleShareClick}
-                className="group h-9 px-2.5 sm:px-3 gap-1.5 rounded-xl bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/80 dark:border-neutral-700/80 text-neutral-700 dark:text-neutral-200 hover:text-foreground dark:hover:text-foreground hover:bg-background dark:hover:bg-background flex items-center justify-center text-base font-medium transition-colors cursor-pointer outline-none focus:outline-none disabled:opacity-70 disabled:pointer-events-auto disabled:cursor-not-allowed"
+                className="group h-9 px-2.5 sm:px-3 gap-1.5 rounded-xl bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/80 dark:border-none text-neutral-700 dark:text-neutral-200 hover:text-foreground dark:hover:text-foreground flex items-center justify-center text-base font-medium transition-colors cursor-pointer outline-none focus:outline-none disabled:opacity-70 disabled:pointer-events-auto disabled:cursor-not-allowed"
               >
                 {isSharing ? (
                   <Loader className="w-4 h-4 shrink-0 animate-spin text-muted-foreground group-hover:text-foreground" />
@@ -871,7 +871,7 @@ export default function PublicSharedChatPage() {
               <button
                 type="button"
                 onClick={() => window.open("/c", "_blank")}
-                className="group w-9 h-9 rounded-xl bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/80 dark:border-neutral-700/80 text-neutral-700 dark:text-neutral-200 hover:text-foreground dark:hover:text-foreground hover:bg-background dark:hover:bg-background flex items-center justify-center transition-colors cursor-pointer outline-none focus:outline-none"
+                className="group w-9 h-9 rounded-xl bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/80 dark:border-none text-neutral-700 dark:text-neutral-200 hover:text-foreground dark:hover:text-foreground flex items-center justify-center transition-colors cursor-pointer outline-none focus:outline-none"
                 aria-label="New chat"
               >
                 <Plus className="w-4 h-4 text-muted-foreground group-hover:text-foreground" />

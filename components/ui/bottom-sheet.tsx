@@ -55,7 +55,7 @@ export function BottomSheet({
   useEffect(() => {
     setMounted(true);
     const checkMobile = () => {
-      setIsMobileScreen(window.innerWidth < 1024);
+      setIsMobileScreen(window.innerWidth < 1025);
     };
     checkMobile();
     window.addEventListener("resize", checkMobile);

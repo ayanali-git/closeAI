@@ -199,6 +199,104 @@ export function AnimatedChevron({
 
 export { AnimatedChevron as AnimatedChevronDown };
 
+export interface AnimatedPlusMinusProps
+  extends React.SVGAttributes<SVGSVGElement> {
+  open?: boolean;
+  isOpen?: boolean;
+  disableHover?: boolean;
+  className?: string;
+  size?: number;
+  strokeWidth?: number;
+}
+
+export function AnimatedPlusMinus({
+  open,
+  isOpen,
+  disableHover = false,
+  className,
+  size = 18,
+  strokeWidth = 1.25,
+  style,
+  ...props
+}: AnimatedPlusMinusProps) {
+  const ref = useRef<SVGSVGElement>(null);
+  const [hovered, setHovered] = useState(false);
+
+  useEffect(() => {
+    if (disableHover) return;
+    const el = ref.current;
+    if (!el) return;
+    const parentGroup =
+      el.closest(".group") || el.closest("button") || el.closest("a") || el;
+    const onEnter = () => setHovered(true);
+    const onLeave = () => setHovered(false);
+
+    parentGroup.addEventListener("mouseenter", onEnter);
+    parentGroup.addEventListener("mouseleave", onLeave);
+    return () => {
+      parentGroup.removeEventListener("mouseenter", onEnter);
+      parentGroup.removeEventListener("mouseleave", onLeave);
+    };
+  }, [disableHover]);
+
+  const isControlled = open !== undefined || isOpen !== undefined;
+  const active = isControlled ? Boolean(open ?? isOpen) : hovered;
+
+  const motionVal = useMotionValue(+active);
+  const spring = useSpring(motionVal, {
+    stiffness: 480,
+    damping: 34,
+    mass: 0.7,
+  });
+
+  useEffect(() => {
+    motionVal.set(+active);
+  }, [active, motionVal]);
+
+  // Horizontal bar remains stable at y=8 from x=3.5 to x=12.5
+  // Vertical bar rotates 90deg into horizontal while its ends collapse to center (8, 8) and fade out,
+  // creating a fluid transition from a crisp plus (+) to a clean minus (-)
+  const vertY1 = useTransform(spring, [0, 0.75, 1], [3.5, 7.2, 8]);
+  const vertY2 = useTransform(spring, [0, 0.75, 1], [12.5, 8.8, 8]);
+  const vertOpacity = useTransform(spring, [0, 0.45, 0.85], [1, 0.7, 0]);
+  const vertRotate = useTransform(spring, [0, 1], [0, 90]);
+
+  return (
+    <svg
+      ref={ref}
+      viewBox="0 0 16 16"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={strokeWidth}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={cn(
+        "inline-block shrink-0 overflow-visible select-none pointer-events-none transition-colors",
+        className
+      )}
+      style={{ width: size, height: size, ...style }}
+      {...props}
+    >
+      <line x1="3.5" y1="8" x2="12.5" y2="8" />
+      <motion.g style={{ originX: "8px", originY: "8px", rotate: vertRotate }}>
+        <motion.line
+          x1="8"
+          y1={vertY1}
+          x2="8"
+          y2={vertY2}
+          style={{ opacity: vertOpacity }}
+        />
+      </motion.g>
+    </svg>
+  );
+}
+
+export {
+  AnimatedPlusMinus as AnimatedPlus,
+  AnimatedPlusMinus as AnimatedMinus,
+};
+
+
 export interface AnimatedSearchCloseProps
   extends React.HTMLAttributes<HTMLSpanElement> {
   open?: boolean;

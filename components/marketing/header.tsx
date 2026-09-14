@@ -532,7 +532,7 @@ export function MarketingHeader() {
   // Close mobile navigation drawer on resize to desktop & keep scrollbar width updated
   useEffect(() => {
     const handleResize = () => {
-      if (window.innerWidth >= 1024) {
+      if (window.innerWidth >= 1025) {
         setMobileNavOpen(false);
       }
       if (!isLocked) {

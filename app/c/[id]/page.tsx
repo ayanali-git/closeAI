@@ -922,7 +922,7 @@ export default function ActiveChatPage() {
                                   isAutoScrollPinnedRef.current = true;
                                   scrollToBottom("smooth");
                                 }}
-                                className="group w-10 h-10 rounded-full bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/80 dark:border-none dark:border-neutral-700/80 text-neutral-700 dark:text-neutral-200 hover:text-foreground dark:hover:text-foreground hover:border-border/80 dark:hover:border-neutral-700/80 flex items-center justify-center transition-all cursor-pointer"
+                                className="group w-10 h-10 rounded-full bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/80 dark:border-none text-neutral-700 dark:text-neutral-200 hover:text-foreground dark:hover:text-foreground flex items-center justify-center transition-all cursor-pointer"
                                 aria-label="Scroll to bottom"
                               >
                                 <ArrowDown className="w-5 h-5 text-muted-foreground group-hover:text-foreground shrink-0" />

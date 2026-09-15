@@ -128,7 +128,7 @@ useEffect(() => {
               transition={DRAWER}
               {...gate}
               onClick={() => onOpenChange(false)}
-              className="pointer-events-auto fixed inset-0 z-50 bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm"
+              className="pointer-events-auto fixed inset-0 z-50 bg-foreground/50 dark:bg-background/50 backdrop-blur-sm"
             />
           )}
         </PresenceGate>

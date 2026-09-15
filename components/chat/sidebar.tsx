@@ -232,8 +232,8 @@ export function Sidebar({
 
   const groupedChats = groupChats(filteredChats);
   const displayName =
-    user?.user_metadata?.full_name ||
     user?.user_metadata?.name ||
+    user?.user_metadata?.full_name ||
     user?.email?.split("@")[0] ||
     "User";
   const planDisplay =

@@ -13,6 +13,18 @@ export async function GET(request: Request) {
   const cleanNext = next.startsWith('/') ? next : `/${next}`;
   const redirectUrl = `${baseUrl}${cleanNext}`;
 
+  const errorParam = searchParams.get('error');
+  const errorCode = searchParams.get('error_code');
+  const errorDesc = searchParams.get('error_description');
+
+  if (errorParam || errorCode || errorDesc) {
+    const errorQuery = new URLSearchParams();
+    if (errorParam) errorQuery.set('error', errorParam);
+    if (errorCode) errorQuery.set('error_code', errorCode);
+    if (errorDesc) errorQuery.set('error_description', errorDesc);
+    return NextResponse.redirect(`${baseUrl}/auth/login?${errorQuery.toString()}`);
+  }
+
   if (code) {
     const cookieStore = await cookies();
     const response = NextResponse.redirect(redirectUrl);

@@ -43,10 +43,19 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/c', request.url));
   }
 
-  // If already logged in, redirect away from auth pages to /c
+  // Purge any corrupted or bloated base64 data:image cookies
+  const allCookies = request.cookies.getAll();
+  allCookies.forEach(c => {
+    if (c.value.length > 3000 && (c.value.includes('data%3Aimage') || c.value.includes('data:image'))) {
+      response.cookies.delete(c.name);
+    }
+  });
+
+  // If already logged in, redirect away from auth pages to /c (unless error param is present)
   const authPaths = ['/auth/login', '/auth/signup'];
   const isAuthPath = authPaths.some(path => request.nextUrl.pathname === path);
-  if (isAuthPath && user) {
+  const hasAuthError = request.nextUrl.searchParams.has('error') || request.nextUrl.searchParams.has('error_code');
+  if (isAuthPath && user && !hasAuthError) {
     const redirectRes = NextResponse.redirect(new URL('/c', request.url));
     response.cookies.getAll().forEach(c => redirectRes.cookies.set(c.name, c.value));
     return redirectRes;

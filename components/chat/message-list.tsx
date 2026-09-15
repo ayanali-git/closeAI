@@ -1191,7 +1191,7 @@ export function MessageList({
             messages[messages.length - 1]?.role === "user" ||
             (messages[messages.length - 1]?.role === "assistant" &&
               !messages[messages.length - 1]?.content)) && (
-            <div className="flex gap-2.5 sm:gap-3 items-center py-2 select-none">
+            <div className="flex gap-2.5 sm:gap-3 items-center py-2">
               <span className="text-[14px] sm:text-[14.5px] font-medium text-muted-foreground animate-pulse">
                 Thinking...
               </span>

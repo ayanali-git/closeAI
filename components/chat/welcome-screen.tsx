@@ -20,8 +20,8 @@ export function WelcomeScreen({
 
   useEffect(() => {
     const rawName =
-      user?.user_metadata?.full_name ||
       user?.user_metadata?.name ||
+      user?.user_metadata?.full_name ||
       user?.email?.split("@")[0] ||
       "";
 

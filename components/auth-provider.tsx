@@ -80,11 +80,25 @@ export function AuthProvider({
     try {
       const { data: profile } = await supabase
         .from('profiles')
-        .select('id')
+        .select('id, avatar_url, name')
         .eq('id', currentUser.id)
         .maybeSingle();
 
-      if (!profile && currentUser.email) {
+      if (profile) {
+        const updates: Record<string, any> = {};
+        if (profile.avatar_url && profile.avatar_url !== currentUser.user_metadata?.avatar_url) {
+          updates.avatar_url = profile.avatar_url;
+        }
+        if (profile.name && (profile.name !== currentUser.user_metadata?.name || profile.name !== currentUser.user_metadata?.full_name)) {
+          updates.name = profile.name;
+          updates.full_name = profile.name;
+        }
+        if (Object.keys(updates).length > 0) {
+          await supabase.auth.updateUser({
+            data: updates,
+          });
+        }
+      } else if (currentUser.email) {
         const name = currentUser.user_metadata?.full_name || 
                      currentUser.user_metadata?.name || 
                      currentUser.user_metadata?.user_name ||
@@ -108,16 +122,35 @@ export function AuthProvider({
 
   const refreshSession = useCallback(async (): Promise<Session | null> => {
     try {
+      const { data: { user: latestUser } } = await supabase.auth.getUser();
       const { data: { session: currentSession }, error } = await supabase.auth.getSession();
       if (!error && currentSession) {
-        setSession(currentSession);
-        setUser(currentSession.user);
-        return currentSession;
+        const updatedSession = latestUser
+          ? { ...currentSession, user: latestUser }
+          : currentSession;
+        setSession(updatedSession);
+        setUser(updatedSession.user);
+        return updatedSession;
       }
       return null;
     } catch (err) {
       console.error('Error refreshing session:', err);
       return null;
+    }
+  }, []);
+
+  const healBloatedSession = useCallback(async (currentUser: User) => {
+    try {
+      const avatar = currentUser.user_metadata?.avatar_url;
+      // If avatar is a Base64 data URL or unexpectedly huge (> 500 chars), purge it from metadata
+      if (typeof avatar === 'string' && (avatar.startsWith('data:image') || avatar.length > 500)) {
+        console.warn('Detected bloated Base64 avatar_url in session. Auto-healing to prevent 494 REQUEST_HEADER_TOO_LARGE...');
+        await supabase.auth.updateUser({
+          data: { avatar_url: null },
+        });
+      }
+    } catch (e) {
+      console.error('Error in healBloatedSession:', e);
     }
   }, []);
 
@@ -130,6 +163,7 @@ export function AuthProvider({
       if (initialSession && !error) {
         setSession(initialSession);
         setUser(initialSession.user);
+        healBloatedSession(initialSession.user);
         ensureProfile(initialSession.user);
       }
       if (!isSigningOutRef.current) {
@@ -152,6 +186,7 @@ export function AuthProvider({
         }
 
         if (currentUser && (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED' || event === 'INITIAL_SESSION')) {
+          healBloatedSession(currentUser);
           ensureProfile(currentUser);
         }
 
@@ -168,7 +203,7 @@ export function AuthProvider({
       isMounted = false;
       subscription.unsubscribe();
     };
-  }, [ensureProfile]);
+  }, [ensureProfile, healBloatedSession]);
 
   const signOut = async () => {
     isSigningOutRef.current = true;
@@ -183,7 +218,13 @@ export function AuthProvider({
         const c = cookies[i].trim();
         const eqIdx = c.indexOf('=');
         const name = eqIdx > -1 ? c.substring(0, eqIdx).trim() : c;
-        if (name.includes('closeai') || name.startsWith('sb-') || name.includes('auth')) {
+        const isAuthSessionCookie =
+          name === AUTH_COOKIE_NAME ||
+          name.startsWith(`${AUTH_COOKIE_NAME}.`) ||
+          (name.startsWith('sb-') && name.endsWith('-auth-token')) ||
+          name.includes('code-verifier');
+
+        if (isAuthSessionCookie) {
           document.cookie = `${name}=deleted; path=/; max-age=0; SameSite=Lax`;
           document.cookie = `${name}=deleted; path=/; domain=${window.location.hostname}; max-age=0; SameSite=Lax`;
         }

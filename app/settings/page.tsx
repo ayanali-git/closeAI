@@ -20,20 +20,21 @@ import {
   Bell,
   Loader,
   Check,
-  Upload
+  Upload,
+  Pencil,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { ProfileImageModal } from '@/components/modals/profile-image-modal';
 
 export default function SettingsPage() {
-  const { user, loading } = useAuth();
+  const { user, loading, refreshSession } = useAuth();
   const { plan: userPlan } = useSubscription();
   const [profile, setProfile] = useState({ name: '', email: '', plan: '' });
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [saving, setSaving] = useState(false);
-  const [uploading, setUploading] = useState(false);
+  const [isImageModalOpen, setIsImageModalOpen] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
 
   const [emailNotifications, setEmailNotifications] = useState(true);
@@ -49,7 +50,7 @@ export default function SettingsPage() {
   useEffect(() => {
     if (user) {
       setProfile({
-        name: user.user_metadata?.name || '',
+        name: user.user_metadata?.name || user.user_metadata?.full_name || '',
         email: user.email || '',
         plan: user.user_metadata?.plan || 'free',
       });
@@ -57,76 +58,39 @@ export default function SettingsPage() {
     }
   }, [user]);
 
-  const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    if (!file.type.startsWith('image/')) {
-      toast.error('Please upload an image file');
-      return;
-    }
-
-    if (file.size > 2 * 1024 * 1024) {
-      toast.error('Image size should be less than 2MB');
-      return;
-    }
-
-    setUploading(true);
-    try {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${user!.id}-${Date.now()}.${fileExt}`;
-      const filePath = `avatars/${fileName}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from('avatars')
-        .upload(filePath, file, { upsert: true });
-
-      if (uploadError) {
-        if (uploadError.message.includes('Bucket not found') || uploadError.message.includes('bucket')) {
-          const reader = new FileReader();
-          reader.onload = async (e) => {
-            const base64Url = e.target?.result as string;
-            const { error: updateError } = await supabase.auth.updateUser({
-              data: { avatar_url: base64Url },
-            });
-            if (updateError) throw updateError;
-            setAvatarUrl(base64Url);
-            toast.success('Profile picture updated!');
-          };
-          reader.readAsDataURL(file);
-          return;
-        }
-        throw uploadError;
-      }
-
-      const { data: { publicUrl } } = supabase.storage
-        .from('avatars')
-        .getPublicUrl(filePath);
-
-      const { error: updateError } = await supabase.auth.updateUser({
-        data: { avatar_url: publicUrl },
-      });
-
-      if (updateError) throw updateError;
-      setAvatarUrl(publicUrl);
-      toast.success('Profile picture updated!');
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to upload image');
-    } finally {
-      setUploading(false);
-    }
-  };
+  const initialName = user?.user_metadata?.name || user?.user_metadata?.full_name || '';
+  const isNameChanged = profile.name.trim() !== initialName.trim();
+  const isSaveDisabled = saving || !profile.name.trim() || !isNameChanged;
 
   const handleProfileUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSaveDisabled) return;
     setSaving(true);
     try {
+      const trimmedName = profile.name.trim();
+
+      // 1. Update profiles table in Supabase
+      if (user?.id) {
+        await supabase
+          .from('profiles')
+          .update({ name: trimmedName })
+          .eq('id', user.id);
+      }
+
+      // 2. Update Supabase Auth user metadata (both name and full_name)
       const { error } = await supabase.auth.updateUser({
-        data: { name: profile.name },
+        data: {
+          name: trimmedName,
+          full_name: trimmedName,
+        },
       });
+
       if (error) {
         toast.error(error.message);
       } else {
+        // 3. Immediately refresh session so Sidebar, Header, etc. update dynamically
+        await refreshSession();
+        router.refresh();
         toast.success('Profile updated!');
       }
     } catch (err) {
@@ -200,13 +164,15 @@ export default function SettingsPage() {
           {/* Profile Section */}
           <div>
             <h2 className="text-base font-medium text-foreground mb-4 flex items-center gap-2">
-              <User className="w-4 h-4" />
               Profile
             </h2>
             <div className="border border-border rounded-2xl p-6 space-y-6">
               <div className="flex items-center gap-6">
-                <div className="relative group">
-                  <Avatar className="w-20 h-20">
+                <div className="relative">
+                  <Avatar 
+                    className="w-20 h-20 border border-border cursor-pointer transition-opacity"
+                    onClick={() => setIsImageModalOpen(true)}
+                  >
                     <AvatarImage src={avatarUrl || undefined} />
                     <AvatarFallback className="bg-secondary text-foreground text-xl font-medium">
                       {profile.name?.[0] || profile.email?.[0] || 'U'}
@@ -214,37 +180,16 @@ export default function SettingsPage() {
                   </Avatar>
                   <button
                     type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                    className="absolute inset-0 flex items-center justify-center bg-black/40 rounded-full opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
-                    disabled={uploading}
+                    onClick={() => setIsImageModalOpen(true)}
+                    className="absolute bottom-1 right-0 w-5 h-5 rounded-full bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/80 dark:border-none flex items-center justify-center text-foreground transition-colors cursor-pointer"
+                    aria-label="Update profile picture"
                   >
-                    {uploading ? (
-                      <Loader className="w-4 h-4 text-white animate-spin" />
-                    ) : (
-                      <Camera className="w-4 h-4 text-white" />
-                    )}
+                    <Pencil className="w-3 h-3 text-muted-foreground hover:text-foreground" />
                   </button>
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/*"
-                    onChange={handleAvatarUpload}
-                    className="hidden"
-                  />
                 </div>
                 <div>
                   <p className="text-md font-medium text-foreground">Profile picture</p>
-                  <p className="text-md text-muted-foreground mb-2">Click avatar to change</p>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={uploading}
-                  >
-                    <Upload className="w-4 h-4 mr-1.5" />
-                    Upload
-                  </Button>
+                  <p className="text-md text-muted-foreground">Click avatar to update</p>
                 </div>
               </div>
 
@@ -265,11 +210,15 @@ export default function SettingsPage() {
                   <Input id="email" value={profile.email} disabled className="text-muted-foreground" />
                   <p className="text-md text-muted-foreground">Email cannot be changed</p>
                 </div>
-                <Button type="submit" className="w-full disabled:pointer-events-auto disabled:cursor-not-allowed cursor-not-allowed" disabled={saving}>
+                <Button
+                  type="submit"
+                  className="w-full cursor-pointer disabled:pointer-events-auto disabled:cursor-not-allowed"
+                  disabled={isSaveDisabled}
+                >
                   {saving ? (
-                    <><Loader className="w-4 h-4 mr-2 animate-spin" />Saving...</>
+                    <Loader className="w-4 h-4 animate-spin" />
                   ) : (
-                    <><Check className="w-4 h-4 mr-2" />Save changes</>
+                    <span>Save changes</span>
                   )}
                 </Button>
               </form>
@@ -302,11 +251,11 @@ export default function SettingsPage() {
             </div>
           </div>
 
-          {/* Security */}
+          {/* Password */}
           <div>
             <h2 className="text-base font-medium text-foreground mb-4 flex items-center gap-2">
               <Shield className="w-4 h-4" />
-              Security
+              Password
             </h2>
             <div className="border border-border rounded-2xl p-6">
               <form onSubmit={handlePasswordChange} className="space-y-4">
@@ -333,10 +282,10 @@ export default function SettingsPage() {
                 <Button
                   type="submit"
                   variant="outline"
-                  className="w-full"
+                  className="w-full cursor-pointer disabled:pointer-events-auto disabled:cursor-not-allowed"
                   disabled={saving || !newPassword || !confirmPassword}
                 >
-                  {saving ? 'Updating...' : 'Update password'}
+                  {saving ? <Loader className="w-4 h-4 animate-spin" /> : 'Update password'}
                 </Button>
               </form>
             </div>
@@ -368,6 +317,15 @@ export default function SettingsPage() {
           </div>
         </div>
       </div>
+
+      <ProfileImageModal
+        open={isImageModalOpen}
+        onOpenChange={setIsImageModalOpen}
+        currentAvatarUrl={avatarUrl}
+        userName={profile.name}
+        userEmail={profile.email}
+        onAvatarUpdated={(newUrl) => setAvatarUrl(newUrl)}
+      />
     </div>
   );
 }

@@ -65,7 +65,7 @@ export function DeleteModal({
           <button
             type="button"
             onClick={() => onOpenChange(false)}
-            className="w-full h-11 rounded-full border border-border/80 bg-transparent text-foreground font-semibold text-sm hover:bg-secondary/60 transition-all cursor-pointer select-none"
+            className="w-full h-11 rounded-full border border-border/80 bg-transparent text-foreground font-normal text-sm hover:bg-secondary/60 transition-all cursor-pointer select-none"
           >
             Cancel
           </button>

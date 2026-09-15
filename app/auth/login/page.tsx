@@ -1,13 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, AlertCircle, X } from 'lucide-react';
 import { CloseAIIcon } from '@/components/brand/logo';
 import toast from '@/lib/toast';
 import { getAuthCallbackUrl } from '@/lib/url';
@@ -18,6 +18,33 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [authError, setAuthError] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Check URL parameters for OAuth errors (like ?error_code=bad_oauth_state)
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const error = params.get('error');
+      const errorCode = params.get('error_code');
+      const errorDesc = params.get('error_description');
+
+      if (error || errorCode || errorDesc) {
+        let message = 'Unable to complete sign in. Please try again.';
+        if (errorCode === 'bad_oauth_state' || errorDesc?.toLowerCase().includes('state')) {
+          message = 'Your sign-in session expired or was interrupted. Please try signing in again.';
+        } else if (errorCode === 'access_denied' || error === 'access_denied') {
+          message = 'Sign-in was cancelled. Please try again when ready.';
+        } else if (errorDesc) {
+          message = decodeURIComponent(errorDesc.replace(/\+/g, ' '));
+        }
+
+        setAuthError(message);
+
+        // Big-tech style: instantly clean URL in address bar to remove ugly raw query params
+        window.history.replaceState({}, '', window.location.pathname);
+      }
+    }
+  }, []);
 
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -48,7 +75,6 @@ export default function LoginPage() {
         options: {
           redirectTo: getAuthCallbackUrl('/c'),
           queryParams: {
-            prompt: 'select_account',
             access_type: 'offline',
           },
         },
@@ -74,10 +100,10 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center  p-4 select-none">
+    <div className="min-h-screen flex items-center justify-center p-4 select-none">
       <div className="max-w-[520px] w-full bg-card text-card-foreground p-8 rounded-3xl border border-border">
         {/* Header */}
-        <div className="text-center mb-8 flex flex-col items-center">
+        <div className="text-center mb-6 flex flex-col items-center">
           <div className="w-12 h-12 rounded-2xl bg-secondary flex items-center justify-center mb-4 border border-border/80 dark:border-none">
             <CloseAIIcon size={26} />
           </div>
@@ -85,12 +111,30 @@ export default function LoginPage() {
           <p className="text-md text-muted-foreground">Sign in to continue to closeAI</p>
         </div>
 
+        {/* OAuth Error Alert Banner */}
+        {authError && (
+          <div className="mb-5 p-3.5 rounded-2xl bg-destructive/10 border border-destructive/20 text-destructive flex items-start gap-3 relative animate-in fade-in duration-200">
+            <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+            <div className="flex-1 text-xs leading-relaxed font-medium">
+              {authError}
+            </div>
+            <button
+              type="button"
+              onClick={() => setAuthError(null)}
+              className="text-destructive/60 hover:text-destructive transition-colors p-0.5 cursor-pointer"
+              aria-label="Dismiss"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        )}
+
         {/* OAuth Buttons */}
         <div className="space-y-2.5 mb-5">
           <Button 
             variant="outline" 
             type="button" 
-            className="w-full h-11 rounded-xl border border-border font-medium  hover:bg-secondary text-foreground transition-colors flex items-center justify-center gap-2.5"
+            className="w-full h-11 rounded-xl border border-border font-medium hover:bg-secondary text-foreground transition-colors flex items-center justify-center gap-2.5 cursor-pointer"
             onClick={handleGoogleLogin}
           >
             <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
@@ -118,7 +162,7 @@ export default function LoginPage() {
           <Button 
             variant="outline" 
             type="button" 
-            className="w-full h-11 rounded-xl border border-border font-medium  hover:bg-secondary text-foreground transition-colors flex items-center justify-center gap-2.5"
+            className="w-full h-11 rounded-xl border border-border font-medium hover:bg-secondary text-foreground transition-colors flex items-center justify-center gap-2.5 cursor-pointer"
             onClick={handleGithubLogin}
           >
             <svg className="w-4 h-4 shrink-0 fill-current" viewBox="0 0 24 24">
@@ -178,7 +222,7 @@ export default function LoginPage() {
           <Button 
             type="submit" 
             disabled={loading} 
-            className="w-full h-11 bg-foreground text-background hover:bg-foreground/90 font-medium rounded-xl mt-3 transition-all cursor-pointer disabled:pointer-events-auto disabled:cursor-not-allowed cursor-not-allowed disabled:opacity-70"
+            className="w-full h-11 bg-foreground text-background hover:bg-foreground/90 font-medium rounded-xl mt-3 transition-all cursor-pointer disabled:cursor-not-allowed disabled:opacity-50 disabled:pointer-events-none"
           >
             {loading ? 'Signing in...' : 'Sign in'}
           </Button>

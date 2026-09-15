@@ -75,7 +75,6 @@ export default function SignupPage() {
         options: {
           redirectTo: getAuthCallbackUrl("/c"),
           queryParams: {
-            prompt: "select_account",
             access_type: "offline",
           },
         },

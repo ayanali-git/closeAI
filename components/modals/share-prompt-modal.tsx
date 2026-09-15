@@ -274,12 +274,12 @@ export function SharePromptModal({
           >
             <div className="w-16 h-16 rounded-full bg-foreground text-background flex items-center justify-center transition-opacity group-hover:opacity-80">
               {linkCopied ? (
-                <CheckIcon className="w-6 h-6" weight="bold" />
+                <CheckIcon className="w-6 h-6" />
               ) : (
-                <LinkIcon className="w-6 h-6" weight="bold" />
+                <LinkIcon className="w-6 h-6" />
               )}
             </div>
-            <span className="text-xs font-medium text-foreground select-none">
+            <span className="text-md font-normal text-foreground select-none">
               {linkCopied ? "Copied!" : "Copy"}
             </span>
           </button>
@@ -291,9 +291,9 @@ export function SharePromptModal({
             className="flex flex-col items-center gap-2 group cursor-pointer"
           >
             <div className="w-16 h-16 rounded-full bg-foreground text-background flex items-center justify-center transition-opacity group-hover:opacity-80">
-              <XLogoIcon className="w-6 h-6" weight="bold" />
+              <XLogoIcon className="w-6 h-6" />
             </div>
-            <span className="text-xs font-medium text-foreground select-none">X</span>
+            <span className="text-md font-normal text-foreground select-none">X</span>
           </button>
 
           {/* LinkedIn */}
@@ -303,9 +303,9 @@ export function SharePromptModal({
             className="flex flex-col items-center gap-2 group cursor-pointer"
           >
             <div className="w-16 h-16 rounded-full bg-foreground text-background flex items-center justify-center transition-opacity group-hover:opacity-80">
-              <LinkedinLogoIcon className="w-6 h-6" weight="bold" />
+              <LinkedinLogoIcon className="w-6 h-6" />
             </div>
-            <span className="text-xs font-medium text-foreground select-none">
+            <span className="text-md font-normal text-foreground select-none">
               LinkedIn
             </span>
           </button>
@@ -317,9 +317,9 @@ export function SharePromptModal({
             className="flex flex-col items-center gap-2 group cursor-pointer"
           >
             <div className="w-16 h-16 rounded-full bg-foreground text-background flex items-center justify-center transition-opacity group-hover:opacity-80">
-              <DotsThreeIcon className="w-6 h-6" weight="bold" />
+              <DotsThreeIcon className="w-6 h-6" />
             </div>
-            <span className="text-xs font-medium text-foreground select-none">
+            <span className="text-md font-normal text-foreground select-none">
               More
             </span>
           </button>

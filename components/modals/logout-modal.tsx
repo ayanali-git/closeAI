@@ -62,7 +62,7 @@ export function LogoutModal({
         {/* Info Box */}
         <div className="w-full flex items-start gap-2.5 p-3.5 rounded-2xl bg-secondary/50 text-left text-xs text-muted-foreground">
           <Info className="w-4 h-4 shrink-0 text-muted-foreground mt-0.5" />
-          <span className="leading-normal">This will also log you out of CloseAI Platform.</span>
+          <span className="leading-normal">This will be log you out across all CloseAI Platforms.</span>
         </div>
 
         {/* Action Buttons (Stacked Full Width Pills) */}
@@ -80,7 +80,7 @@ export function LogoutModal({
           <button
             type="button"
             onClick={() => onOpenChange(false)}
-            className="w-full h-11 rounded-full border border-border/80 bg-transparent text-foreground font-semibold text-sm hover:bg-secondary/60 transition-all cursor-pointer select-none"
+            className="w-full h-11 rounded-full border border-border/80 bg-transparent text-foreground font-normal text-sm hover:bg-secondary/60 transition-all cursor-pointer select-none"
           >
             Cancel
           </button>

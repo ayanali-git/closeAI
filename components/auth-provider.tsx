@@ -11,6 +11,7 @@ export interface AuthContextType {
   session: Session | null;
   token: string | null;
   loading: boolean;
+  isSigningOut: boolean;
   signOut: () => Promise<void>;
   refreshSession: () => Promise<Session | null>;
 }
@@ -20,6 +21,7 @@ export const AuthContext = createContext<AuthContextType>({
   session: null,
   token: null,
   loading: true,
+  isSigningOut: false,
   signOut: async () => { },
   refreshSession: async () => null,
 });
@@ -72,6 +74,7 @@ export function AuthProvider({
   const router = useRouter();
   const profileCheckedRef = useRef<string | null>(null);
   const isSigningOutRef = useRef(false);
+  const [isSigningOut, setIsSigningOut] = useState(false);
 
   const ensureProfile = useCallback(async (currentUser: User) => {
     if (!currentUser?.id || profileCheckedRef.current === currentUser.id) return;
@@ -207,6 +210,7 @@ export function AuthProvider({
 
   const signOut = async () => {
     isSigningOutRef.current = true;
+    setIsSigningOut(true);
     setUser(null);
     setSession(null);
     setLoading(false);
@@ -250,6 +254,7 @@ export function AuthProvider({
     session,
     token: session?.access_token ?? null,
     loading,
+    isSigningOut,
     signOut,
     refreshSession,
   };

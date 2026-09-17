@@ -43,7 +43,7 @@ export default function CareersPage() {
         <h2 className="text-xl sm:text-2xl font-semibold mb-4 sm:mb-6">Open Roles</h2>
         <div className="flex flex-col gap-4">
           {roles.map((role, i) => (
-            <div key={i} className="group flex items-center justify-between p-4 sm:p-6 bg-card border border-border rounded-2xl hover:bg-secondary/50 transition-colors cursor-pointer">
+            <div key={i} className="group flex items-center justify-between p-4 sm:p-6 bg-card border border-border/80 dark:border-none rounded-2xl hover:bg-secondary/50 transition-colors cursor-pointer">
               <div>
                 <h3 className="text-base sm:text-lg font-medium mb-1">{role.title}</h3>
                 <div className="text-base sm:text-base text-muted-foreground">

@@ -19,7 +19,7 @@ import { useSidebarContext } from "@/components/chat/sidebar-context";
 import toast from "@/lib/toast";
 
 function NewChatContent() {
-  const { user, loading } = useAuth();
+  const { user, loading, isSigningOut } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
   const queryPrompt = searchParams?.get("q")?.trim() || "";
@@ -42,6 +42,7 @@ function NewChatContent() {
   const [isAutoCreating, setIsAutoCreating] = useState(false);
   const [selectedModel, setSelectedModel] = useState("GPT-5.4");
   const [selectedModelTier, setSelectedModelTier] = useState(4);
+  const [thinkMode, setThinkMode] = useState(false);
   const autoCreateTriggeredRef = useRef(false);
 
   const handleAutoCreateAndSend = async (promptText: string) => {
@@ -71,6 +72,7 @@ function NewChatContent() {
           JSON.stringify({
             prompt: promptText,
             model: selectedModel,
+            think: thinkMode,
           })
         );
       }
@@ -89,6 +91,8 @@ function NewChatContent() {
     if (loading) return;
 
     if (!user) {
+      // Don't redirect to login during sign-out — signOut handler redirects to home
+      if (isSigningOut) return;
       const pending = queryPrompt || (typeof window !== "undefined" ? sessionStorage.getItem("pending_prompt") : null);
       if (pending) {
         if (typeof window !== "undefined") {
@@ -115,7 +119,7 @@ function NewChatContent() {
       }
       handleAutoCreateAndSend(promptToSend.trim());
     }
-  }, [user, loading, queryPrompt, router]);
+  }, [user, loading, isSigningOut, queryPrompt, router]);
 
   const handleToggleArchive = async (id: string, archived: boolean) => {
     try {
@@ -169,6 +173,7 @@ function NewChatContent() {
           JSON.stringify({
             prompt: messageText,
             model: selectedModel,
+            think: thinkMode,
           })
         );
       }
@@ -279,6 +284,8 @@ function NewChatContent() {
                 onModelChange={setSelectedModel}
                 selectedTier={selectedModelTier}
                 onTierChange={setSelectedModelTier}
+                thinkMode={thinkMode}
+                onThinkModeChange={setThinkMode}
                 centered={false}
                 showDisclaimer={false}
               />

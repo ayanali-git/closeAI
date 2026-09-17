@@ -55,7 +55,7 @@ export default function SafetyPage() {
           return (
             <div
               key={i}
-              className="p-8 rounded-3xl border border-border/50 bg-card transition-all flex flex-col justify-between"
+              className="p-8 rounded-3xl border border-border/80 dark:border-none bg-card transition-all flex flex-col justify-between"
             >
               <div>
                 <div className="w-12 h-12 rounded-2xl bg-secondary flex items-center justify-center mb-6">
@@ -74,7 +74,7 @@ export default function SafetyPage() {
       </div>
 
       {/* CTA Box */}
-      <div className="rounded-3xl border border-border/60 bg-secondary/40 p-8 sm:p-12 text-center flex flex-col items-center">
+      <div className="rounded-3xl border border-border/80 dark:border-none bg-card p-8 sm:p-12 text-center flex flex-col items-center">
         <h2 className="text-2xl sm:text-3xl font-semibold text-foreground mb-3">
           Review our Model System Cards
         </h2>
@@ -85,7 +85,7 @@ export default function SafetyPage() {
           href="/research/overview"
           className="group inline-flex items-center text-md font-semibold uppercase tracking-wider text-foreground"
         >
-          <span>Explore system cards</span>
+          <span>Explore here</span>
           <AnimatedArrow size={18} />
         </Link>
       </div>

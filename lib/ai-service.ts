@@ -23,6 +23,7 @@ interface Message {
 
 export class AIService {
   private useGemini = true; // Set to true to prefer Gemini by default
+  private static openAiQuotaExceededUntil = Date.now() + 60 * 60 * 1000; // Cache known quota limit
 
   private getGenAIClient() {
     const key = process.env.GOOGLE_API_KEY;
@@ -44,14 +45,15 @@ export class AIService {
     messages: Message[],
     fileContext?: string,
     imageUrls?: string[],
-    modelName: string = "GPT-5.4"
+    modelName: string = "GPT-5.4",
+    think: boolean = false
   ): Promise<AIResponse> {
     const isGemini = modelName.toLowerCase().includes('gemini');
 
     if (isGemini) {
-      return await this.generateGeminiResponse(messages, fileContext, imageUrls, modelName);
+      return await this.generateGeminiResponse(messages, fileContext, imageUrls, modelName, think);
     } else {
-      return await this.generateOpenAIResponse(messages, fileContext, imageUrls, modelName);
+      return await this.generateOpenAIResponse(messages, fileContext, imageUrls, modelName, think);
     }
   }
 
@@ -59,18 +61,22 @@ export class AIService {
     messages: Message[],
     fileContext?: string,
     imageUrls?: string[],
-    modelName: string = "GPT-5.4"
+    modelName: string = "GPT-5.4",
+    think: boolean = false
   ): Promise<AIResponse> {
+    if (Date.now() < AIService.openAiQuotaExceededUntil) {
+      const genAI = this.getGenAIClient();
+      if (genAI) {
+        return await this.generateGeminiResponse(messages, fileContext, imageUrls, "gemini-3.6-flash", think);
+      }
+    }
+
     const openaiClient = this.getOpenAIClient();
     if (!openaiClient) {
       // If OpenAI key is missing but Gemini is configured, use Gemini with fallback
       const genAI = this.getGenAIClient();
       if (genAI) {
-        const fallbackRes = await this.generateGeminiResponse(messages, fileContext, imageUrls, "gemini-3.7-flash");
-        return {
-          ...fallbackRes,
-          content: `> *Note: OpenAI API key is not configured. Responded using Google Gemini instead.*\n\n${fallbackRes.content}`,
-        };
+        return await this.generateGeminiResponse(messages, fileContext, imageUrls, "gemini-3.6-flash", think);
       }
       throw new Error('OpenAI API key is not configured. Please add OPENAI_API_KEY in your .env file.');
     }
@@ -88,11 +94,9 @@ export class AIService {
     }
 
     try {
-      const systemPrompt = `You are CloseAI, a helpful, thorough, and intelligent AI assistant. Always provide comprehensive, fully detailed answers, complete explanations, and clean code solutions without stopping prematurely. Format your output in clean, elegant Markdown:
-- When presenting tabular data, always use standard GitHub-Flavored Markdown tables with newlines between rows.
-- Use fenced code blocks with the appropriate language identifier for all code snippets.
-- Use bold text (**text**) cleanly without orphaned asterisks.
-${fileContext ? `\n\nFile Context:\n${fileContext}` : ''}`;
+      const systemPrompt = think
+        ? `You are CloseAI in Deep Thinking & Reasoning mode. Analyze every aspect of the question thoroughly. Reason step-by-step, explore nuances and edge cases, and provide comprehensive, in-depth, and well-structured answers with complete details and explanations.${fileContext ? `\n\nFile Context:\n${fileContext}` : ''}`
+        : `You are CloseAI, a quick and helpful assistant. Provide direct, concise, clear, and accurate answers without unnecessary verbosity.${fileContext ? `\n\nFile Context:\n${fileContext}` : ''}`;
 
       const fullMessages: any[] = [
         { role: 'system', content: systemPrompt }
@@ -128,8 +132,8 @@ ${fileContext ? `\n\nFile Context:\n${fileContext}` : ''}`;
       const response = await openaiClient.chat.completions.create({
         model: openAiModel,
         messages: fullMessages,
-        max_tokens: 10000,
-        temperature: 0.7,
+        max_tokens: think ? 10000 : 4000,
+        temperature: think ? 0.7 : 0.5,
       });
 
       const content = response.choices[0]?.message?.content || 'I apologize, but I was unable to generate a response.';
@@ -145,11 +149,12 @@ ${fileContext ? `\n\nFile Context:\n${fileContext}` : ''}`;
     } catch (error: any) {
       if (error.code === 'invalid_api_key' || error.status === 401) {
         throw new Error('Invalid OpenAI API key. Please verify your OPENAI_API_KEY in .env.');
-      } else if (error.code === 'insufficient_quota' || error.status === 429) {
+      } else if (error.code === 'insufficient_quota' || error.status === 429 || error?.message?.includes('credits') || error?.message?.includes('quota')) {
+        AIService.openAiQuotaExceededUntil = Date.now() + 60 * 60 * 1000;
         const genAI = this.getGenAIClient();
         if (genAI) {
           console.warn('OpenAI quota exceeded, falling back to Google Gemini...');
-          const fallbackRes = await this.generateGeminiResponse(messages, fileContext, imageUrls, "gemini-3.7-flash");
+          const fallbackRes = await this.generateGeminiResponse(messages, fileContext, imageUrls, "gemini-3.6-flash", think);
           return {
             ...fallbackRes,
           };
@@ -164,38 +169,21 @@ ${fileContext ? `\n\nFile Context:\n${fileContext}` : ''}`;
     messages: Message[],
     fileContext?: string,
     imageUrls?: string[],
-    modelName: string = "gemini-3.7-flash"
+    modelName: string = "gemini-3.6-flash",
+    think: boolean = false
   ): Promise<AIResponse> {
     const genAI = this.getGenAIClient();
     if (!genAI) {
       const openaiClient = this.getOpenAIClient();
       if (openaiClient) {
-        return await this.generateOpenAIResponse(messages, fileContext, imageUrls, "GPT-5.4");
+        return await this.generateOpenAIResponse(messages, fileContext, imageUrls, "GPT-5.4", think);
       }
       throw new Error('Google Generative AI not initialized (Missing GOOGLE_API_KEY)');
     }
 
-    // Normalize model name (convert spaces to hyphens, lowercase)
-    const cleanModelName = (modelName || "gemini-3.7-flash").trim().toLowerCase().replace(/\s+/g, "-");
-
-    // Map any deprecated or retired models to supported versions
-    let initialCandidate = cleanModelName;
-    if (
-      initialCandidate.includes("1.5-pro") ||
-      initialCandidate.includes("1.5-flash") ||
-      initialCandidate.includes("2.5-pro") ||
-      initialCandidate.includes("2.5-flash") ||
-      initialCandidate === "gemini-pro"
-    ) {
-      initialCandidate = "gemini-3.7-flash";
-    }
-
-    // Candidate models to try in order (all live and tested on Google Generative AI v1beta)
+    // Candidate models in fast priority order (gemini-3.6-flash is tested & active)
     const candidates = [
-      initialCandidate,
-      "gemini-3.7-flash",
       "gemini-3.6-flash",
-      "gemini-3.5-flash",
       "gemini-flash-latest",
       "gemini-3.1-flash-lite",
       "gemini-3.8-flash"
@@ -208,11 +196,9 @@ ${fileContext ? `\n\nFile Context:\n${fileContext}` : ''}`;
       try {
         const model = genAI.getGenerativeModel({ model: candidate });
 
-        const systemPrompt = `You are CloseAI, a helpful, thorough, and intelligent AI assistant. Always provide comprehensive, fully detailed answers, complete explanations, and clean code solutions without stopping prematurely. Format your output in clean, elegant Markdown:
-- When presenting tabular data, always use standard GitHub-Flavored Markdown tables with newlines between rows.
-- Use fenced code blocks with the appropriate language identifier for all code snippets.
-- Use bold text (**text**) cleanly without orphaned asterisks.
-${fileContext ? `\n\nFile Context:\n${fileContext}` : ''}`;
+        const systemPrompt = think
+          ? `You are CloseAI in Deep Thinking & Reasoning mode. Analyze every aspect of the question thoroughly. Reason step-by-step, explore nuances and edge cases, and provide comprehensive, in-depth, and well-structured answers with complete details and explanations. Format your output in clean, elegant Markdown with standard GitHub-Flavored tables and fenced code blocks.${fileContext ? `\n\nFile Context:\n${fileContext}` : ''}`
+          : `You are CloseAI, a quick and helpful assistant. Provide direct, concise, clear, and accurate answers without unnecessary verbosity. Format your output in clean, elegant Markdown with standard GitHub-Flavored tables and fenced code blocks.${fileContext ? `\n\nFile Context:\n${fileContext}` : ''}`;
 
         const lastMessage = messages[messages.length - 1];
 

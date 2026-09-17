@@ -103,7 +103,8 @@ function ChatTitleMarquee({
   useEffect(() => {
     const measure = () => {
       if (textRef.current && containerRef.current) {
-        const actionSpace = 70;
+        const isMobile = typeof window !== "undefined" && window.innerWidth < 1025;
+        const actionSpace = isMobile ? 0 : 70;
 
         const diff =
           textRef.current.scrollWidth -
@@ -123,28 +124,27 @@ function ChatTitleMarquee({
     };
   }, [title]);
 
-  const isScrolling =
-  overflowWidth > 0 && (isHovered || isSelected);
+  const isScrolling = overflowWidth > 0 && isHovered;
 
-  const duration = Math.max(1.8, overflowWidth / 24);
+  const duration = Math.max(3.2, (overflowWidth / 35) + 1.8);
 
   return (
     <div
       ref={containerRef}
-      className="relative flex-1 min-w-0 overflow-hidden pr-1"
+      className="relative flex-1 min-w-0 overflow-hidden pr-1 max-[1025px]:mr-[78px]"
       style={{
         maskImage:
           overflowWidth > 0
             ? isScrolling
               ? "linear-gradient(to right, transparent 0%, black 5px, black calc(100% - 5px), transparent 100%)"
-              : "linear-gradient(to right, black 0%, black calc(100% - 5px), transparent 100%)"
+              : "linear-gradient(to right, black 0%, black calc(100% - 8px), transparent 100%)"
             : "none",
 
         WebkitMaskImage:
           overflowWidth > 0
             ? isScrolling
               ? "linear-gradient(to right, transparent 0%, black 5px, black calc(100% - 5px), transparent 100%)"
-              : "linear-gradient(to right, black 0%, black calc(100% - 5px), transparent 100%)"
+              : "linear-gradient(to right, black 0%, black calc(100% - 8px), transparent 100%)"
             : "none",
       }}
     >
@@ -152,14 +152,14 @@ function ChatTitleMarquee({
       <span
         ref={textRef}
         style={{
-          transform: isScrolling
-            ? `translateX(-${overflowWidth + 10}px)`
-            : "translateX(0px)",
-          transition: isScrolling
-            ? `transform ${duration}s linear`
-            : "transform 0.25s ease-out",
-        }}
-        className="inline-block whitespace-nowrap text-[15px] leading-snug select-none"
+          '--marquee-dist': `${overflowWidth + 10}px`,
+          animation: isScrolling
+            ? `chat-title-marquee ${duration}s ease-in-out infinite`
+            : "none",
+          transform: isScrolling ? undefined : "translateX(0px)",
+          transition: isScrolling ? "none" : "transform 0.25s ease-out",
+        } as React.CSSProperties}
+        className="inline-block whitespace-nowrap text-[15px] leading-snug select-none will-change-transform"
       >
         {title || "New chat"}
       </span>
@@ -211,6 +211,7 @@ export function Sidebar({
   const { theme, setTheme } = useTheme();
   const [showSearch, setShowSearch] = useState(false);
   const [hoveredChatId, setHoveredChatId] = useState<string | null>(null);
+  const [pressedChatId, setPressedChatId] = useState<string | null>(null);
   const [isLogoHovered, setIsLogoHovered] = useState(false);
   const [isCloseBtnHovered, setIsCloseBtnHovered] = useState(false);
   const [collapsedSections, setCollapsedSections] = useState<
@@ -733,7 +734,9 @@ export function Sidebar({
 
   const renderChatItem = (chat: Chat) => {
     const isHovered = hoveredChatId === chat.id;
+    const isPressed = pressedChatId === chat.id;
     const isSelected = currentChatId === chat.id;
+    const isHighlighted = isSelected || isHovered || isPressed;
 
     return (
       <div
@@ -745,12 +748,21 @@ export function Sidebar({
           }
         }}
         onMouseEnter={() => setHoveredChatId(chat.id)}
-        onMouseLeave={() => setHoveredChatId(null)}
+        onMouseLeave={() => {
+          setHoveredChatId(null);
+          setPressedChatId(null);
+        }}
+        onTouchStart={() => setPressedChatId(chat.id)}
+        onTouchEnd={() => setPressedChatId(null)}
+        onTouchCancel={() => setPressedChatId(null)}
         className={cn(
           "group relative flex items-center justify-between px-3 py-2 rounded-xl text-md cursor-pointer transition-all duration-150",
           isSelected
             ? "bg-secondary text-muted-foreground hover:text-foreground"
-            : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+            : cn(
+                "text-muted-foreground hover:bg-secondary active:bg-secondary hover:text-foreground",
+                isPressed && "bg-secondary text-foreground"
+              )
         )}
       >
         {/* Title with Smooth Marquee on Hover */}
@@ -760,23 +772,29 @@ export function Sidebar({
           isSelected={isSelected}
         />
 
-        {/* Status indicators when not hovered */}
+        {/* Status indicators when not hovered (hidden on mobile where action buttons are always visible) */}
         {chat.starred && !isHovered && (
-          <PinOff className="w-4 h-4 text-muted-foreground shrink-0 ml-1.5" />
+          <PinOff className="w-4 h-4 text-muted-foreground shrink-0 ml-1.5 max-[1025px]:hidden" />
         )}
         {chat.archived && !chat.starred && !isHovered && (
-          <ArchiveX className="w-4 h-4 text-muted-foreground shrink-0 ml-1.5" />
+          <ArchiveX className="w-4 h-4 text-muted-foreground shrink-0 ml-1.5 max-[1025px]:hidden" />
         )}
 
-        {/* Hover Actions with Smooth Fade */}
+        {/* Actions */}
         <div
-  className={cn(
-    "absolute right-1 top-1/2 -translate-y-1/2 flex items-center gap-0.5 pl-12 sm:pl-16 lg:pl-20 pr-1 py-0.5 rounded-r-xl bg-gradient-to-l from-secondary via-secondary to-transparent z-10 transition-opacity duration-150",
-    isSelected
-      ? "opacity-100 pointer-events-auto"
-      : "opacity-0 pointer-events-none [@media(hover:hover)]:group-hover:opacity-100 [@media(hover:hover)]:group-hover:pointer-events-auto"
-  )}
->
+          className={cn(
+            "absolute right-2 inset-y-0 flex items-center gap-0.5 z-10 pointer-events-none",
+            // Desktop (>= 1025px): full-height smooth gradient fade matching hover box
+            "min-[1025px]:right-0 min-[1025px]:pl-12 min-[1025px]:pr-2 min-[1025px]:rounded-r-xl",
+            "min-[1025px]:bg-gradient-to-l min-[1025px]:from-secondary min-[1025px]:via-secondary min-[1025px]:to-transparent",
+            // Small screens (< 1025px): completely transparent, no gradient box, seamless with hover box!
+            "max-[1025px]:bg-transparent max-[1025px]:bg-none max-[1025px]:opacity-100",
+            // Desktop visibility: shown on hover or when selected
+            isSelected
+              ? "opacity-100"
+              : "min-[1025px]:opacity-0 [@media(hover:hover)]:group-hover:opacity-100"
+          )}
+        >
           <Tooltip>
             <TooltipTrigger asChild>
               <button
@@ -784,7 +802,7 @@ export function Sidebar({
                   e.stopPropagation();
                   onToggleStar(chat.id, !chat.starred);
                 }}
-                className="p-1 rounded-md text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                className="p-1 rounded-md text-muted-foreground hover:text-foreground transition-colors cursor-pointer pointer-events-auto"
               >
                 {chat.starred ? (
                   <PinOff className="w-4 h-4 text-foreground" />
@@ -806,7 +824,7 @@ export function Sidebar({
                     e.stopPropagation();
                     onToggleArchive(chat.id, !chat.archived);
                   }}
-                  className="p-1 rounded-md text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                  className="p-1 rounded-md text-muted-foreground hover:text-foreground transition-colors cursor-pointer pointer-events-auto"
                 >
                   {chat.archived ? (
                     <ArchiveX className="w-4 h-4" />
@@ -828,7 +846,7 @@ export function Sidebar({
                   e.stopPropagation();
                   setChatToDelete(chat);
                 }}
-                className="p-1 rounded-md text-muted-foreground hover:text-red-500 transition-colors cursor-pointer"
+                className="p-1 rounded-md text-muted-foreground hover:text-red-500 transition-colors cursor-pointer pointer-events-auto"
               >
                 <Trash2 className="w-4 h-4" />
               </button>

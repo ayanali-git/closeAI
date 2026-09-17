@@ -128,7 +128,7 @@ function SharedHeaderTitleMarquee({
 
   if (isLoading || !title) {
     return (
-      <div className="relative flex-1 overflow-hidden min-w-0 max-w-[140px] min-[400px]:max-w-[200px] min-[600px]:max-w-[280px] md:max-w-[316px] lg:max-w-[416px] xl:max-w-[516px] py-1 select-none flex items-center">
+      <div className="relative flex-1 overflow-hidden min-w-0 max-w-[140px] min-[400px]:max-w-[200px] min-[600px]:max-w-[280px] md:max-w-[278px] lg:max-w-[378px] xl:max-w-[478px] py-1 select-none flex items-center">
         <div
           style={{ width: "var(--shared-title-w, 180px)" }}
           className="h-4 rounded-md bg-secondary/80 dark:bg-neutral-800/80 animate-pulse shrink-0 max-w-full"
@@ -137,28 +137,42 @@ function SharedHeaderTitleMarquee({
     );
   }
 
-  const duration = Math.max(1.8, overflowWidth / 24);
+  const isScrolling = overflowWidth > 0 && isHovered;
+  const duration = Math.max(3.2, (overflowWidth / 35) + 1.8);
 
   return (
     <div
       ref={containerRef}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
-      className="relative flex-1 overflow-hidden min-w-0 max-w-[140px] min-[400px]:max-w-[200px] min-[600px]:max-w-[280px] md:max-w-[316px] lg:max-w-[416px] xl:max-w-[516px] py-1 select-none"
+      className="relative flex-1 overflow-hidden min-w-0 max-w-[140px] min-[400px]:max-w-[200px] min-[600px]:max-w-[280px] md:max-w-[278px] lg:max-w-[378px] xl:max-w-[478px] py-1 select-none pr-1"
+      style={{
+        maskImage:
+          overflowWidth > 0
+            ? isScrolling
+              ? "linear-gradient(to right, transparent 0%, black 5px, black calc(100% - 5px), transparent 100%)"
+              : "linear-gradient(to right, black 0%, black calc(100% - 8px), transparent 100%)"
+            : "none",
+
+        WebkitMaskImage:
+          overflowWidth > 0
+            ? isScrolling
+              ? "linear-gradient(to right, transparent 0%, black 5px, black calc(100% - 5px), transparent 100%)"
+              : "linear-gradient(to right, black 0%, black calc(100% - 8px), transparent 100%)"
+            : "none",
+      }}
     >
       <span
         ref={textRef}
         style={{
-          transform:
-            isHovered && overflowWidth > 0
-              ? `translateX(-${overflowWidth + 10}px)`
-              : "translateX(0px)",
-          transition:
-            isHovered && overflowWidth > 0
-              ? `transform ${duration}s linear`
-              : "transform 0.25s ease-out",
-        }}
-        className="inline-block whitespace-nowrap text-base sm:text-[15px] font-medium text-foreground select-none"
+          '--marquee-dist': `${overflowWidth + 10}px`,
+          animation: isScrolling
+            ? `chat-title-marquee ${duration}s ease-in-out infinite`
+            : "none",
+          transform: isScrolling ? undefined : "translateX(0px)",
+          transition: isScrolling ? "none" : "transform 0.25s ease-out",
+        } as React.CSSProperties}
+        className="inline-block whitespace-nowrap text-base sm:text-[15px] font-medium text-foreground select-none will-change-transform"
       >
         {title}
       </span>
@@ -181,6 +195,7 @@ function SharedChatInputPill({
   onScrollToBottom?: () => void;
 }) {
   const [prompt, setPrompt] = useState("");
+  const [thinkMode, setThinkMode] = useState(false);
   const [plusMenuOpen, setPlusMenuOpen] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [isMultiLine, setIsMultiLine] = useState(false);
@@ -204,36 +219,22 @@ function SharedChatInputPill({
   const isTextMultiLine = Boolean(
     prompt &&
       prompt.trim().length > 0 &&
-      (prompt.includes("\n") || prompt.length > 25 || isMultiLine)
+      ((prompt || "").includes("\n") || isMultiLine)
   );
 
-  const isExpandedLayout = isFullyExpanded || isTextMultiLine;
+  const isExpandedLayout = isBigContent || isTextMultiLine;
 
   const adjustHeight = useCallback(() => {
     const el = textareaRef.current;
     if (!el) return;
-
-    if (!prompt || prompt.trim() === "") {
-      el.style.height = "26px";
-      el.style.overflowY = "hidden";
-      setIsMultiLine(false);
-      if (isFullyExpanded) setIsFullyExpanded(false);
-      return;
-    }
-
-    el.style.height = "auto";
-    const scrollH = el.scrollHeight;
-    const maxH = isFullyExpanded ? 600 : 300;
-
-    if (scrollH > 38 || prompt.includes("\n")) {
-      setIsMultiLine(true);
-      if (scrollH > maxH) {
-        el.style.height = `${maxH}px`;
-        el.style.overflowY = "auto";
-      } else {
-        el.style.height = `${Math.max(scrollH, 44)}px`;
-        el.style.overflowY = "hidden";
-      }
+    if (prompt && prompt.trim().length > 0) {
+      el.style.height = "auto";
+      const scrollH = el.scrollHeight;
+      const maxHeight = isFullyExpanded ? 400 : 200;
+      const newHeight = Math.min(scrollH, maxHeight);
+      el.style.height = `${Math.max(newHeight, 26)}px`;
+      el.style.overflowY = scrollH > maxHeight ? "auto" : "hidden";
+      setIsMultiLine(scrollH > 36 || (prompt || "").includes("\n"));
     } else {
       el.style.height = "26px";
       el.style.overflowY = "hidden";
@@ -281,7 +282,7 @@ function SharedChatInputPill({
         if (typeof window !== "undefined") {
           sessionStorage.setItem(
             `auto_send_${chatId}`,
-            JSON.stringify({ prompt: prompt.trim() })
+            JSON.stringify({ prompt: prompt.trim(), think: thinkMode })
           );
         }
       }
@@ -447,7 +448,11 @@ function SharedChatInputPill({
           width: menuWidth ? `${menuWidth}px` : undefined,
         }}
       >
-        <PlusMenuContent onAddFiles={handleContinue} isOpen={plusMenuOpen} disableAttach={true} />
+        <PlusMenuContent
+          onAddFiles={handleContinue}
+          isOpen={plusMenuOpen}
+          disableAttach={true}
+        />
       </DropdownMenuContent>
     </DropdownMenu>
   );
@@ -458,16 +463,22 @@ function SharedChatInputPill({
         <TooltipTrigger asChild>
           <button
             type="button"
-            onClick={(e) => e.preventDefault()}
-            style={{ cursor: "not-allowed" }}
-            className="flex items-center gap-1 px-1.5 sm:px-2.5 py-1 rounded-full text-[13px] sm:text-[14px] font-medium text-muted-foreground/50 opacity-60 cursor-not-allowed select-none bg-transparent hover:bg-transparent shrink-0"
-            aria-label="Think mode (Coming soon)"
+            onClick={() => setThinkMode(!thinkMode)}
+            className={cn(
+              "h-9 sm:h-10 px-2.5 sm:px-3 rounded-full flex items-center justify-center gap-1.5 text-[13px] sm:text-[14px] font-medium select-none transition-all shrink-0 cursor-pointer",
+              thinkMode
+                ? "bg-foreground dark:bg-[#2F2F2F] text-background dark:text-foreground hover:opacity-90"
+                : "text-muted-foreground hover:text-foreground hover:bg-secondary"
+            )}
+            aria-label="Think"
           >
-            <Brain className="w-5 h-5 text-muted-foreground/50 pointer-events-none" />
-            <span className="pointer-events-none hidden sm:inline">Think</span>
+            <Brain className="w-4 h-4 sm:w-5 sm:h-5" />
+            <span className="hidden sm:inline">Think</span>
           </button>
         </TooltipTrigger>
-        <TooltipContent className="text-md">Coming soon</TooltipContent>
+        <TooltipContent className="text-md">
+          Think
+        </TooltipContent>
       </Tooltip>
 
       <Tooltip>
@@ -821,7 +832,11 @@ export default function PublicSharedChatPage() {
 
   return (
     <div className="flex flex-col h-[100dvh] w-full bg-background text-foreground overflow-hidden relative">
-      <title>{cleanTitle ? `CloseAI \u007C Shared Chat\u003A ${cleanTitle}` : "CloseAI"}</title>
+      <title>
+        {cleanTitle
+          ? `CloseAI \u007C Shared Chat\u003A ${cleanTitle}`
+          : "CloseAI"}
+      </title>
 
       {/* Transparent Floating Header - Buttons float cleanly on top, matching c/[id] exactly */}
       <header className="absolute top-0 left-0 right-0 z-30 h-14 pt-[env(safe-area-inset-top,0px)] px-3 sm:px-4 flex items-center justify-between select-none pointer-events-none bg-transparent">
@@ -831,7 +846,9 @@ export default function PublicSharedChatPage() {
             href="/"
             className="flex items-center gap-2 hover:opacity-85 transition-opacity shrink-0"
           >
-            <CloseAIIcon size={26} />
+            <span className="font-semibold text-xl tracking-tight text-foreground">
+              CloseAI
+            </span>
           </Link>
           <Separator
             orientation="vertical"
@@ -858,7 +875,7 @@ export default function PublicSharedChatPage() {
                 ) : (
                   <Upload className="w-4 h-4 shrink-0 text-muted-foreground group-hover:text-foreground" />
                 )}
-                <span className="inline">Share</span>
+                <span className="inline hidden sm:block">Share</span>
               </button>
             </TooltipTrigger>
             <TooltipContent side="bottom" sideOffset={6} className="text-md">
@@ -900,9 +917,7 @@ export default function PublicSharedChatPage() {
           {isError ? (
             <div className="flex-1 w-full flex flex-col items-center justify-center p-6 text-center space-y-4">
               <div className="space-y-1">
-                <p className="text-2xl font-semibold">
-                  Conversation not found
-                </p>
+                <p className="text-2xl font-semibold">Conversation not found</p>
                 <p className="text-base text-muted-foreground max-w-base">
                   This shared link may have been deleted or is unavailable.
                 </p>

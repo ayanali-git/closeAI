@@ -9,17 +9,9 @@ import {
   XIcon,
   DotsThreeIcon,
   PaperclipIcon,
-  FilePdfIcon,
-  FileDocIcon,
-  FileCsvIcon,
-  FileTextIcon,
-  FileCodeIcon,
-  FileZipIcon,
-  FileAudioIcon,
-  FileVideoIcon,
-  FileIcon,
 } from "@phosphor-icons/react";
 import { BottomSheet } from "@/components/ui/bottom-sheet";
+import { getFileIconInfo } from "@/lib/file-utils";
 import { cn } from "@/lib/utils";
 import toast from "@/lib/toast";
 
@@ -67,47 +59,6 @@ function getFileExtension(file: any, fileUrl?: string): string {
   const name = file?.filename || file?.name || fileUrl || "";
   const match = typeof name === "string" ? name.match(/\.([a-zA-Z0-9]+)(?:\?.*)?$/) : null;
   return match ? match[1].toLowerCase() : "";
-}
-
-/** Maps a file extension to the matching Phosphor file-type icon */
-function getFileIcon(ext: string) {
-  switch (ext) {
-    case "pdf":
-      return FilePdfIcon;
-    case "doc":
-    case "docx":
-      return FileDocIcon;
-    case "csv":
-    case "xlsx":
-    case "xls":
-      return FileCsvIcon;
-    case "txt":
-    case "md":
-      return FileTextIcon;
-    case "js":
-    case "jsx":
-    case "ts":
-    case "tsx":
-    case "py":
-    case "json":
-    case "html":
-    case "css":
-      return FileCodeIcon;
-    case "zip":
-    case "rar":
-    case "7z":
-      return FileZipIcon;
-    case "audio":
-    case "mp3":
-    case "wav":
-      return FileAudioIcon;
-    case "video":
-    case "mp4":
-    case "mov":
-      return FileVideoIcon;
-    default:
-      return FileIcon;
-  }
 }
 
 export function SharePromptModal({
@@ -215,30 +166,29 @@ export function SharePromptModal({
                 {files!.map((file: any, i: number) => {
                   const fileUrl = file.url || file.publicUrl;
                   const isImage = isImageFile(file, fileUrl);
-                  const ext = getFileExtension(file, fileUrl);
-                  const FileTypeIcon = getFileIcon(ext);
+                  const { Icon, colorClass, badgeBg } = getFileIconInfo(file);
+                  const displayName = file.name || file.filename || "File";
                   return (
                     <div
                       key={file.id || i}
                       className={cn(
-                        "overflow-hidden rounded-full bg-secondary border border-border/80",
-                        isImage ? "max-w-[100px] sm:max-w-[150px]" : "max-w-full"
+                        "overflow-hidden bg-secondary border border-border/80",
+                        isImage
+                          ? "rounded-xl max-w-[100px] sm:max-w-[150px]"
+                          : "rounded-full max-w-full"
                       )}
                     >
                       {isImage && fileUrl ? (
                         <img
                           src={fileUrl}
-                          alt={file.name || "Attachment"}
-                          className="w-full max-h-[180px] sm:max-h-[220px] object-cover rounded-2xl"
+                          alt={displayName}
+                          className="w-full max-h-[180px] sm:max-h-[220px] object-cover rounded-xl"
                         />
                       ) : (
-                        <div className="flex items-center gap-1.5 px-3 py-2 text-xs sm:text-sm text-foreground">
-                          <FileTypeIcon
-                            className="w-4 h-4 shrink-0 text-muted-foreground"
-                            weight="fill"
-                          />
-                          <span className="whitespace-nowrap">
-                            {file.name || file.filename || "File"}
+                        <div className="flex items-center gap-2 px-3 py-1.5 text-xs sm:text-sm text-foreground">
+                          <Icon className="w-4 h-4 shrink-0 text-muted-foreground" weight="fill" />
+                          <span className="truncate max-w-[140px] sm:max-w-[180px] font-medium">
+                            {displayName}
                           </span>
                         </div>
                       )}
@@ -250,7 +200,7 @@ export function SharePromptModal({
 
             {/* Prompt Text — identical bubble styling (bg / rounding / padding) to a real sent message bubble */}
             {promptText && (
-              <p className="bg-bubble dark:bg-[#2F2F2F] text-foreground text-[15px] sm:text-[15.5px] leading-relaxed rounded-2xl sm:rounded-3xl px-4 sm:px-5 py-2.5 sm:py-3 max-w-[85%] whitespace-pre-wrap break-words">
+              <p className="bg-foreground dark:bg-[#2F2F2F] text-background dark:text-foreground text-[15px] sm:text-[15.5px] leading-relaxed rounded-2xl sm:rounded-3xl px-4 sm:px-5 py-2.5 sm:py-3 max-w-[85%] whitespace-pre-wrap break-words">
                 {promptText}
               </p>
             )}
@@ -280,7 +230,7 @@ export function SharePromptModal({
               )}
             </div>
             <span className="text-md font-normal text-foreground select-none">
-              {linkCopied ? "Copied!" : "Copy"}
+              {linkCopied ? "Copied" : "Copy"}
             </span>
           </button>
 

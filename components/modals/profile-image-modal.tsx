@@ -150,7 +150,7 @@ export function ProfileImageModal({
             </Avatar>
 
             {/* Camera badge button at bottom-right (loader spins here on save) */}
-            <div className="absolute bottom-0 right-1 w-7 h-7 rounded-full bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/80 dark:border-none flex items-center justify-center shadow-lg transition-transform">
+            <div className="absolute bottom-0 right-1 w-7 h-7 rounded-full bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/80 dark:border-none flex items-center justify-center transition-transform">
               {loading ? (
                 <Loader className="w-5 h-5 animate-spin text-muted-foreground hover:text-foreground" />
               ) : (

@@ -44,7 +44,7 @@ import toast from "@/lib/toast";
 import { DeleteModal } from "@/components/modals/delete-modal";
 
 export default function ActiveChatPage() {
-  const { user, token, loading } = useAuth();
+  const { user, token, loading, isSigningOut } = useAuth();
   const router = useRouter();
   const params = useParams();
   const chatId = params.id as string;
@@ -73,10 +73,12 @@ export default function ActiveChatPage() {
   const [pendingMessage, setPendingMessage] = useState<{
     content: string;
     files: File[];
+    isThinkMode?: boolean;
   } | null>(null);
   const [selectedModel, setSelectedModel] = useState("GPT-5.4");
   const [selectedModelTier, setSelectedModelTier] = useState(4);
   const [showScrollBottom, setShowScrollBottom] = useState(false);
+  const [thinkMode, setThinkMode] = useState(false);
   const autoSendTriggeredRef = useRef(false);
   const isAutoScrollPinnedRef = useRef(true);
 
@@ -87,9 +89,10 @@ export default function ActiveChatPage() {
     if (!scrollContainerRef.current) return;
     const { scrollTop, scrollHeight, clientHeight } =
       scrollContainerRef.current;
-    const isScrolledUp = scrollHeight - scrollTop - clientHeight > 80;
-    setShowScrollBottom(isScrolledUp);
-    isAutoScrollPinnedRef.current = !isScrolledUp;
+    const distanceToBottom = scrollHeight - scrollTop - clientHeight;
+    const isAtBottom = distanceToBottom <= 25;
+    setShowScrollBottom(!isAtBottom);
+    isAutoScrollPinnedRef.current = isAtBottom;
   };
 
   const dockRef = useRef<HTMLDivElement>(null);
@@ -160,8 +163,11 @@ export default function ActiveChatPage() {
           if (autoData?.model) {
             setSelectedModel(autoData.model);
           }
+          if (autoData?.think) {
+            setThinkMode(true);
+          }
           if (autoData?.prompt) {
-            setPendingMessage({ content: autoData.prompt, files: [] });
+            setPendingMessage({ content: autoData.prompt, files: [], isThinkMode: !!autoData?.think });
             setIsTyping(true);
           }
         } catch (e) {}
@@ -176,13 +182,13 @@ export default function ActiveChatPage() {
   }, [chatId]);
 
   useEffect(() => {
-    if (!loading && !user) {
+    if (!loading && !user && !isSigningOut) {
       router.push("/auth/login");
     } else if (user && chatId) {
       loadChat();
       loadChats();
     }
-  }, [user, loading, chatId, router]);
+  }, [user, loading, isSigningOut, chatId, router]);
 
   // Auto-focus chat input on load / reload (matching s/[id] behavior)
   useEffect(() => {
@@ -255,7 +261,10 @@ export default function ActiveChatPage() {
             if (autoData?.model) {
               setSelectedModel(autoData.model);
             }
-            triggerAiGeneration(autoData.prompt, autoData?.model);
+            if (autoData?.think) {
+              setThinkMode(true);
+            }
+            triggerAiGeneration(autoData.prompt, autoData?.model, !!autoData?.think);
           }
         }
       }
@@ -307,8 +316,8 @@ export default function ActiveChatPage() {
     }
 
     let displayed = "";
-    const step = Math.max(1, Math.min(3, Math.ceil(tokens.length / 100)));
-    const intervalMs = 18;
+    const step = Math.max(1, Math.min(4, Math.ceil(tokens.length / 60)));
+    const intervalMs = 10;
 
     for (let i = 0; i < tokens.length; i += step) {
       if (streamAbortControllerRef.current) {
@@ -354,10 +363,12 @@ export default function ActiveChatPage() {
 
   const triggerAiGeneration = async (
     promptText: string,
-    modelOverride?: string
+    modelOverride?: string,
+    thinkOverride?: boolean
   ) => {
+    const isThink = thinkOverride !== undefined ? thinkOverride : thinkMode;
     setIsTyping(true);
-    setPendingMessage({ content: promptText, files: [] });
+    setPendingMessage({ content: promptText, files: [], isThinkMode: isThink });
     isAutoScrollPinnedRef.current = true;
     setShowScrollBottom(false);
     setTimeout(forceScrollToBottom, 0);
@@ -376,6 +387,7 @@ export default function ActiveChatPage() {
         headers["Authorization"] = `Bearer ${authToken}`;
       }
 
+      const reqStart = Date.now();
       const response = await fetch("/api/chat", {
         method: "POST",
         headers,
@@ -384,6 +396,7 @@ export default function ActiveChatPage() {
           message: promptText,
           files: [],
           model: modelOverride || selectedModel,
+          think: isThink,
         }),
       });
 
@@ -393,6 +406,17 @@ export default function ActiveChatPage() {
       }
 
       const result = await response.json();
+      const actualElapsedSecs = Math.max(1, Math.round((Date.now() - reqStart) / 1000));
+      if (result.assistantMessage) {
+        if (isThink || result.assistantMessage.metadata?.think) {
+          result.assistantMessage.metadata = {
+            ...(result.assistantMessage.metadata || {}),
+            think: true,
+            thinkTime: actualElapsedSecs,
+          };
+        }
+      }
+
       if (result.assistantMessage && result.userMessage) {
         await streamAssistantResponse(
           result.userMessage,
@@ -537,7 +561,7 @@ export default function ActiveChatPage() {
 
     setInputValue("");
     setUploadedFiles([]);
-    setPendingMessage({ content: messageContent, files: currentFiles });
+    setPendingMessage({ content: messageContent, files: currentFiles, isThinkMode: thinkMode });
     setIsTyping(true);
     isAutoScrollPinnedRef.current = true;
     setShowScrollBottom(false);
@@ -581,6 +605,7 @@ export default function ActiveChatPage() {
         setIsUploading(false);
       }
 
+      const reqStart = Date.now();
       const response = await fetch("/api/chat", {
         method: "POST",
         headers,
@@ -589,6 +614,7 @@ export default function ActiveChatPage() {
           message: messageContent,
           files: fileData,
           model: selectedModel,
+          think: thinkMode,
         }),
       });
 
@@ -598,6 +624,17 @@ export default function ActiveChatPage() {
       }
 
       const result = await response.json();
+      const actualElapsedSecs = Math.max(1, Math.round((Date.now() - reqStart) / 1000));
+      if (result.assistantMessage) {
+        if (thinkMode || result.assistantMessage.metadata?.think) {
+          result.assistantMessage.metadata = {
+            ...(result.assistantMessage.metadata || {}),
+            think: true,
+            thinkTime: actualElapsedSecs,
+          };
+        }
+      }
+
       if (result.userMessage && result.assistantMessage) {
         await streamAssistantResponse(
           result.userMessage,
@@ -615,9 +652,46 @@ export default function ActiveChatPage() {
       setInputValue(messageContent);
       setUploadedFiles(currentFiles);
       setIsTyping(false);
+      setIsUploading(false);
       setPendingMessage(null);
     } finally {
       setIsUploading(false);
+    }
+  };
+
+  const handleDeleteMessage = async (messageId: string, messageIndex: number) => {
+    if (!chatId || isTyping) return;
+    try {
+      let actualIndex = messages.findIndex((m) => m.id === messageId);
+      if (actualIndex === -1 && typeof messageIndex === "number" && messages[messageIndex]) {
+        actualIndex = messageIndex;
+      }
+      const targetMsg = actualIndex !== -1 ? messages[actualIndex] : null;
+      if (!targetMsg) return;
+
+      const trueId = targetMsg.id;
+      let pairedAssistantId: string | undefined = undefined;
+      if (
+        targetMsg.role === "user" &&
+        actualIndex + 1 < messages.length &&
+        messages[actualIndex + 1]?.role === "assistant"
+      ) {
+        pairedAssistantId = messages[actualIndex + 1].id;
+      }
+
+      const idsToRemove = new Set([trueId]);
+      if (pairedAssistantId) {
+        idsToRemove.add(pairedAssistantId);
+      }
+      setMessages((prev) => prev.filter((m) => !idsToRemove.has(m.id)));
+
+      await chatService.deleteMessage(supabase, trueId, pairedAssistantId, chatId);
+      toast.success("Message deleted");
+      await loadChats();
+    } catch (error: any) {
+      console.error("Error deleting message:", error);
+      toast.error(error.message || "Failed to delete message");
+      await loadChat();
     }
   };
 
@@ -746,7 +820,7 @@ export default function ActiveChatPage() {
                   ) : (
                     <Upload className="w-4 h-4 shrink-0 text-muted-foreground group-hover:text-foreground" />
                   )}
-                  <span className="inline">Share</span>
+                  <span className="inline hidden sm:block">Share</span>
                 </button>
               </TooltipTrigger>
               <TooltipContent side="bottom" sideOffset={6} className="text-md">
@@ -860,11 +934,26 @@ export default function ActiveChatPage() {
         <div
           ref={scrollContainerRef}
           onScroll={handleScroll}
-          className="flex-1 w-full overflow-x-hidden relative no-overscroll flex flex-col pt-14 scroll-smooth overflow-y-scroll [scrollbar-gutter:stable]"
+          onWheel={(e) => {
+            if (e.deltaY < 0) {
+              isAutoScrollPinnedRef.current = false;
+              setShowScrollBottom(true);
+            }
+          }}
+          onTouchMove={() => {
+            if (scrollContainerRef.current) {
+              const { scrollTop, scrollHeight, clientHeight } = scrollContainerRef.current;
+              if (scrollHeight - scrollTop - clientHeight > 25) {
+                isAutoScrollPinnedRef.current = false;
+                setShowScrollBottom(true);
+              }
+            }
+          }}
+          className="flex-1 w-full overflow-x-hidden relative no-overscroll flex flex-col pt-14 overflow-y-scroll [scrollbar-gutter:stable]"
         >
           <div className="flex-1 flex flex-col min-h-full">
             {/* Messages Container or Loader */}
-            {isChatLoading ? (
+            {isChatLoading && !pendingMessage && messages.length === 0 ? (
               <div className="flex-1 w-full h-full flex flex-col items-center justify-center pb-16 text-muted-foreground">
                 <Loader className="w-6 h-6 animate-spin text-muted-foreground" />
               </div>
@@ -877,6 +966,7 @@ export default function ActiveChatPage() {
                   pendingMessage={pendingMessage}
                   onRegenerate={handleRegenerate}
                   onEditAndResend={handleEditAndResend}
+                  onDeleteMessage={handleDeleteMessage}
                 />
               </div>
             )}
@@ -908,6 +998,8 @@ export default function ActiveChatPage() {
                   onModelChange={setSelectedModel}
                   selectedTier={selectedModelTier}
                   onTierChange={setSelectedModelTier}
+                  thinkMode={thinkMode}
+                  onThinkModeChange={setThinkMode}
                 >
                   {/* Dynamic Floating Scroll-to-Bottom Button — stays right above input pill */}
                   <AnimatePresence>

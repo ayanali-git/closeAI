@@ -55,7 +55,7 @@ export default function ResearchOverviewPage() {
       {/* Hero Research Spotlight */}
       <div className="rounded-3xl border border-border/80 dark:border-none bg-gradient-to-br from-indigo-950/40 via-card to-background p-8 sm:p-12 mb-16">
         <div className="flex items-center gap-2 mb-4">
-          <span className="w-2.5 h-2.5 rounded-full bg-indigo-400" />
+          <span className="w-2.5 h-2.5 rounded-full bg-indigo-400 animate-pulse" />
           <span className="text-md font-semibold uppercase tracking-wider text-indigo-400">
             Featured Breakthrough
           </span>
@@ -70,7 +70,7 @@ export default function ResearchOverviewPage() {
           href="/c"
           className="group inline-flex items-center text-md font-semibold uppercase tracking-wider text-foreground"
         >
-          <span>Try in CloseAI Chat</span>
+          <span>Try it now</span>
           <AnimatedArrow size={18} />
         </Link>
       </div>

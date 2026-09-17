@@ -454,3 +454,15 @@ html:not(.dark) .token.important {
 .footer-group:has(a:hover) a:hover {
   color: hsl(var(--foreground)) !important;
 }
+
+@keyframes chat-title-marquee {
+  0% {
+    transform: translateX(0);
+  }
+  40%, 50% {
+    transform: translateX(calc(-1 * var(--marquee-dist, 0px)));
+  }
+  60%, 100% {
+    transform: translateX(0);
+  }
+}

@@ -18,6 +18,7 @@ export interface Message {
   createdAt: string;
   chatId: string;
   files?: any[];
+  metadata?: any;
 }
 
 export const chatService = {
@@ -106,9 +107,62 @@ export const chatService = {
         chatId: msg.chat_id,
         files: (msg.file_uploads && msg.file_uploads.length > 0)
           ? msg.file_uploads
-          : (msg.metadata?.files || [])
+          : (msg.metadata?.files || []),
+        metadata: msg.metadata || null,
       }))
     };
+  },
+
+  async deleteMessage(
+    supabase: SupabaseClient,
+    messageId: string,
+    pairedAssistantMessageId?: string,
+    chatId?: string
+  ) {
+    const ids = [messageId];
+    if (pairedAssistantMessageId) {
+      ids.push(pairedAssistantMessageId);
+    }
+
+    // 1. Try server endpoint which uses supabaseAdmin with service role privileges
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData?.session?.access_token;
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+      };
+      if (token) {
+        headers["Authorization"] = `Bearer ${token}`;
+      }
+
+      const res = await fetch("/api/chat", {
+        method: "DELETE",
+        headers,
+        body: JSON.stringify({
+          messageId,
+          pairedAssistantId: pairedAssistantMessageId,
+          chatId,
+        }),
+      });
+
+      if (res.ok) {
+        return;
+      }
+    } catch (apiErr) {
+      console.warn("API message delete failed, falling back to direct delete:", apiErr);
+    }
+
+    // 2. Direct client fallback
+    try {
+      await supabase.from("file_uploads").delete().in("message_id", ids);
+    } catch (e) {}
+
+    const { error } = await supabase
+      .from("messages")
+      .delete()
+      .in("id", ids);
+
+    if (error) throw error;
   },
 
   async deleteChat(supabase: SupabaseClient, chatId: string) {

@@ -39,6 +39,7 @@ import {
   MoreHorizontal,
   Pencil,
   Upload,
+  Trash2,
 } from "lucide-react";
 import {
   Tooltip,
@@ -48,12 +49,21 @@ import {
 import { cn } from "@/lib/utils";
 import toast from "@/lib/toast";
 import { SharePromptModal } from "@/components/modals/share-prompt-modal";
+import { DeleteMessageModal } from "@/components/modals/delete-message-modal";
+import { ThinkReasoning } from "@/components/chat/think-reasoning";
+import { FilePreviewModal } from "@/components/modals/file-preview-modal";
+import { ImagePreview } from "@/components/ui/image-preview";
+import { getFileIconInfo } from "@/lib/file-utils";
 
 export interface MessageListProps {
   messages: Message[];
   user: User | null;
   isTyping: boolean;
-  pendingMessage: { content: string; files: any[] } | null;
+  pendingMessage: {
+    content: string;
+    files: any[];
+    isThinkMode?: boolean;
+  } | null;
   onRegenerate?: (message?: Message, index?: number) => void;
   onEditMessage?: (content: string) => void;
   onEditAndResend?: (
@@ -61,6 +71,7 @@ export interface MessageListProps {
     newContent: string,
     messageIndex: number
   ) => void;
+  onDeleteMessage?: (messageId: string, messageIndex: number) => void;
   showMessageActions?: boolean;
 }
 
@@ -248,7 +259,7 @@ function CodeBlock({ language, code }: { language: string; code: string }) {
             : "rounded-t-2xl sm:rounded-t-3xl"
         )}
       >
-        <span className="font-mono text-base lowercase font-medium tracking-wide text-muted-foreground hover:text-foreground">
+        <span className="font-mono text-base lowercase font-medium tracking-wide text-foreground">
           {displayLang}
         </span>
 
@@ -256,12 +267,11 @@ function CodeBlock({ language, code }: { language: string; code: string }) {
           type="button"
           onClick={handleCopy}
           className="
+            group/copy-btn
             flex items-center gap-1.5
             px-2 py-2
             rounded-full
             text-base
-            text-muted-foreground
-            hover:text-foreground
             hover:bg-neutral-200/80
             dark:hover:bg-white/10
             transition-colors
@@ -271,13 +281,13 @@ function CodeBlock({ language, code }: { language: string; code: string }) {
         >
           {copied ? (
             <>
-              <Check className="w-4 h-4" />
-              <span className="font-medium">Copied!</span>
+              <Check className="w-4 h-4 text-muted-foreground group-hover/copy-btn:text-foreground transition-colors" />
+              <span className="font-medium text-foreground">Copied</span>
             </>
           ) : (
             <>
-              <Copy className="w-4 h-4" />
-              <span className="font-medium">Copy</span>
+              <Copy className="w-4 h-4 text-muted-foreground group-hover/copy-btn:text-foreground transition-colors" />
+              <span className="font-medium text-foreground">Copy</span>
             </>
           )}
         </button>
@@ -326,7 +336,13 @@ function isImageFile(file: any): boolean {
   return false;
 }
 
-function MessageAttachmentItem({ file }: { file: any }) {
+function MessageAttachmentItem({
+  file,
+  onPreview,
+}: {
+  file: any;
+  onPreview?: (file: any) => void;
+}) {
   const isImg = isImageFile(file);
   const [imgSrc, setImgSrc] = useState<string>(() => {
     if (file?.url && typeof file.url === "string") return file.url;
@@ -353,34 +369,39 @@ function MessageAttachmentItem({ file }: { file: any }) {
   }, [file]);
 
   const displayName = file?.filename || file?.name || "File";
+  const { Icon, label, colorClass, badgeBg } = getFileIconInfo(file);
 
   if (isImg && imgSrc) {
     return (
-      <a
-        href={imgSrc}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="group relative block overflow-hidden rounded-xl bg-neutral-100 dark:bg-[#262626] transition-all max-w-[100px] sm:max-w-[150px] cursor-pointer select-none"
-        title={displayName}
-      >
-        <img
-          src={imgSrc}
-          alt={displayName}
-          className="w-full max-h-[180px] sm:max-h-[220px] object-cover rounded-xl transition-transform"
-          loading="lazy"
-        />
-      </a>
+      <ImagePreview src={imgSrc} alt={displayName}>
+        <div
+          className="group relative block overflow-hidden rounded-xl bg-neutral-100 dark:bg-[#262626] border border-border/60 transition-all max-w-[100px] sm:max-w-[150px] cursor-pointer select-none hover:opacity-90"
+          title={`Preview ${displayName}`}
+        >
+          <img
+            src={imgSrc}
+            alt={displayName}
+            className="w-full max-h-[180px] sm:max-h-[220px] object-cover rounded-xl transition-transform group-hover:scale-105"
+            loading="lazy"
+          />
+        </div>
+      </ImagePreview>
     );
   }
 
-  // Non-image file pill
+  // Non-image file pill with simple Phosphor icon and ext badge
   return (
-    <div className="flex items-center gap-1.5 bg-secondary text-foreground text-sm sm:text-[14px] px-3 py-1.5 rounded-full border border-border/80">
-      <Paperclip className="w-4 h-4 text-muted-foreground" />
-      <span className="truncate max-w-[130px] sm:max-w-[160px] font-medium">
+    <button
+      type="button"
+      onClick={() => onPreview?.(file)}
+      className="flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-foreground text-xs sm:text-sm px-3 py-1.5 rounded-full border border-border/80 transition-colors cursor-pointer group select-none text-left"
+      title={`Preview ${displayName}`}
+    >
+      <Icon className="w-4 h-4 shrink-0 text-muted-foreground" weight="fill" />
+      <span className="truncate max-w-[140px] sm:max-w-[180px] font-medium">
         {displayName}
       </span>
-    </div>
+    </button>
   );
 }
 
@@ -434,6 +455,7 @@ export function MessageList({
   onRegenerate,
   onEditMessage,
   onEditAndResend,
+  onDeleteMessage,
   showMessageActions = true,
 }: MessageListProps) {
   const scrollBottomRef = useRef<HTMLDivElement>(null);
@@ -457,6 +479,13 @@ export function MessageList({
     files?: any[];
   } | null>(null);
   const [loadingShareId, setLoadingShareId] = useState<string | null>(null);
+  const [deleteMessageTarget, setDeleteMessageTarget] = useState<{
+    id: string;
+    index: number;
+    content: string;
+    files?: any[];
+  } | null>(null);
+  const [previewFile, setPreviewFile] = useState<any>(null);
 
   // Sync feedback state from cookie on mount
   useEffect(() => {
@@ -664,6 +693,7 @@ export function MessageList({
                       <MessageAttachmentItem
                         key={file.id || file.url || i}
                         file={file}
+                        onPreview={setPreviewFile}
                       />
                     ))}
                   </div>
@@ -671,7 +701,7 @@ export function MessageList({
 
                 {isEditing ? (
                   /* Inline Editor */
-                  <div className="w-full bg-bubble dark:bg-[#2F2F2F] rounded-2xl sm:rounded-3xl p-3 sm:p-4 border">
+                  <div className="w-full bg-foreground dark:bg-[#2F2F2F] rounded-2xl sm:rounded-3xl p-3 sm:p-4 border">
                     <textarea
                       ref={editTextareaRef}
                       value={editDraftText}
@@ -695,14 +725,14 @@ export function MessageList({
                         Math.max(editDraftText.split("\n").length, 2),
                         8
                       )}
-                      className="w-full bg-transparent border-0 outline-none focus:outline-none focus:ring-0 resize-none text-[15px] sm:text-[15.5px] leading-relaxed text-foreground placeholder:text-muted-foreground select-text"
+                      className="w-full bg-transparent border-0 outline-none focus:outline-none focus:ring-0 resize-none text-[15px] sm:text-[15.5px] leading-relaxed text-background dark:text-foreground placeholder:text-muted-foreground select-text"
                       autoFocus
                     />
                     <div className="flex items-center justify-end gap-2 mt-2 pt-1 select-none">
                       <button
                         type="button"
                         onClick={cancelEditing}
-                        className="px-3 py-1.5 rounded-full text-[15px] font-medium bg-neutral-200 dark:bg-neutral-800 hover:bg-neutral-300 dark:hover:bg-neutral-700 text-foreground transition-colors cursor-pointer"
+                        className="px-3.5 py-1.5 rounded-full text-[15px] font-medium bg-white/10 hover:bg-white/20 active:bg-white/25 text-white transition-colors cursor-pointer"
                       >
                         Cancel
                       </button>
@@ -711,10 +741,10 @@ export function MessageList({
                         onClick={() => submitEdit(msg, index)}
                         disabled={!editDraftText.trim()}
                         className={cn(
-                          "px-4 py-1.5 rounded-full text-[15px] font-medium transition-all cursor-pointer",
+                          "px-4 py-1.5 rounded-full text-[15px] font-medium transition-all",
                           editDraftText.trim()
-                            ? "bg-foreground text-background hover:opacity-90 active:scale-95"
-                            : "bg-neutral-300 dark:bg-[#484848] text-muted-foreground/60 cursor-not-allowed opacity-60"
+                            ? "bg-white text-black hover:bg-white/90 active:scale-95 cursor-pointer"
+                            : "bg-white/20 text-white/40 cursor-not-allowed"
                         )}
                       >
                         Send
@@ -724,12 +754,13 @@ export function MessageList({
                 ) : (
                   <>
                     {/* User Bubble Capsule */}
-                    <div className="bg-bubble dark:bg-[#2F2F2F] text-foreground text-[15px] sm:text-[15.5px] leading-relaxed rounded-2xl sm:rounded-3xl px-4 sm:px-5 py-2.5 sm:py-3 max-w-[85%] sm:max-w-[75%] whitespace-pre-wrap select-text break-words">
+                    <div className="bg-foreground dark:bg-[#2F2F2F] text-background dark:text-foreground text-[15px] sm:text-[15.5px] leading-relaxed rounded-2xl sm:rounded-3xl px-4 sm:px-5 py-2.5 sm:py-3 max-w-[85%] sm:max-w-[75%] whitespace-pre-wrap select-text break-words">
                       {msg.content}
                     </div>
 
                     {/* User Hover Actions Toolbar */}
                     <div className="flex items-center gap-1 mt-1.5 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+                      {/* 1. Copy message */}
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <button
@@ -754,6 +785,31 @@ export function MessageList({
                         </TooltipContent>
                       </Tooltip>
 
+                      {/* 2. Edit prompt */}
+                      {(onEditAndResend || onEditMessage) &&
+                        !isThisMsgThinking && (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <button
+                                type="button"
+                                onClick={() => startEditing(msgId, msg.content)}
+                                className="p-1.5 rounded-sm hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                                aria-label="Edit prompt"
+                              >
+                                <Pencil className="w-4 h-4" />
+                              </button>
+                            </TooltipTrigger>
+                            <TooltipContent
+                              side="bottom"
+                              sideOffset={4}
+                              className="text-md"
+                            >
+                              Edit prompt
+                            </TooltipContent>
+                          </Tooltip>
+                        )}
+
+                      {/* 3. Share prompt */}
                       {!isThisMsgThinking && (
                         <Tooltip>
                           <TooltipTrigger asChild>
@@ -790,28 +846,35 @@ export function MessageList({
                         </Tooltip>
                       )}
 
-                      {(onEditAndResend || onEditMessage) &&
-                        !isThisMsgThinking && (
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <button
-                                type="button"
-                                onClick={() => startEditing(msgId, msg.content)}
-                                className="p-1.5 rounded-sm hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
-                                aria-label="Edit message"
-                              >
-                                <Pencil className="w-4 h-4" />
-                              </button>
-                            </TooltipTrigger>
-                            <TooltipContent
-                              side="bottom"
-                              sideOffset={4}
-                              className="text-md"
+                      {/* 4. Delete message */}
+                      {onDeleteMessage && !isThisMsgThinking && (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setDeleteMessageTarget({
+                                  id: msgId,
+                                  index,
+                                  content: msg.content,
+                                  files: msg.files,
+                                })
+                              }
+                              className="p-1.5 rounded-sm hover:bg-secondary text-muted-foreground hover:text-destructive transition-colors cursor-pointer"
+                              aria-label="Delete message"
                             >
-                              Edit message
-                            </TooltipContent>
-                          </Tooltip>
-                        )}
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </TooltipTrigger>
+                          <TooltipContent
+                            side="bottom"
+                            sideOffset={4}
+                            className="text-md"
+                          >
+                            Delete message
+                          </TooltipContent>
+                        </Tooltip>
+                      )}
                     </div>
                   </>
                 )}
@@ -823,6 +886,21 @@ export function MessageList({
           return (
             <div key={msgId} className="w-full group space-y-2">
               <div className="w-full space-y-3">
+                {/* Collapsed Thought for Xs if this message was generated in think mode */}
+                {msg.metadata?.think && (
+                  <div className="pt-1 pb-1">
+                    <ThinkReasoning
+                      isThinking={false}
+                      promptText={
+                        index > 0 && messages[index - 1]?.role === "user"
+                          ? messages[index - 1]?.content
+                          : undefined
+                      }
+                      thinkingSteps={msg.metadata?.thinkingSteps}
+                      elapsedSeconds={msg.metadata?.thinkTime || 5}
+                    />
+                  </div>
+                )}
                 {/* Message Content */}
                 <div className="chat-markdown text-foreground select-text text-[15px] sm:text-[15.5px] leading-7 break-words w-full">
                   <ReactMarkdown
@@ -970,6 +1048,18 @@ export function MessageList({
                           >
                             {children}
                           </code>
+                        );
+                      },
+                      img({ src, alt }: any) {
+                        if (!src) return null;
+                        return (
+                          <div className="my-4 max-w-lg">
+                            <ImagePreview
+                              src={src}
+                              alt={alt || "Image preview"}
+                              className="rounded-xl border border-border/60 max-h-[420px] object-contain cursor-pointer hover:opacity-95 transition-opacity"
+                            />
+                          </div>
                         );
                       },
                     }}
@@ -1145,11 +1235,15 @@ export function MessageList({
             {pendingMessage.files.length > 0 && (
               <div className="flex flex-wrap gap-2.5 mb-2.5 justify-end items-end">
                 {pendingMessage.files.map((file, i) => (
-                  <MessageAttachmentItem key={i} file={file} />
+                  <MessageAttachmentItem
+                    key={i}
+                    file={file}
+                    onPreview={setPreviewFile}
+                  />
                 ))}
               </div>
             )}
-            <div className="bg-bubble dark:bg-[#2F2F2F] text-foreground text-[15px] sm:text-[15.5px] leading-relaxed rounded-2xl sm:rounded-3xl px-4 sm:px-5 py-2.5 sm:py-3 max-w-[85%] sm:max-w-[75%] whitespace-pre-wrap select-text break-words">
+            <div className="bg-foreground dark:bg-[#2F2F2F] text-background dark:text-foreground text-[15px] sm:text-[15.5px] leading-relaxed rounded-2xl sm:rounded-3xl px-4 sm:px-5 py-2.5 sm:py-3 max-w-[85%] sm:max-w-[75%] whitespace-pre-wrap select-text break-words">
               {pendingMessage.content}
             </div>
 
@@ -1191,10 +1285,26 @@ export function MessageList({
             messages[messages.length - 1]?.role === "user" ||
             (messages[messages.length - 1]?.role === "assistant" &&
               !messages[messages.length - 1]?.content)) && (
-            <div className="flex gap-2.5 sm:gap-3 items-center py-2">
-              <span className="text-[14px] sm:text-[14.5px] font-medium text-muted-foreground animate-pulse">
-                Thinking...
-              </span>
+            <div className="py-2">
+              {pendingMessage?.isThinkMode ? (
+                <ThinkReasoning
+                  isThinking={true}
+                  promptText={
+                    pendingMessage?.content ||
+                    (messages.length &&
+                    messages[messages.length - 1]?.role === "user"
+                      ? messages[messages.length - 1]?.content
+                      : "")
+                  }
+                />
+              ) : (
+                <div className="py-2 flex items-center">
+                  <span
+                    className="w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full bg-foreground animate-pulse inline-block"
+                    aria-label="Generating"
+                  />
+                </div>
+              )}
             </div>
           )}
 
@@ -1208,6 +1318,29 @@ export function MessageList({
         }}
         promptText={sharePromptMsg?.text || ""}
         files={sharePromptMsg?.files}
+      />
+
+      <DeleteMessageModal
+        open={!!deleteMessageTarget}
+        onOpenChange={(open) => {
+          if (!open) setDeleteMessageTarget(null);
+        }}
+        promptText={deleteMessageTarget?.content || ""}
+        files={deleteMessageTarget?.files}
+        onConfirm={() => {
+          if (deleteMessageTarget && onDeleteMessage) {
+            onDeleteMessage(deleteMessageTarget.id, deleteMessageTarget.index);
+            setDeleteMessageTarget(null);
+          }
+        }}
+      />
+
+      <FilePreviewModal
+        open={!!previewFile}
+        onOpenChange={(open) => {
+          if (!open) setPreviewFile(null);
+        }}
+        file={previewFile}
       />
     </>
   );

@@ -76,6 +76,7 @@ export default function LoginPage() {
           redirectTo: getAuthCallbackUrl('/c'),
           queryParams: {
             access_type: 'offline',
+            prompt: 'select_account',
           },
         },
       });

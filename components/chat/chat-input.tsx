@@ -33,6 +33,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { PlusMenuContent } from "./plus-menu-content";
+import { FilePreviewModal } from "@/components/modals/file-preview-modal";
+import { ImagePreview } from "@/components/ui/image-preview";
+import { getFileIconInfo } from "@/lib/file-utils";
 import { cn } from "@/lib/utils";
 import toast from "@/lib/toast";
 
@@ -52,120 +55,90 @@ interface ChatInputProps {
   onModelChange?: (model: string) => void;
   selectedTier?: number;
   onTierChange?: (tier: number) => void;
-}
-
-/** Get a human-readable file type label */
-function getFileTypeLabel(file: File): string {
-  const ext = file.name.split(".").pop()?.toLowerCase() || "";
-  const mime = file.type;
-
-  if (mime.startsWith("image/")) return "Image";
-  if (mime.startsWith("video/")) return "Video";
-  if (mime.startsWith("audio/")) return "Audio";
-
-  const codeExts: Record<string, string> = {
-    tsx: "TypeScript",
-    ts: "TypeScript",
-    jsx: "JavaScript",
-    js: "JavaScript",
-    py: "Python",
-    rb: "Ruby",
-    go: "Go",
-    rs: "Rust",
-    java: "Java",
-    c: "C",
-    cpp: "C++",
-    h: "Header",
-    cs: "C#",
-    swift: "Swift",
-    kt: "Kotlin",
-    vue: "Vue",
-    svelte: "Svelte",
-    html: "HTML",
-    xml: "XML",
-    yaml: "YAML",
-    yml: "YAML",
-    toml: "TOML",
-    sh: "Shell",
-    bash: "Shell",
-    zsh: "Shell",
-    css: "CSS",
-    scss: "SCSS",
-    sass: "SASS",
-    less: "LESS",
-    json: "JSON",
-    jsonl: "JSON",
-    md: "Markdown",
-    mdx: "Markdown",
-    sql: "SQL",
-    php: "PHP",
-  };
-
-  if (codeExts[ext]) return codeExts[ext];
-  if (["txt", "log", "csv"].includes(ext)) return "Text";
-  if (["pdf"].includes(ext)) return "PDF";
-  if (["doc", "docx"].includes(ext)) return "Document";
-  if (["xls", "xlsx"].includes(ext)) return "Spreadsheet";
-  if (["ppt", "pptx"].includes(ext)) return "Presentation";
-  if (["zip", "tar", "gz", "rar", "7z"].includes(ext)) return "Archive";
-
-  return "File";
-}
-
-/** Get icon component for file type */
-function getFileIcon(file: File) {
-  const mime = file.type;
-  const ext = file.name.split(".").pop()?.toLowerCase() || "";
-
-  if (mime.startsWith("image/")) return ImageIcon;
-  if (mime.startsWith("video/")) return Film;
-  if (mime.startsWith("audio/")) return Music;
-
-  const codeExtensions = [
-    "tsx", "ts", "jsx", "js", "py", "rb", "go", "rs", "java", "c", "cpp", "h",
-    "cs", "swift", "kt", "vue", "svelte", "html", "xml", "yaml", "yml", "toml",
-    "sh", "bash", "zsh", "css", "scss", "sass", "less", "json", "sql", "php"
-  ];
-  if (codeExtensions.includes(ext)) return Code;
-
-  return FileText;
+  thinkMode?: boolean;
+  onThinkModeChange?: (enabled: boolean) => void;
 }
 
 /** preview card with thumbnail or code icon */
-function FilePreviewCard({ file, onRemove }: { file: File; onRemove: () => void }) {
+function FilePreviewCard({
+  file,
+  onRemove,
+  onPreview,
+}: {
+  file: File;
+  onRemove: () => void;
+  onPreview?: () => void;
+}) {
   const [imageUrl, setImageUrl] = useState<string | null>(null);
 
+  const isImage =
+    file.type.startsWith("image/") ||
+    /\.(jpg|jpeg|png|webp|gif|svg|bmp|ico|avif)$/i.test(file.name);
+
   useEffect(() => {
-    if (file.type.startsWith("image/")) {
+    if (isImage) {
       const url = URL.createObjectURL(file);
       setImageUrl(url);
       return () => {
         URL.revokeObjectURL(url);
       };
     }
-  }, [file]);
+  }, [file, isImage]);
 
-  const Icon = getFileIcon(file);
-  const typeLabel = getFileTypeLabel(file);
+  const { Icon, label, colorClass, badgeBg } = getFileIconInfo(file);
 
+  // For images: show ONLY preview without details
+  if (isImage) {
+    return (
+      <div
+        className="relative group inline-block select-none"
+        title={`Preview ${file.name}`}
+      >
+        <ImagePreview src={imageUrl || ""} alt={file.name}>
+          <div className="w-14 h-14 rounded-2xl overflow-hidden bg-neutral-100 dark:bg-[#262626] border border-neutral-200/90 dark:border-white/10 flex items-center justify-center shrink-0 hover:opacity-90 active:scale-[0.98] transition-all cursor-pointer">
+            {imageUrl ? (
+              <img
+                src={imageUrl}
+                alt={file.name}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <Icon className="w-5 h-5 text-neutral-700 dark:text-neutral-300" />
+            )}
+          </div>
+        </ImagePreview>
+        {/* Remove button */}
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            onRemove();
+          }}
+          className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-white/90 dark:bg-neutral-800/90 backdrop-blur-sm border border-neutral-300/90 dark:border-white/20 text-neutral-600 dark:text-neutral-300 hover:text-neutral-900 dark:hover:text-white hover:bg-white dark:hover:bg-neutral-700 flex items-center justify-center cursor-pointer transition-transform z-10"
+          aria-label="Remove image"
+        >
+          <X className="w-2.5 h-2.5 stroke-[2.5]" />
+        </button>
+      </div>
+    );
+  }
+
+  // For non-image files: show full details (file icon, name, type)
   return (
-    <div className="relative group flex items-center gap-2.5 bg-neutral-100 dark:bg-[#262626] border border-neutral-200/90 dark:border-white/10 rounded-2xl p-2 pr-4 text-foreground min-w-0">
-      {/* File type icon or Image preview */}
+    <div
+      onClick={onPreview}
+      className="relative group flex items-center gap-2.5 bg-neutral-100 dark:bg-[#262626] hover:bg-neutral-200/80 dark:hover:bg-[#303030] border border-neutral-200/90 dark:border-white/10 rounded-2xl p-2 pr-4 text-foreground min-w-0 cursor-pointer select-none transition-colors"
+      title={`Preview ${file.name}`}
+    >
+      {/* File type icon */}
       <div className="w-10 h-10 rounded-xl overflow-hidden bg-white dark:bg-neutral-800 border border-neutral-200/80 dark:border-white/5 flex items-center justify-center shrink-0">
-        {imageUrl ? (
-          <img src={imageUrl} alt={file.name} className="w-full h-full object-cover" />
-        ) : (
-          <Icon className="w-4 h-4 text-neutral-700 dark:text-neutral-300" />
-        )}
+        <Icon className="w-5 h-5 text-neutral-700 dark:text-neutral-300" weight="fill" />
       </div>
 
       {/* File info */}
-      <div className="flex flex-col min-w-0 pr-0.5">
-        <span className="text-[15px] font-semibold text-neutral-900 dark:text-neutral-100 truncate max-w-[130px] sm:max-w-[160px] leading-tight">
+      <div className="flex flex-col min-w-0 pr-0.5 justify-center">
+        <span className="text-[14.5px] font-semibold text-neutral-900 dark:text-neutral-100 truncate max-w-[140px] sm:max-w-[180px] leading-tight">
           {file.name}
-        </span>
-        <span className="text-[11.5px] text-neutral-500 dark:text-neutral-400 capitalize leading-tight mt-0.5">
-          {typeLabel}
         </span>
       </div>
 
@@ -176,7 +149,7 @@ function FilePreviewCard({ file, onRemove }: { file: File; onRemove: () => void 
           e.stopPropagation();
           onRemove();
         }}
-        className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-white/90 dark:bg-neutral-800/90 backdrop-blur-sm border border-neutral-300/90 dark:border-white/20 text-neutral-600 dark:text-neutral-300 hover:text-neutral-900 dark:hover:text-white hover:bg-white dark:hover:bg-neutral-700 flex items-center justify-center cursor-pointer"
+        className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-white/90 dark:bg-neutral-800/90 backdrop-blur-sm border border-neutral-300/90 dark:border-white/20 text-neutral-600 dark:text-neutral-300 hover:text-neutral-900 dark:hover:text-white hover:bg-white dark:hover:bg-neutral-700 flex items-center justify-center cursor-pointer transition-transform z-10"
         aria-label="Remove file"
       >
         <X className="w-2.5 h-2.5 stroke-[2.5]" />
@@ -202,6 +175,8 @@ export const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(function Cha
     onModelChange,
     selectedTier = 4,
     onTierChange,
+    thinkMode = false,
+    onThinkModeChange,
   },
   ref
 ) {
@@ -219,6 +194,7 @@ export const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(function Cha
   const recognitionRef = useRef<any>(null);
   const cursorPositionRef = useRef<number | null>(null);
   const [currentModel, setCurrentModel] = useState(selectedModel);
+  const [previewFile, setPreviewFile] = useState<File | null>(null);
 
   useEffect(() => {
     if (selectedModel) {
@@ -609,17 +585,21 @@ export const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(function Cha
         <TooltipTrigger asChild>
           <button
             type="button"
-            onClick={(e) => e.preventDefault()}
-            style={{ cursor: "not-allowed" }}
-            className="flex items-center gap-1 px-1.5 sm:px-2.5 py-1 rounded-full text-[13px] sm:text-[14px] font-medium text-muted-foreground/50 opacity-60 cursor-not-allowed select-none bg-transparent hover:bg-transparent shrink-0"
-            aria-label="Think mode (Coming soon)"
+            onClick={() => onThinkModeChange?.(!thinkMode)}
+            className={cn(
+              "h-9 sm:h-10 px-2.5 sm:px-3 rounded-full flex items-center justify-center gap-1.5 text-[13px] sm:text-[14px] font-medium select-none transition-all shrink-0 cursor-pointer",
+              thinkMode
+                ? "bg-foreground dark:bg-[#2F2F2F] text-background dark:text-foreground hover:opacity-90"
+                : "text-muted-foreground hover:text-foreground hover:bg-secondary"
+            )}
+            aria-label="Think"
           >
-            <Brain className="w-5 h-5 text-muted-foreground/50 pointer-events-none" />
-            <span className="pointer-events-none hidden sm:inline">Think</span>
+            <Brain className="w-4 h-4 sm:w-5 sm:h-5" />
+            <span className="hidden sm:inline">Think</span>
           </button>
         </TooltipTrigger>
         <TooltipContent className="text-md">
-          Coming soon
+          Think
         </TooltipContent>
       </Tooltip>
 
@@ -727,7 +707,12 @@ export const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(function Cha
         {uploadedFiles.length > 0 && (
           <div className="flex flex-wrap gap-2 px-1 pt-1 pb-2">
             {uploadedFiles.map((file, i) => (
-              <FilePreviewCard key={i} file={file} onRemove={() => removeFile(i)} />
+              <FilePreviewCard
+                key={i}
+                file={file}
+                onRemove={() => removeFile(i)}
+                onPreview={() => setPreviewFile(file)}
+              />
             ))}
           </div>
         )}
@@ -866,6 +851,14 @@ export const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(function Cha
           </p>
         </div>
       )}
+
+      <FilePreviewModal
+        open={!!previewFile}
+        onOpenChange={(open) => {
+          if (!open) setPreviewFile(null);
+        }}
+        file={previewFile}
+      />
     </div>
   );
 });

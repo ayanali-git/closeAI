@@ -44,7 +44,7 @@ export default function EnterprisePage() {
           Empower your teams with industry-leading intelligence, enterprise security, and administrative governance designed for global scale.
         </p>
         <div className="flex flex-wrap items-center gap-4">
-          <Button asChild variant="outline" size="lg" className="rounded-full px-8 border-border hover:bg-secondary">
+          <Button asChild variant="outline" size="lg" className="rounded-full px-8 border border-border/80 dark:border-none hover:bg-secondary">
             <Link href="/product/pricing">View Pricing</Link>
           </Button>
           <Button asChild size="lg" className="group rounded-full px-8 bg-foreground text-background hover:opacity-90">
@@ -63,7 +63,7 @@ export default function EnterprisePage() {
           return (
             <div
               key={i}
-              className="p-8 rounded-3xl border border-border/50 bg-card transition-all flex flex-col justify-between"
+              className="p-8 rounded-3xl border border-border/80 dark:border-none bg-card transition-all flex flex-col justify-between"
             >
               <div>
                 <div className="w-12 h-12 rounded-2xl bg-secondary flex items-center justify-center mb-6">
@@ -78,7 +78,7 @@ export default function EnterprisePage() {
       </div>
 
       {/* Customer Trust Banner */}
-      <div className="rounded-3xl border border-border/60 bg-gradient-to-br from-card via-card to-secondary/30 p-10 sm:p-14 text-center">
+      <div className="rounded-3xl border border-border/80 dark:border-none bg-gradient-to-br from-card via-card to-secondary/30 p-10 sm:p-14 text-center">
         <h2 className="text-2xl sm:text-4xl font-semibold text-foreground mb-4">
           Trusted by high-growth engineering and creative teams worldwide
         </h2>

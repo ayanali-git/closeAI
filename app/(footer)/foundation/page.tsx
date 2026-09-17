@@ -71,7 +71,7 @@ export default function FoundationPage() {
         </p>
         <Button asChild className="group rounded-full px-8 h-12 bg-foreground text-background hover:opacity-90">
           <Link href="/company/contact" className="flex items-center">
-            <span>Submit Grant Proposal</span>
+            <span>Submit Proposal</span>
             <AnimatedArrow size={18} />
           </Link>
         </Button>

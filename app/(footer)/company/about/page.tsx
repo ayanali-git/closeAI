@@ -26,7 +26,7 @@ export default function AboutPage() {
             { icon: Building2, title: "Long-term Focus", desc: "We prioritize long-term safety and capabilities over short-term gains." },
             { icon: Users, title: "Collaboration", desc: "Working with the global research community to tackle grand challenges." }
           ].map((principle, i) => (
-            <div key={i} className="p-6 bg-card border border-border rounded-2xl">
+            <div key={i} className="p-6 bg-card border border-border/80 dark:border-none rounded-2xl">
               <principle.icon className="h-6 w-6 mb-4 text-foreground" />
               <h3 className="text-lg font-medium mb-2">{principle.title}</h3>
               <p className="text-muted-foreground text-base sm:text-base">{principle.desc}</p>

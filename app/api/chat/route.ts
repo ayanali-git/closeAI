@@ -10,7 +10,7 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        const { message, chatId, files, truncateMessageId, model } = await request.json();
+        const { message, chatId, files, truncateMessageId, model, think } = await request.json();
 
         if (!message || typeof message !== 'string') {
             return NextResponse.json({ error: 'Message is required' }, { status: 400 });
@@ -115,9 +115,10 @@ export async function POST(request: NextRequest) {
             ?.map((f: any) => f.url) || [];
 
         // Generate AI response
+        const genStartTime = Date.now();
         let aiResponse;
         try {
-            aiResponse = await aiService.generateResponse(aiMessages, undefined, imageUrls, model || "GPT-5.4");
+            aiResponse = await aiService.generateResponse(aiMessages, undefined, imageUrls, model || "GPT-5.4", !!think);
         } catch (aiError: any) {
             console.error('AI generation error:', aiError);
             aiResponse = {
@@ -125,14 +126,24 @@ export async function POST(request: NextRequest) {
             };
         }
 
-        // Save assistant message
+        // Save assistant message with dynamic think metadata
+        const actualGenSeconds = Math.max(1, Math.round((Date.now() - genStartTime) / 1000));
+        const thinkTime = think ? actualGenSeconds : undefined;
+        const assistantMetadata: Record<string, any> = {
+            model: model || "GPT-5.4",
+            think: !!think,
+        };
+        if (thinkTime) {
+            assistantMetadata.thinkTime = thinkTime;
+        }
+
         const { data: assistantMessage, error: assistantMsgError } = await supabaseAdmin
             .from('messages')
             .insert({
                 chat_id: currentChatId,
                 role: 'assistant',
                 content: aiResponse.content,
-                metadata: model ? { model } : null,
+                metadata: assistantMetadata,
             })
             .select()
             .single();
@@ -165,6 +176,7 @@ export async function POST(request: NextRequest) {
                 createdAt: assistantMessage.created_at,
                 chatId: currentChatId,
                 model: model || "GPT-5.4",
+                metadata: assistantMetadata,
             },
         });
 
@@ -174,5 +186,85 @@ export async function POST(request: NextRequest) {
             { error: error.message || 'Internal server error' },
             { status: 500 }
         );
+    }
+}
+
+export async function DELETE(request: NextRequest) {
+    try {
+        const { user, error: authError } = await getServerAuthUser(request);
+        if (authError || !user) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+
+        const { messageId, pairedAssistantId, chatId } = await request.json();
+
+        if (!messageId) {
+            return NextResponse.json({ error: 'messageId is required' }, { status: 400 });
+        }
+
+        // Verify chat ownership if chatId provided
+        if (chatId) {
+            const { data: chat, error: chatError } = await supabaseAdmin
+                .from('chats')
+                .select('id')
+                .eq('id', chatId)
+                .eq('user_id', user.id)
+                .single();
+
+            if (chatError || !chat) {
+                return NextResponse.json({ error: 'Chat not found or unauthorized' }, { status: 404 });
+            }
+        } else {
+            // Verify message ownership through chat
+            const { data: msg } = await supabaseAdmin
+                .from('messages')
+                .select('chat_id')
+                .eq('id', messageId)
+                .single();
+
+            if (msg) {
+                const { data: chat } = await supabaseAdmin
+                    .from('chats')
+                    .select('id')
+                    .eq('id', msg.chat_id)
+                    .eq('user_id', user.id)
+                    .single();
+
+                if (!chat) {
+                    return NextResponse.json({ error: 'Unauthorized to delete this message' }, { status: 403 });
+                }
+            }
+        }
+
+        const ids = [messageId];
+        if (pairedAssistantId) {
+            ids.push(pairedAssistantId);
+        }
+
+        // Delete associated file uploads
+        try {
+            await supabaseAdmin
+                .from('file_uploads')
+                .delete()
+                .in('message_id', ids);
+        } catch (fileErr) {
+            console.warn('Error deleting message files:', fileErr);
+        }
+
+        // Delete message(s)
+        const { error: delError } = await supabaseAdmin
+            .from('messages')
+            .delete()
+            .in('id', ids);
+
+        if (delError) {
+            console.error('Error deleting messages:', delError);
+            return NextResponse.json({ error: delError.message || 'Failed to delete message' }, { status: 500 });
+        }
+
+        return NextResponse.json({ success: true });
+    } catch (error: any) {
+        console.error('Delete message error:', error);
+        return NextResponse.json({ error: error.message || 'Internal server error' }, { status: 500 });
     }
 }

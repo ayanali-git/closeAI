@@ -14,7 +14,7 @@ function extractKeyTopic(prompt?: string): string {
   if (!prompt || !prompt.trim()) return "";
   const cleaned = prompt
     .replace(
-      /^(can you|could you|please|help me|i want to|i need to|write a|write an|write|create a|create|generate a|generate|draft a|draft|build a|build|explain|how do i|how to)\s+/i,
+      /^(can you|could you|please|help me|i want to|i need to|write a|write an|write|create a|create|generate a|generate|draft a|draft|build a|build|explain|how do i|how to)\\s+/i,
       ""
     )
     .replace(/[?.!]+$/, "")
@@ -164,6 +164,26 @@ function getDynamicSteps(prompt?: string): string[] {
   ];
 }
 
+/**
+ * Format seconds into dynamic human-readable duration: "3s", "1m 24s", "2h 5m 10s"
+ */
+function formatDuration(totalSeconds: number): string {
+  const secs = Math.max(1, Math.round(totalSeconds));
+  if (secs < 60) return `${secs}s`;
+  const hours = Math.floor(secs / 3600);
+  const minutes = Math.floor((secs % 3600) / 60);
+  const remainingSecs = secs % 60;
+
+  if (hours > 0) {
+    const parts: string[] = [`${hours}h`];
+    if (minutes > 0) parts.push(`${minutes}m`);
+    if (remainingSecs > 0) parts.push(`${remainingSecs}s`);
+    return parts.join(" ");
+  }
+
+  return remainingSecs > 0 ? `${minutes}m ${remainingSecs}s` : `${minutes}m`;
+}
+
 export function ThinkReasoning({
   isThinking = false,
   promptText,
@@ -175,7 +195,6 @@ export function ThinkReasoning({
     return getDynamicSteps(promptText);
   }, [thinkingSteps, promptText]);
 
-  const [activeSteps, setActiveSteps] = useState<string[]>(baseSentences);
   const [phase, setPhase] = useState<"thinking" | "done">(isThinking ? "thinking" : "done");
   const [revealed, setRevealed] = useState<number>(isThinking ? 1 : baseSentences.length);
   const [open, setOpen] = useState<boolean>(isThinking);
@@ -187,13 +206,16 @@ export function ThinkReasoning({
   const startTsRef = useRef<number>(Date.now());
   const timerRef = useRef<any>(null);
   const stepTimerRef = useRef<any>(null);
+  const stepsEndRef = useRef<HTMLDivElement>(null);
 
-  // Sync active steps if baseSentences changes
+  // Auto-scroll the thinking steps panel as new steps appear
   useEffect(() => {
-    setActiveSteps(baseSentences);
-  }, [baseSentences]);
+    if (isThinking && open && stepsEndRef.current) {
+      stepsEndRef.current.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }
+  }, [revealed, isThinking, open]);
 
-  // Live timer & progressive step stream when isThinking is active
+  // Live timer & progressive step reveal when isThinking is active
   useEffect(() => {
     if (isThinking) {
       setPhase("thinking");
@@ -208,37 +230,27 @@ export function ThinkReasoning({
         setLiveSeconds(secs);
       }, 1000);
 
-      // Progressively reveal sentences one by one like AI agents / Codex
-      let currentIdx = 1;
+      // Progressively reveal sentences one by one (capped at baseSentences.length — NO repeats)
       stepTimerRef.current = setInterval(() => {
-        setActiveSteps((prev) => {
-          // If we ever reach the end of initial steps, dynamically generate next deep-dive steps
-          if (currentIdx >= prev.length) {
-            const nextStepNumber = prev.length + 1;
-            const dynamicExtensions = [
-              "Deepening contextual assessment and validating secondary constraints.",
-              "Refining edge-case permutations and cross-referencing domain requirements.",
-              "Conducting secondary sanity pass across synthesized concepts.",
-              "Synthesizing final high-precision response structure.",
-              "Polishing response formatting and preparing answer output.",
-            ];
-            const extra =
-              dynamicExtensions[(nextStepNumber - 1) % dynamicExtensions.length];
-            return [...prev, extra];
+        setRevealed((prev) => {
+          if (prev < baseSentences.length) {
+            return prev + 1;
+          }
+          // All unique steps revealed — stop the interval, no more steps to add
+          if (stepTimerRef.current) {
+            clearInterval(stepTimerRef.current);
+            stepTimerRef.current = null;
           }
           return prev;
         });
-
-        currentIdx += 1;
-        setRevealed(currentIdx);
       }, 1700);
 
       return () => {
         if (timerRef.current) clearInterval(timerRef.current);
         if (stepTimerRef.current) clearInterval(stepTimerRef.current);
       };
-    } else {
-      // Done thinking
+    } else if (phase === "thinking") {
+      // Transitioning from live thinking to done
       if (timerRef.current) clearInterval(timerRef.current);
       if (stepTimerRef.current) clearInterval(stepTimerRef.current);
 
@@ -246,28 +258,23 @@ export function ThinkReasoning({
       const finalSecs = elapsedSeconds !== undefined ? elapsedSeconds : diff;
       setActualDuration(finalSecs);
 
-      // Calculate how many steps correspond to the duration (approx 1 step per 1.7s, min 3)
-      const targetCount = Math.min(
-        activeSteps.length,
-        Math.max(3, Math.round(finalSecs / 1.7))
-      );
-      setRevealed(targetCount);
+      // Show all unique base steps when done (no duplicates, no repeats)
+      setRevealed(baseSentences.length);
       setOpen(false);
 
       const t = setTimeout(() => setPhase("done"), 250);
       return () => clearTimeout(t);
     }
-  }, [isThinking, elapsedSeconds]);
+  }, [isThinking, elapsedSeconds, phase, baseSentences.length]);
 
   const done = phase === "done";
-  const count = done
-    ? Math.min(
-        activeSteps.length,
-        Math.max(3, Math.round((elapsedSeconds ?? actualDuration) / 1.7))
-      )
-    : Math.min(revealed, activeSteps.length);
 
-  const visibleSentences = activeSteps.slice(0, count);
+  // When done, show all base steps. When thinking, show revealed count.
+  const visibleCount = done
+    ? baseSentences.length
+    : Math.min(revealed, baseSentences.length);
+
+  const visibleSentences = baseSentences.slice(0, visibleCount);
 
   const displayElapsed = done
     ? elapsedSeconds !== undefined
@@ -275,146 +282,29 @@ export function ThinkReasoning({
       : actualDuration
     : liveSeconds;
 
+  const formattedElapsed = formatDuration(displayElapsed);
+
   const toggle = () => {
     setOpen((prev) => !prev);
   };
 
   return (
-    <div className="tr-container">
-      <style jsx global>{`
-        .tr-container {
-          display: flex;
-          flex-direction: column;
-          width: 100%;
-          max-width: 100%;
-          font-family: inherit;
-          animation: tr-block-in 240ms cubic-bezier(0.22, 1, 0.36, 1) both;
-          user-select: none;
-        }
-        @keyframes tr-block-in {
-          from { opacity: 0; transform: translateY(2px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        .tr-header {
-          display: inline-flex;
-          align-items: center;
-          gap: 6px;
-          align-self: flex-start;
-          min-height: 22px;
-          padding: 0;
-          border: 0;
-          background: transparent;
-          cursor: pointer;
-          outline: none;
-        }
-        .tr-label {
-          font-size: 13.5px;
-          line-height: 18px;
-          font-weight: 500;
-          color: var(--tre-label, #737373);
-          letter-spacing: -0.005em;
-        }
-        .tr-verb {
-          color: var(--tre-verb, #a3a3a3);
-        }
-        .tr-collapsible {
-          display: grid;
-          grid-template-rows: 1fr;
-          opacity: 1;
-          transition: grid-template-rows 280ms cubic-bezier(0.22, 1, 0.36, 1), opacity 200ms ease;
-        }
-        .tr-collapsible.is-collapsed {
-          grid-template-rows: 0fr;
-          opacity: 0;
-          pointer-events: none;
-        }
-        .tr-inner {
-          min-height: 0;
-          overflow: hidden;
-        }
-        .tr-stream {
-          display: flex;
-          flex-direction: column;
-          gap: 2.5px;
-          margin-top: 6px;
-          overflow: visible;
-        }
-        .tr-sentence {
-          margin: 0;
-          padding: 1.5px 0;
-          line-height: 20px;
-          font-size: 13.5px;
-          font-weight: 400;
-          color: var(--tre-sentence, #8e8e8e);
-          letter-spacing: -0.005em;
-          user-select: text;
-          animation: tr-sentence-fade-in 320ms cubic-bezier(0.16, 1, 0.3, 1) both;
-        }
-        @keyframes tr-sentence-fade-in {
-          from {
-            opacity: 0;
-            transform: translateY(3px);
-            filter: blur(2px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-            filter: blur(0);
-          }
-        }
-        .tr-shimmer {
-          color: transparent;
-          -webkit-text-fill-color: transparent;
-          background: linear-gradient(
-            90deg,
-            #8e8e8e 0%,
-            #8e8e8e 30%,
-            rgba(220, 220, 220, 0.9) 50%,
-            #8e8e8e 70%,
-            #8e8e8e 100%
-          );
-          background-size: 300% 100%;
-          -webkit-background-clip: text;
-          background-clip: text;
-          animation: tr-shine 2.25s cubic-bezier(0.25, 0.1, 0.25, 1) infinite;
-        }
-        @keyframes tr-shine {
-          0%, 18% { background-position: 100% 0; }
-          82%, 100% { background-position: 0% 0; }
-        }
-        :root,
-        [data-theme="light"] {
-          --tre-label: #737373;
-          --tre-verb: #171717;
-          --tre-chevron: #737373;
-          --tre-sentence: #666666;
-          --tre-hover: #171717;
-        }
-        :root.dark,
-        [data-theme="dark"],
-        .dark {
-          --tre-label: #737373;
-          --tre-verb: #e5e5e5;
-          --tre-chevron: #737373;
-          --tre-sentence: #8e8e8e;
-          --tre-hover: #f5f5f5;
-        }
-      `}</style>
-
+    <div className="flex flex-col w-full max-w-full select-none">
       <button
         type="button"
-        className="tr-header group"
+        className="inline-flex items-center gap-1.5 self-start min-h-[22px] p-0 border-0 bg-transparent cursor-pointer outline-none select-none group"
         aria-expanded={open}
         aria-label="Toggle thought"
         onClick={toggle}
       >
         {done ? (
-          <span className="tr-label">
-            <span className="tr-verb font-medium text-foreground">Thought</span> for {displayElapsed}s
+          <span className="text-[13.5px] leading-[18px] font-normal text-muted-foreground tracking-[-0.005em]">
+            <span className="font-medium text-foreground">Thought</span> for {formattedElapsed}
           </span>
         ) : (
-          <span className="tr-label tr-shimmer">
-            Thinking… <span className="font-normal text-xs text-muted-foreground/80">{displayElapsed}s</span>
+          <span className="inline-flex items-center gap-1.5 text-[13.5px] leading-[18px] text-muted-foreground">
+            <span className="font-medium animate-shimmer-text text-muted-foreground">Thinking…</span>
+            <span className="font-normal text-xs opacity-80 text-muted-foreground">{formattedElapsed}</span>
           </span>
         )}
         <AnimatedChevron
@@ -427,17 +317,21 @@ export function ThinkReasoning({
         />
       </button>
 
-      <div className={`tr-collapsible ${open ? "" : "is-collapsed"}`}>
-        <div className="tr-inner">
-          <div className="tr-stream">
+      {open && (
+        <div className="mt-1.5 overflow-hidden">
+          <div className="flex flex-col gap-1 max-h-[480px] overflow-y-auto scrollbar-thin pr-1 select-text">
             {visibleSentences.map((line, i) => (
-              <p key={i} className="tr-sentence">
+              <p
+                key={`${i}-${line}`}
+                className="m-0 py-0.5 text-[13.5px] leading-5 text-muted-foreground/90 select-text"
+              >
                 {line}
               </p>
             ))}
+            <div ref={stepsEndRef} />
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

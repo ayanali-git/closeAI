@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   LinkedinLogoIcon,
   XLogoIcon,
@@ -70,6 +70,48 @@ export function SharePromptModal({
   const [linkCopied, setLinkCopied] = useState(false);
   const [isCopyingLink, setIsCopyingLink] = useState(false);
   const [isMobileScreen, setIsMobileScreen] = useState(false);
+
+  const cardRef = useRef<HTMLDivElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
+  const [brandingRightOffset, setBrandingRightOffset] = useState<number | null>(null);
+
+  // Measure preview card content edge to align CloseAI line-to-line with the rightmost content boundary
+  useEffect(() => {
+    if (!open) return;
+
+    const updateRightOffset = () => {
+      if (cardRef.current && contentRef.current) {
+        const cardRect = cardRef.current.getBoundingClientRect();
+        const contentRect = contentRef.current.getBoundingClientRect();
+        const offset = Math.round(cardRect.right - contentRect.right);
+        if (offset > 0) {
+          setBrandingRightOffset(offset);
+        }
+      }
+    };
+
+    updateRightOffset();
+    const rafId = requestAnimationFrame(updateRightOffset);
+    const timerId = setTimeout(updateRightOffset, 60);
+    const timerId2 = setTimeout(updateRightOffset, 200);
+
+    const observer = new ResizeObserver(() => {
+      updateRightOffset();
+    });
+
+    if (cardRef.current) observer.observe(cardRef.current);
+    if (contentRef.current) observer.observe(contentRef.current);
+
+    window.addEventListener("resize", updateRightOffset);
+
+    return () => {
+      cancelAnimationFrame(rafId);
+      clearTimeout(timerId);
+      clearTimeout(timerId2);
+      observer.disconnect();
+      window.removeEventListener("resize", updateRightOffset);
+    };
+  }, [open, promptText, files]);
 
   // Mirrors BottomSheet's own breakpoint so the header X only shows on desktop,
   // where BottomSheet renders as a centered modal with no other close affordance.
@@ -141,73 +183,83 @@ export function SharePromptModal({
             <button
               type="button"
               onClick={() => onOpenChange(false)}
-              className="p-1.5 rounded-sm flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors cursor-pointer shrink-0"
+              className="p-2.5 rounded-sm flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors cursor-pointer shrink-0"
               aria-label="Close"
             >
-              <XIcon className="w-4 h-4" weight="bold" />
+              <XIcon className="w-5 h-5" weight="bold" />
             </button>
           )}
         </div>
 
         {/* Preview Card — renders the prompt exactly like a real sent message */}
-        <div className="relative w-full rounded-2xl overflow-hidden dark:bg-neutral-800 dark:bg-[#1a1a1a]">
-          {/* Bottom gradient overlay — fades into the CloseAI branding */}
-          <div className="absolute bottom-0 left-0 right-0 h-1/2 z-10 pointer-events-none bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
-
+        <div ref={cardRef} className="relative w-full rounded-2xl sm:rounded-3xl overflow-hidden dark:bg-neutral-800 border border-border/80 dark:border-none">
+          {/* Scrollable / Max Prompt Viewport */}
           <div
             className={cn(
-              "relative z-0 min-h-[300px] sm:min-h-[330px] flex flex-col items-end justify-start gap-2.5 px-5 sm:px-6 pt-5 sm:pt-6 pb-12 sm:pb-14",
+              "relative z-0 max-h-[380px] sm:max-h-[420px] overflow-y-auto min-h-[300px] sm:min-h-[330px] flex flex-col items-end justify-start gap-2.5 px-5 sm:px-6 pt-5 sm:pt-6 pb-24 sm:pb-28 select-text code-scroll",
+              "[scrollbar-color:hsl(var(--muted-foreground)/0.4)_transparent] [&::-webkit-scrollbar-track]:!bg-transparent [&::-webkit-scrollbar-corner]:!bg-transparent [&::-webkit-scrollbar-button]:!hidden",
               // Both states pin to the top of the card, share preview — no vertical centering gap above the content.
             )}
+            style={{
+              scrollbarColor: "hsl(var(--muted-foreground) / 0.4) transparent",
+            }}
           >
-            {/* Files Preview — same small-thumbnail treatment as a real message attachment, not a big stretched square */}
-            {hasFiles && (
-              <div className="flex flex-wrap gap-1.5 justify-end items-end select-none">
-                {files!.map((file: any, i: number) => {
-                  const fileUrl = file.url || file.publicUrl;
-                  const isImage = isImageFile(file, fileUrl);
-                  const { Icon, colorClass, badgeBg } = getFileIconInfo(file);
-                  const displayName = file.name || file.filename || "File";
-                  return (
-                    <div
-                      key={file.id || i}
-                      className={cn(
-                        "overflow-hidden bg-secondary border border-border/80",
-                        isImage
-                          ? "rounded-xl max-w-[100px] sm:max-w-[150px]"
-                          : "rounded-full max-w-full"
-                      )}
-                    >
-                      {isImage && fileUrl ? (
-                        <img
-                          src={fileUrl}
-                          alt={displayName}
-                          className="w-full max-h-[180px] sm:max-h-[220px] object-cover rounded-xl"
-                        />
-                      ) : (
-                        <div className="flex items-center gap-2 px-3 py-1.5 text-xs sm:text-sm text-foreground">
-                          <Icon className="w-4 h-4 shrink-0 text-muted-foreground" weight="fill" />
-                          <span className="truncate max-w-[140px] sm:max-w-[180px] font-medium">
-                            {displayName}
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            )}
+            <div ref={contentRef} className="w-full flex flex-col items-end justify-start gap-2.5">
+              {/* Files Preview — same small-thumbnail treatment as a real message attachment, not a big stretched square */}
+              {hasFiles && (
+                <div className="flex flex-wrap gap-1.5 justify-end items-end select-none">
+                  {files!.map((file: any, i: number) => {
+                    const fileUrl = file.url || file.publicUrl;
+                    const isImage = isImageFile(file, fileUrl);
+                    const { Icon, colorClass, badgeBg } = getFileIconInfo(file);
+                    const displayName = file.name || file.filename || "File";
+                    return (
+                      <div
+                        key={file.id || i}
+                        className={cn(
+                          "overflow-hidden bg-secondary border border-border/80",
+                          isImage
+                            ? "rounded-xl max-w-[100px] sm:max-w-[150px]"
+                            : "rounded-full max-w-full"
+                        )}
+                      >
+                        {isImage && fileUrl ? (
+                          <img
+                            src={fileUrl}
+                            alt={displayName}
+                            className="w-full max-h-[180px] sm:max-h-[220px] object-cover rounded-xl"
+                          />
+                        ) : (
+                          <div className="flex items-center gap-2 px-3 py-1.5 text-xs sm:text-sm text-foreground">
+                            <Icon className="w-4 h-4 shrink-0 text-muted-foreground" weight="fill" />
+                            <span className="truncate max-w-[140px] sm:max-w-[180px] font-medium">
+                              {displayName}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
 
-            {/* Prompt Text — identical bubble styling (bg / rounding / padding) to a real sent message bubble */}
-            {promptText && (
-              <p className="bg-foreground dark:bg-[#2F2F2F] text-background dark:text-foreground text-[15px] sm:text-[15.5px] leading-relaxed rounded-2xl sm:rounded-3xl px-4 sm:px-5 py-2.5 sm:py-3 max-w-[85%] whitespace-pre-wrap break-words">
-                {promptText}
-              </p>
-            )}
+              {/* Prompt Text — identical bubble styling (bg / rounding / padding) to a real sent message bubble */}
+              {promptText && (
+                <p className="bg-bubble dark:bg-[#2F2F2F] text-foreground text-[15px] sm:text-[15.5px] leading-relaxed rounded-2xl sm:rounded-3xl px-4 sm:px-5 py-2.5 sm:py-3 max-w-[85%] whitespace-pre-wrap break-words">
+                  {promptText}
+                </p>
+              )}
+            </div>
           </div>
 
+          {/* Bottom gradient overlay — 25% full fade, stops before scrollbar like c/id and s/id */}
+          <div className="absolute bottom-0 left-0 right-4 sm:right-5 h-[25%] min-h-[95px] sm:min-h-[105px] z-10 pointer-events-none bg-gradient-to-t from-background via-background/90 to-transparent dark:from-neutral-800 dark:via-neutral-800/95 to-transparent" />
+
           {/* CloseAI Branding */}
-          <div className="absolute right-5 sm:right-6 bottom-4 sm:bottom-5 z-20">
+          <div
+            className="absolute right-5 sm:right-6 bottom-4 sm:bottom-5 z-20 pointer-events-none transition-[right] duration-75"
+            style={brandingRightOffset !== null ? { right: `${brandingRightOffset}px` } : undefined}
+          >
             <span className="text-2xl font-bold text-muted-foreground tracking-tight select-none">
               CloseAI
             </span>

@@ -451,6 +451,7 @@ export interface AnimatedComingSoonTextProps {
   comingSoonText?: string;
   align?: "start" | "center";
   className?: string;
+  isHovered?: boolean;
 }
 
 export function AnimatedComingSoonText({
@@ -458,6 +459,7 @@ export function AnimatedComingSoonText({
   comingSoonText = "Coming soon",
   align = "start",
   className,
+  isHovered,
 }: AnimatedComingSoonTextProps) {
   const ref = useRef<HTMLSpanElement>(null);
   const [hovered, setHovered] = useState(false);
@@ -561,7 +563,7 @@ export function AnimatedComingSoonText({
     };
   }, [clicked]);
 
-  const isActive = hovered || clicked;
+  const isActive = isHovered !== undefined ? isHovered : (hovered || clicked);
   const motionVal = useMotionValue(+!!isActive);
   const spring = useSpring(motionVal, { stiffness: 450, damping: 28 });
 

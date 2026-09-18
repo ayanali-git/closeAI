@@ -274,28 +274,6 @@ export function Footer() {
                 <li>
                   <Link
                     href="/product/api-docs"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 text-foreground transition-colors"
-                  >
-                    <span>Docs</span>
-                    <ArrowUpRight className="w-4 h-4 stroke-[2.5]" />
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    href="/product/api-docs"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 text-foreground transition-colors"
-                  >
-                    <span>Resources</span>
-                    <ArrowUpRight className="w-4 h-4 stroke-[2.5]" />
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    href="/product/api-docs"
                     className="inline-flex items-center gap-1 text-foreground transition-colors"
                   >
                     <span>Developer Forum</span>
@@ -322,14 +300,6 @@ export function Footer() {
                 </li>
                 <li>
                   <Link
-                    href="/foundation"
-                    className="inline-flex items-center gap-1 text-foreground transition-colors"
-                  >
-                    Our Charter
-                  </Link>
-                </li>
-                <li>
-                  <Link
                     href="/company/careers"
                     target="_blank"
                     rel="noopener noreferrer"
@@ -345,6 +315,14 @@ export function Footer() {
                     className="inline-flex items-center gap-1 text-foreground transition-colors"
                   >
                     News
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/company/contact"
+                    className="inline-flex items-center gap-1 text-foreground transition-colors"
+                  >
+                    Contact Us
                   </Link>
                 </li>
               </ul>
@@ -388,25 +366,6 @@ export function Footer() {
                     className="inline-flex items-center gap-1 text-foreground transition-colors"
                   >
                     Podcast
-                  </Link>
-                </li>
-              </ul>
-            </div>
-
-            <div className="space-y-3">
-              <h4 className="text-md font-semibold text-muted-foreground uppercase tracking-wider">
-                Support
-              </h4>
-              <ul className="footer-group space-y-2.5 text-md">
-                <li>
-                  <Link
-                    href="/support/help"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 text-foreground transition-colors"
-                  >
-                    <span>Help Center</span>
-                    <ArrowUpRight className="w-4 h-4 stroke-[2.5]" />
                   </Link>
                 </li>
               </ul>
@@ -477,6 +436,25 @@ export function Footer() {
                     className="inline-flex items-center gap-1 text-foreground transition-colors"
                   >
                     Privacy Policy
+                  </Link>
+                </li>
+              </ul>
+            </div>
+
+            <div className="space-y-3">
+              <h4 className="text-md font-semibold text-muted-foreground uppercase tracking-wider">
+                Support
+              </h4>
+              <ul className="footer-group space-y-2.5 text-md">
+                <li>
+                  <Link
+                    href="/support/help"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 text-foreground transition-colors"
+                  >
+                    <span>Help Center</span>
+                    <ArrowUpRight className="w-4 h-4 stroke-[2.5]" />
                   </Link>
                 </li>
               </ul>

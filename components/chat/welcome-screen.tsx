@@ -1,16 +1,18 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { User } from "@supabase/supabase-js";
 
 interface WelcomeScreenProps {
   user?: User | null;
+  resetKey?: number | string;
   onPromptSelect?: (prompt: string) => void;
   children?: React.ReactNode;
 }
 
 export function WelcomeScreen({
   user,
+  resetKey,
   onPromptSelect,
   children,
 }: WelcomeScreenProps) {
@@ -18,7 +20,21 @@ export function WelcomeScreen({
     "What would you like to explore?"
   );
 
+  // Maintain a single stable random index for this new chat session.
+  // It will NEVER re-roll when switching tabs or when the user object is re-referenced.
+  const chosenSeedRef = useRef<number | null>(null);
+  const lastResetKeyRef = useRef<number | string | undefined>(resetKey);
+
+  if (lastResetKeyRef.current !== resetKey) {
+    lastResetKeyRef.current = resetKey;
+    chosenSeedRef.current = Math.floor(Math.random() * 1000);
+  }
+
   useEffect(() => {
+    if (chosenSeedRef.current === null) {
+      chosenSeedRef.current = Math.floor(Math.random() * 1000);
+    }
+
     const rawName =
       user?.user_metadata?.name ||
       user?.user_metadata?.full_name ||
@@ -65,9 +81,9 @@ export function WelcomeScreen({
           "What are we building today?",
         ];
 
-    const randomIndex = Math.floor(Math.random() * titlesWithUser.length);
-    setDynamicTitle(titlesWithUser[randomIndex]);
-  }, [user]);
+    const listIndex = chosenSeedRef.current % titlesWithUser.length;
+    setDynamicTitle(titlesWithUser[listIndex]);
+  }, [user, resetKey]);
 
   return (
     <div className="flex-1 w-full h-full flex flex-col items-center justify-center text-center select-none pb-6 sm:pb-8">

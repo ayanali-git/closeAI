@@ -209,7 +209,7 @@ export default function LandingPage() {
                 placeholder="Ask about anything"
                 rows={3}
                 disabled={isSubmitting}
-                className="w-full bg-transparent resize-none text-[17px] font-normal text-foreground placeholder:text-muted-foreground focus:placeholder:text-foreground transition-colors outline-none border-none ring-0 leading-relaxed"
+                className="w-full bg-transparent resize-none text-[17px] font-normal text-muted-foreground transition-colors outline-none border-none ring-0 leading-relaxed"
               />
               <div
                 className="flex items-center justify-end pt-3"
@@ -266,14 +266,12 @@ export default function LandingPage() {
                     handlePillClick(pill.prompt);
                   }}
                   className={cn(
-                    "px-4 py-3 rounded-full text-md sm:text-[15px] transition-all outline-none focus:outline-none focus-visible:outline-none focus:ring-0 focus-visible:ring-0 ring-0",
+                    "px-4 py-3 rounded-full text-md sm:text-[15px] transition-all outline-none focus:outline-none focus-visible:outline-none focus:ring-0 focus-visible:ring-0 ring-0 border border-border/80 dark:border-none backdrop-blur-sm",
                     pill.disabled
-                      ? "cursor-not-allowed select-none bg-white/50 dark:bg-[#212121]/50 hover:bg-secondary dark:hover:bg-[#2f2f2f] border border-border/80 dark:border-none backdrop-blur-sm text-muted-foreground hover:text-foreground group/pill"
-                      : "cursor-pointer bg-white/50 dark:bg-[#212121]/50 hover:bg-secondary dark:hover:bg-[#2f2f2f]",
-                    isSelected
-                      ? "bg-secondary text-foreground border border-border/80 dark:border-none"
-                      : !pill.disabled &&
-                          "bg-white/50 dark:bg-[#212121]/50 border border-border/80 dark:border-none backdrop-blur-sm hover:bg-secondary text-muted-foreground hover:text-foreground"
+                      ? "cursor-not-allowed select-none bg-white/50 dark:bg-[#212121]/50 hover:bg-secondary dark:hover:bg-[#2f2f2f] text-muted-foreground"
+                      : isSelected
+                      ? "cursor-pointer bg-secondary dark:bg-[#2f2f2f] text-foreground hover:bg-secondary dark:hover:bg-[#2f2f2f]"
+                      : "cursor-pointer bg-white/50 dark:bg-[#212121]/50 hover:bg-secondary dark:hover:bg-[#2f2f2f] text-muted-foreground hover:text-foreground"
                   )}
                 >
                   {pill.disabled ? (

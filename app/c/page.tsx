@@ -32,7 +32,9 @@ function NewChatContent() {
     setChats,
     isChatsLoading,
     loadChats,
+    deleteChat,
   } = useSidebarContext();
+  const [newChatKey, setNewChatKey] = useState(0);
   const [isSidebarBtnHovered, setIsSidebarBtnHovered] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [message, setMessage] = useState("");
@@ -206,13 +208,15 @@ function NewChatContent() {
         onNewChat={() => {
           setMessage("");
           setUploadedFiles([]);
+          setNewChatKey((k) => k + 1);
           if (typeof window !== 'undefined' && window.innerWidth < 1025) {
             setSidebarOpen(false);
           }
         }}
-        onDeleteChat={async (id) => {
-          await chatService.deleteChat(supabase, id);
-          loadChats();
+        onDeleteChat={(id) => {
+          deleteChat(id)
+            .then(() => toast.success("Chat deleted"))
+            .catch(() => toast.error("Failed to delete chat"));
         }}
         onToggleStar={async (id, starred) => {
           if (starred) {
@@ -270,6 +274,7 @@ function NewChatContent() {
           ) : (
             <WelcomeScreen
               user={user}
+              resetKey={newChatKey}
               onPromptSelect={(prompt) => setMessage(prompt)}
             >
               <ChatInput

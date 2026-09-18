@@ -41,7 +41,7 @@ import {
 import { useSidebarContext } from "@/components/chat/sidebar-context";
 import { cn } from "@/lib/utils";
 import toast from "@/lib/toast";
-import { DeleteModal } from "@/components/modals/delete-modal";
+import { DeleteModal } from "@/components/modals/delete-chat-modal";
 
 export default function ActiveChatPage() {
   const { user, token, loading, isSigningOut } = useAuth();
@@ -57,26 +57,31 @@ export default function ActiveChatPage() {
     setChats,
     isChatsLoading,
     loadChats,
+    deleteChat,
   } = useSidebarContext();
-  const [isSidebarBtnHovered, setIsSidebarBtnHovered] = useState(false);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
-  const [isChatLoading, setIsChatLoading] = useState(true);
-  const [currentChatTitle, setCurrentChatTitle] = useState<string>("");
+  useEffect(() => {
+    router.prefetch("/c");
+  }, [router]);
+
   const [messages, setMessages] = useState<Message[]>([]);
-  const [searchQuery, setSearchQuery] = useState("");
   const [inputValue, setInputValue] = useState("");
+  const [selectedModel, setSelectedModel] = useState("GPT-5.4");
+  const [selectedModelTier, setSelectedModelTier] = useState(4);
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
   const [isTyping, setIsTyping] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [isSharing, setIsSharing] = useState(false);
+  const [isSidebarBtnHovered, setIsSidebarBtnHovered] = useState(false);
+  const [isChatLoading, setIsChatLoading] = useState(true);
   const [pendingMessage, setPendingMessage] = useState<{
     content: string;
-    files: File[];
+    files: any[];
     isThinkMode?: boolean;
   } | null>(null);
-  const [selectedModel, setSelectedModel] = useState("GPT-5.4");
-  const [selectedModelTier, setSelectedModelTier] = useState(4);
+  const [currentChatTitle, setCurrentChatTitle] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showScrollBottom, setShowScrollBottom] = useState(false);
   const [thinkMode, setThinkMode] = useState(false);
   const autoSendTriggeredRef = useRef(false);
@@ -91,8 +96,8 @@ export default function ActiveChatPage() {
       scrollContainerRef.current;
     const distanceToBottom = scrollHeight - scrollTop - clientHeight;
     const isAtBottom = distanceToBottom <= 25;
-    setShowScrollBottom(!isAtBottom);
     isAutoScrollPinnedRef.current = isAtBottom;
+    setShowScrollBottom((prev) => (prev !== !isAtBottom ? !isAtBottom : prev));
   };
 
   const dockRef = useRef<HTMLDivElement>(null);
@@ -296,10 +301,13 @@ export default function ActiveChatPage() {
     // Remove optimistic pending message
     setPendingMessage(null);
 
-    // Initial state with blank assistant message
     setMessages((prev) => {
       const list = baseMessages ? [...baseMessages] : [...prev];
-      const filtered = list.filter((m) => m.id !== userMessage.id);
+      const filtered = list.filter(
+        (m) =>
+          m.id !== userMessage.id &&
+          !(m.role === "user" && m.content === userMessage.content && (m.id?.startsWith("msg-") || m.id?.startsWith("pending-")))
+      );
       return [
         ...filtered,
         userMessage,
@@ -455,7 +463,7 @@ export default function ActiveChatPage() {
     setMessages(remainingMessages);
 
     // 2. Set pending message and typing indicator
-    setPendingMessage({ content: newContent, files: [] });
+    setPendingMessage({ content: newContent, files: [], isThinkMode: thinkMode });
     setIsTyping(true);
     isAutoScrollPinnedRef.current = true;
     setShowScrollBottom(false);
@@ -477,6 +485,7 @@ export default function ActiveChatPage() {
       }
 
       // 3. Call /api/chat with truncateMessageId to prune DB messages from that point
+      const reqStart = Date.now();
       const response = await fetch("/api/chat", {
         method: "POST",
         headers,
@@ -486,6 +495,7 @@ export default function ActiveChatPage() {
           files: [],
           truncateMessageId: messageId,
           model: selectedModel,
+          think: thinkMode,
         }),
       });
 
@@ -495,6 +505,16 @@ export default function ActiveChatPage() {
       }
 
       const result = await response.json();
+      const actualElapsedSecs = Math.max(1, Math.round((Date.now() - reqStart) / 1000));
+      if (result.assistantMessage) {
+        if (thinkMode || result.assistantMessage.metadata?.think) {
+          result.assistantMessage.metadata = {
+            ...(result.assistantMessage.metadata || {}),
+            think: true,
+            thinkTime: actualElapsedSecs,
+          };
+        }
+      }
       if (result.userMessage && result.assistantMessage) {
         await streamAssistantResponse(
           result.userMessage,
@@ -552,15 +572,20 @@ export default function ActiveChatPage() {
     await handleEditAndResend(userMsg.id, userMsg.content, userMsgIdx);
   };
 
-  const handleSend = async () => {
-    if (!inputValue.trim() && uploadedFiles.length === 0) return;
-    if (!user) return;
+  const handleSend = async (customMessage?: string) => {
+    const isCustom = typeof customMessage === "string";
+    const textToSend = isCustom ? customMessage.trim() : inputValue.trim();
+    const currentFiles = isCustom ? [] : [...uploadedFiles];
 
-    const messageContent = inputValue;
-    const currentFiles = [...uploadedFiles];
+    if (!textToSend && currentFiles.length === 0) return;
+    if (!user || isTyping) return;
 
-    setInputValue("");
-    setUploadedFiles([]);
+    const messageContent = isCustom ? customMessage.trim() : inputValue;
+
+    if (!isCustom) {
+      setInputValue("");
+      setUploadedFiles([]);
+    }
     setPendingMessage({ content: messageContent, files: currentFiles, isThinkMode: thinkMode });
     setIsTyping(true);
     isAutoScrollPinnedRef.current = true;
@@ -649,8 +674,10 @@ export default function ActiveChatPage() {
     } catch (error: any) {
       console.error("Error sending message:", error);
       toast.error(error.message || "Failed to send message");
-      setInputValue(messageContent);
-      setUploadedFiles(currentFiles);
+      if (!isCustom) {
+        setInputValue(messageContent);
+        setUploadedFiles(currentFiles);
+      }
       setIsTyping(false);
       setIsUploading(false);
       setPendingMessage(null);
@@ -683,7 +710,16 @@ export default function ActiveChatPage() {
       if (pairedAssistantId) {
         idsToRemove.add(pairedAssistantId);
       }
-      setMessages((prev) => prev.filter((m) => !idsToRemove.has(m.id)));
+      const remainingMessages = messages.filter((m) => !idsToRemove.has(m.id));
+      setMessages(remainingMessages);
+
+      if (remainingMessages.length === 0) {
+        // If chat becomes empty (single message chat), delete whole chat and open new chat instantly
+        deleteChat(chatId).catch(console.error);
+        toast.success("Chat deleted");
+        router.replace("/c");
+        return;
+      }
 
       await chatService.deleteMessage(supabase, trueId, pairedAssistantId, chatId);
       toast.success("Message deleted");
@@ -734,10 +770,13 @@ export default function ActiveChatPage() {
           }
           router.push("/c");
         }}
-        onDeleteChat={async (id) => {
-          await chatService.deleteChat(supabase, id);
-          if (id === chatId) router.push("/c");
-          else loadChats();
+        onDeleteChat={(id) => {
+          deleteChat(id)
+            .then(() => toast.success("Chat deleted"))
+            .catch(() => toast.error("Failed to delete chat"));
+          if (id === chatId) {
+            router.replace("/c");
+          }
         }}
         onToggleStar={async (id, starred) => {
           if (starred) {
@@ -813,7 +852,7 @@ export default function ActiveChatPage() {
                       setTimeout(() => setIsSharing(false), 300);
                     }
                   }}
-                  className="group h-9 px-2.5 sm:px-3 gap-1.5 rounded-xl bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/80 dark:border-none dark:border-neutral-700/80 text-neutral-700 dark:text-neutral-200 hover:text-foreground dark:hover:text-foreground flex items-center justify-center text-base font-medium transition-colors cursor-pointer outline-none focus:outline-none disabled:opacity-70 disabled:pointer-events-auto disabled:cursor-not-allowed"
+                  className="group h-9 px-2.5 sm:px-3 gap-1.5 rounded-xl bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/80 dark:border-none dark:border-neutral-700/80 text-foreground flex items-center justify-center text-base font-medium transition-colors cursor-pointer outline-none focus:outline-none disabled:opacity-70 disabled:pointer-events-auto disabled:cursor-not-allowed"
                 >
                   {isSharing ? (
                     <Loader className="w-4 h-4 shrink-0 animate-spin text-muted-foreground group-hover:text-foreground" />
@@ -934,22 +973,7 @@ export default function ActiveChatPage() {
         <div
           ref={scrollContainerRef}
           onScroll={handleScroll}
-          onWheel={(e) => {
-            if (e.deltaY < 0) {
-              isAutoScrollPinnedRef.current = false;
-              setShowScrollBottom(true);
-            }
-          }}
-          onTouchMove={() => {
-            if (scrollContainerRef.current) {
-              const { scrollTop, scrollHeight, clientHeight } = scrollContainerRef.current;
-              if (scrollHeight - scrollTop - clientHeight > 25) {
-                isAutoScrollPinnedRef.current = false;
-                setShowScrollBottom(true);
-              }
-            }
-          }}
-          className="flex-1 w-full overflow-x-hidden relative no-overscroll flex flex-col pt-14 overflow-y-scroll [scrollbar-gutter:stable]"
+          className="flex-1 w-full overflow-x-hidden relative flex flex-col pt-14 overflow-y-scroll overscroll-y-contain [scrollbar-gutter:stable]"
         >
           <div className="flex-1 flex flex-col min-h-full">
             {/* Messages Container or Loader */}
@@ -965,6 +989,7 @@ export default function ActiveChatPage() {
                   isTyping={isTyping}
                   pendingMessage={pendingMessage}
                   onRegenerate={handleRegenerate}
+                  onSendMessage={handleSend}
                   onEditAndResend={handleEditAndResend}
                   onDeleteMessage={handleDeleteMessage}
                 />
@@ -1043,9 +1068,14 @@ export default function ActiveChatPage() {
         open={showDeleteModal}
         onOpenChange={setShowDeleteModal}
         itemTitle={currentChatTitle || "Chat"}
-        onConfirm={async () => {
-          await chatService.deleteChat(supabase, chatId);
-          router.push("/c");
+        promptText={messages.find((m) => m.role === "user")?.content || currentChatTitle || "Chat"}
+        files={messages.find((m) => m.role === "user")?.files}
+        onConfirm={() => {
+          setShowDeleteModal(false);
+          deleteChat(chatId)
+            .then(() => toast.success("Chat deleted"))
+            .catch(() => toast.error("Failed to delete chat"));
+          router.replace("/c");
         }}
       />
     </div>

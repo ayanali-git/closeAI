@@ -39,6 +39,7 @@ export async function GET(
       content: msg.content,
       createdAt: msg.created_at,
       chatId: msg.chat_id,
+      metadata: msg.metadata || null,
       files: (msg.file_uploads && msg.file_uploads.length > 0)
         ? msg.file_uploads
         : (msg.metadata?.files || [])

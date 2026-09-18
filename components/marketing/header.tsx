@@ -21,7 +21,7 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { LogoutModal } from "@/components/modals/logout-modal";
+import { LogoutModal } from "@/components/modals/log-out-modal";
 import { cn } from "@/lib/utils";
 
 type MegaMenuCategory =
@@ -713,10 +713,10 @@ export function MarketingHeader() {
                     </p>
                     <p className="text-muted-foreground">
                       At this time, it may not cover all topics, including some
-                      GPT-related ones we don't yet fully support. You can
-                      try asking a different question related to
-                      GPT-specific content, or use closeAI chat for broader
-                      topics or creative prompts.
+                      GPT-related ones we don't yet fully support. You can try
+                      asking a different question related to GPT-specific
+                      content, or use closeAI chat for broader topics or
+                      creative prompts.
                     </p>
                   </div>
 
@@ -1634,6 +1634,14 @@ export function MarketingHeader() {
                           News
                         </Link>
                       </li>
+                      <li>
+                        <Link
+                          href="/company/contact"
+                          className="text-2xl font-medium text-foreground hover:opacity-70 transition-opacity"
+                        >
+                          Contact Us
+                        </Link>
+                      </li>
                     </ul>
                   </div>
 
@@ -1839,7 +1847,10 @@ export function MarketingHeader() {
                         </div>
                         <div className="space-y-2.5">
                           {[
-                            { label: "GPT-6 Astra", href: "/research/overview" },
+                            {
+                              label: "GPT-6 Astra",
+                              href: "/research/overview",
+                            },
                             { label: "GPT-5.6", href: "/research/overview" },
                             { label: "GPT-5.5", href: "/research/overview" },
                             {
@@ -2170,7 +2181,11 @@ export function MarketingHeader() {
           await signOut();
           router.push("/");
         }}
-        userName={user?.user_metadata?.name || user?.user_metadata?.full_name || user?.email?.split("@")[0]}
+        userName={
+          user?.user_metadata?.name ||
+          user?.user_metadata?.full_name ||
+          user?.email?.split("@")[0]
+        }
         userEmail={user?.email}
         userAvatar={user?.user_metadata?.avatar_url}
       />

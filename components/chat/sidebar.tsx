@@ -37,6 +37,7 @@ import {
   ArchiveX,
   Download,
   ArrowUpRight,
+  Store,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -65,8 +66,8 @@ import {
   AnimatedSearchClose,
   AnimatedComingSoonText,
 } from "@/components/ui/animated";
-import { LogoutModal } from "@/components/modals/logout-modal";
-import { DeleteModal } from "@/components/modals/delete-modal";
+import { LogoutModal } from "@/components/modals/log-out-modal";
+import { DeleteModal } from "@/components/modals/delete-chat-modal";
 
 interface SidebarProps {
   user: User | null;
@@ -219,6 +220,7 @@ export function Sidebar({
   >({});
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [chatToDelete, setChatToDelete] = useState<Chat | null>(null);
+  const [isDownloadBtnHovered, setIsDownloadBtnHovered] = useState(false);
 
   const toggleSection = (group: string) => {
     setCollapsedSections((prev) => ({
@@ -273,7 +275,7 @@ export function Sidebar({
               (e.currentTarget as HTMLElement)?.blur();
               setAccountSubView("main");
             }}
-            className="flex items-center gap-2 px-2.5 py-2 text-md font-medium text-foreground [@media(hover:hover)]:hover:bg-secondary active:bg-secondary/80 rounded-xl cursor-pointer w-full text-left transition-colors outline-none focus:outline-none focus:bg-transparent focus-visible:outline-none"
+            className="flex items-center gap-2 px-2 py-2 text-md font-medium text-foreground [@media(hover:hover)]:hover:bg-secondary active:bg-secondary/80 rounded-xl cursor-pointer w-full text-left transition-colors outline-none focus:outline-none focus:bg-transparent focus-visible:outline-none"
           >
             <ChevronLeft className="w-4 h-4 stroke-[2.5]" />
             <span>Theme</span>
@@ -291,7 +293,7 @@ export function Sidebar({
                 (e.currentTarget as HTMLElement)?.blur();
                 setTheme(t.value);
               }}
-              className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-md text-foreground [@media(hover:hover)]:hover:bg-secondary active:bg-secondary/80 cursor-pointer transition-colors outline-none focus:outline-none focus:bg-transparent focus-visible:outline-none text-left"
+              className="w-full flex items-center justify-between px-2 py-2 rounded-xl text-md text-foreground [@media(hover:hover)]:hover:bg-secondary active:bg-secondary/80 cursor-pointer transition-colors outline-none focus:outline-none focus:bg-transparent focus-visible:outline-none text-left"
             >
               <div className="flex items-center gap-2.5">
                 <t.icon className="w-4 h-4 text-muted-foreground" />
@@ -315,7 +317,7 @@ export function Sidebar({
               (e.currentTarget as HTMLElement)?.blur();
               setAccountSubView("main");
             }}
-            className="flex items-center gap-2 px-2.5 py-2 text-md font-medium text-foreground [@media(hover:hover)]:hover:bg-secondary active:bg-secondary/80 rounded-xl cursor-pointer w-full text-left transition-colors outline-none focus:outline-none focus:bg-transparent focus-visible:outline-none"
+            className="flex items-center gap-2 px-2 py-2 text-md font-medium text-foreground [@media(hover:hover)]:hover:bg-secondary active:bg-secondary/80 rounded-xl cursor-pointer w-full text-left transition-colors outline-none focus:outline-none focus:bg-transparent focus-visible:outline-none"
           >
             <ChevronLeft className="w-4 h-4 stroke-[2.5]" />
             <span>Help</span>
@@ -323,27 +325,27 @@ export function Sidebar({
           <div className="h-[1px] bg-neutral-200 dark:bg-[#383838] my-1" />
           <Link
             href="/support/help"
-            className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-md text-foreground [@media(hover:hover)]:hover:bg-secondary active:bg-secondary/80 transition-colors outline-none focus:outline-none focus:bg-transparent focus-visible:outline-none"
+            className="flex items-center gap-2.5 px-2 py-2 rounded-xl text-md text-foreground [@media(hover:hover)]:hover:bg-secondary active:bg-secondary/80 transition-colors outline-none focus:outline-none focus:bg-transparent focus-visible:outline-none"
           >
             <HelpCircle className="w-4 h-4 text-muted-foreground" />
             <span>Help center</span>
           </Link>
           <Link
             href="/company/blog"
-            className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-md text-foreground [@media(hover:hover)]:hover:bg-secondary active:bg-secondary/80 transition-colors outline-none focus:outline-none focus:bg-transparent focus-visible:outline-none"
+            className="flex items-center gap-2.5 px-2 py-2 rounded-xl text-md text-foreground [@media(hover:hover)]:hover:bg-secondary active:bg-secondary/80 transition-colors outline-none focus:outline-none focus:bg-transparent focus-visible:outline-none"
           >
             <PenLine className="w-4 h-4 text-muted-foreground" />
             <span>Release notes</span>
           </Link>
           <div
-            className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-md text-muted-foreground [@media(hover:hover)]:hover:bg-secondary active:bg-secondary/80 transition-colors outline-none focus:outline-none select-none cursor-pointer"
+            className="flex items-center gap-2.5 px-2 py-2 rounded-xl text-md font-medium transition-colors outline-none focus:outline-none focus:bg-transparent focus-visible:outline-none whitespace-nowrap text-left cursor-not-allowed select-none text-muted-foreground [@media(hover:hover)]:hover:bg-secondary dark:[@media(hover:hover)]:hover:bg-[#2f2f2f]"
           >
             <Download className="w-4 h-4 text-muted-foreground shrink-0" />
             <AnimatedComingSoonText label="Download apps" comingSoonText="Coming soon" />
           </div>
           <Link
             href="/settings"
-            className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-md text-foreground [@media(hover:hover)]:hover:bg-secondary active:bg-secondary/80 transition-colors outline-none focus:outline-none focus:bg-transparent focus-visible:outline-none"
+            className="flex items-center gap-2.5 px-2 py-2 rounded-xl text-md text-foreground [@media(hover:hover)]:hover:bg-secondary active:bg-secondary/80 transition-colors outline-none focus:outline-none focus:bg-transparent focus-visible:outline-none"
           >
             <Command className="w-4 h-4 text-muted-foreground" />
             <span>Keyboard shortcuts</span>
@@ -353,7 +355,7 @@ export function Sidebar({
             href="/support/terms"
             target="_blank"
             rel="noopener noreferrer"
-            className="group flex items-center justify-between px-3 py-2 rounded-xl text-md text-foreground [@media(hover:hover)]:hover:bg-secondary active:bg-secondary/80 transition-colors outline-none focus:outline-none focus:bg-transparent focus-visible:outline-none"
+            className="group flex items-center justify-between px-2 py-2 rounded-xl text-md text-foreground [@media(hover:hover)]:hover:bg-secondary active:bg-secondary/80 transition-colors outline-none focus:outline-none focus:bg-transparent focus-visible:outline-none"
           >
             <div className="flex items-center gap-2.5">
               <FileText className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors shrink-0" />
@@ -365,7 +367,7 @@ export function Sidebar({
             href="/support/privacy"
             target="_blank"
             rel="noopener noreferrer"
-            className="group flex items-center justify-between px-3 py-2 rounded-xl text-md text-foreground [@media(hover:hover)]:hover:bg-secondary active:bg-secondary/80 transition-colors outline-none focus:outline-none focus:bg-transparent focus-visible:outline-none"
+            className="group flex items-center justify-between px-2 py-2 rounded-xl text-md text-foreground [@media(hover:hover)]:hover:bg-secondary active:bg-secondary/80 transition-colors outline-none focus:outline-none focus:bg-transparent focus-visible:outline-none"
           >
             <div className="flex items-center gap-2.5">
               <Info className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors shrink-0" />
@@ -377,7 +379,7 @@ export function Sidebar({
             href="/company/contact"
             target="_blank"
             rel="noopener noreferrer"
-            className="group flex items-center justify-between px-3 py-2 rounded-xl text-md text-foreground [@media(hover:hover)]:hover:bg-secondary active:bg-secondary/80 transition-colors outline-none focus:outline-none focus:bg-transparent focus-visible:outline-none"
+            className="group flex items-center justify-between px-2 py-2 rounded-xl text-md text-foreground [@media(hover:hover)]:hover:bg-secondary active:bg-secondary/80 transition-colors outline-none focus:outline-none focus:bg-transparent focus-visible:outline-none"
           >
             <div className="flex items-center gap-2.5">
               <Bug className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors shrink-0" />
@@ -398,17 +400,17 @@ export function Sidebar({
               (e.currentTarget as HTMLElement)?.blur();
               setAccountSubView("main");
             }}
-            className="flex items-center gap-2 px-2.5 py-2 text-md font-medium text-foreground [@media(hover:hover)]:hover:bg-secondary active:bg-secondary/80 rounded-xl cursor-pointer w-full text-left transition-colors outline-none focus:outline-none focus:bg-transparent focus-visible:outline-none"
+            className="flex items-center gap-2 px-2 py-2 text-md font-medium text-foreground [@media(hover:hover)]:hover:bg-secondary active:bg-secondary/80 rounded-xl cursor-pointer w-full text-left transition-colors outline-none focus:outline-none focus:bg-transparent focus-visible:outline-none"
           >
             <ChevronLeft className="w-4 h-4 stroke-[2.5]" />
             <span>Accounts</span>
           </button>
           <div className="h-[1px] bg-neutral-200 dark:bg-[#383838] my-1" />
-          <div className="flex items-center gap-2 px-3 py-1.5 text-base text-muted-foreground hover:text-foreground select-none">
+          <div className="flex items-center gap-2 px-2 py-1.5 text-base text-muted-foreground hover:text-foreground select-none">
             <UserIcon className="w-4 h-4 shrink-0" />
             <span className="truncate">{userEmail}</span>
           </div>
-          <div className="flex items-center justify-between px-3 py-2 rounded-xl bg-secondary/50">
+          <div className="flex items-center justify-between px-2 py-2 rounded-xl bg-secondary/50">
             <div className="flex items-center gap-2.5 min-w-0">
               <Avatar className="w-8 h-8 rounded-full border border-border shrink-0">
                 <AvatarImage src={avatarUrl} />
@@ -425,7 +427,7 @@ export function Sidebar({
           <div className="h-[1px] bg-neutral-200 dark:bg-[#383838] my-1" />
           <Link
             href="/auth/login"
-            className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-md text-foreground [@media(hover:hover)]:hover:bg-secondary active:bg-secondary/80 transition-colors outline-none focus:outline-none focus:bg-transparent focus-visible:outline-none"
+            className="flex items-center gap-2.5 px-2 py-2 rounded-xl text-md text-foreground [@media(hover:hover)]:hover:bg-secondary active:bg-secondary/80 transition-colors outline-none focus:outline-none focus:bg-transparent focus-visible:outline-none"
           >
             <Plus className="w-4 h-4 text-muted-foreground" />
             <span>Add account</span>
@@ -445,7 +447,7 @@ export function Sidebar({
               (e.currentTarget as HTMLElement)?.blur();
               setAccountSubView("accounts");
             }}
-            className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-xl [@media(hover:hover)]:hover:bg-secondary active:bg-secondary/80 text-left transition-colors cursor-pointer outline-none focus:outline-none focus:bg-transparent focus-visible:outline-none"
+            className="w-full flex items-center gap-2.5 px-2 py-2 rounded-xl [@media(hover:hover)]:hover:bg-secondary active:bg-secondary/80 text-left transition-colors cursor-pointer outline-none focus:outline-none focus:bg-transparent focus-visible:outline-none"
           >
             <Avatar className="w-8 h-8 rounded-full border border-border shrink-0">
               <AvatarImage src={avatarUrl} />
@@ -465,7 +467,7 @@ export function Sidebar({
           </button>
         ) : (
           <DropdownMenuSub>
-            <DropdownMenuSubTrigger className="flex items-center gap-2.5 px-2.5 py-2 text-md rounded-xl cursor-pointer">
+            <DropdownMenuSubTrigger className="flex items-center gap-2.5 px-2 py-2 text-md rounded-xl cursor-pointer">
               <Avatar className="w-8 h-8 rounded-full border border-border shrink-0">
                 <AvatarImage src={avatarUrl} />
                 <AvatarFallback className="text-md font-semibold bg-secondary text-foreground">
@@ -486,11 +488,11 @@ export function Sidebar({
               alignOffset={-97}
               className="w-64 rounded-2xl p-1.5 bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/80 dark:border-none"
             >
-              <div className="flex items-center gap-2 px-3 py-2 text-md text-muted-foreground hover:text-foreground select-none">
+              <div className="flex items-center gap-2 px-2 py-2 text-md text-muted-foreground hover:text-foreground select-none">
                 <UserIcon className="w-4 h-4 shrink-0" />
                 <span className="truncate">{userEmail}</span>
               </div>
-              <DropdownMenuItem className="flex items-center justify-between px-3 py-2 rounded-xl cursor-pointer">
+              <DropdownMenuItem className="flex items-center justify-between px-2 py-2 rounded-xl cursor-pointer">
                 <div className="flex items-center gap-2.5 min-w-0">
                   <Avatar className="w-8 h-8 rounded-full border border-border shrink-0">
                     <AvatarImage src={avatarUrl} />
@@ -508,7 +510,7 @@ export function Sidebar({
               <DropdownMenuItem asChild>
                 <Link
                   href="/auth/login"
-                  className="flex items-center gap-2.5 px-3 py-2 cursor-pointer rounded-xl text-md"
+                  className="flex items-center gap-2.5 px-2 py-2 cursor-pointer rounded-xl text-md"
                 >
                   <Plus className="w-4 h-4 text-muted-foreground group-hover:text-foreground" />
                   <span>Add account</span>
@@ -524,7 +526,7 @@ export function Sidebar({
         <DropdownMenuItem asChild>
           <Link
             href="/upgrade"
-            className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-md cursor-pointer"
+            className="flex items-center gap-2.5 px-2 py-2 rounded-xl text-md cursor-pointer"
           >
             <Sparkles className="w-4 h-4 text-muted-foreground group-hover:text-foreground" />
             <span>
@@ -537,7 +539,7 @@ export function Sidebar({
         <DropdownMenuItem asChild>
           <Link
             href="/settings"
-            className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-md cursor-pointer"
+            className="flex items-center gap-2.5 px-2 py-2 rounded-xl text-md cursor-pointer"
           >
             <Clock className="w-4 h-4 text-muted-foreground group-hover:text-foreground" />
             <span>Personalization</span>
@@ -548,7 +550,7 @@ export function Sidebar({
         <DropdownMenuItem asChild>
           <Link
             href="/settings"
-            className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-md cursor-pointer"
+            className="flex items-center gap-2.5 px-2 py-2 rounded-xl text-md cursor-pointer"
           >
             <UserIcon className="w-4 h-4 text-muted-foreground group-hover:text-foreground" />
             <span>Profile</span>
@@ -559,7 +561,7 @@ export function Sidebar({
         <DropdownMenuItem asChild>
           <Link
             href="/settings"
-            className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-md cursor-pointer"
+            className="flex items-center gap-2.5 px-2 py-2 rounded-xl text-md cursor-pointer"
           >
             <Settings className="w-4 h-4 text-muted-foreground group-hover:text-foreground" />
             <span>Settings</span>
@@ -576,7 +578,7 @@ export function Sidebar({
               (e.currentTarget as HTMLElement)?.blur();
               setAccountSubView("theme");
             }}
-            className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-md text-foreground [@media(hover:hover)]:hover:bg-secondary active:bg-secondary/80 transition-colors cursor-pointer outline-none focus:outline-none focus:bg-transparent focus-visible:outline-none"
+            className="w-full flex items-center justify-between px-2 py-2 rounded-xl text-md text-foreground [@media(hover:hover)]:hover:bg-secondary active:bg-secondary/80 transition-colors cursor-pointer outline-none focus:outline-none focus:bg-transparent focus-visible:outline-none"
           >
             <div className="flex items-center gap-2.5">
               <Sun className="w-4 h-4 dark:hidden text-muted-foreground" />
@@ -587,7 +589,7 @@ export function Sidebar({
           </button>
         ) : (
           <DropdownMenuSub>
-            <DropdownMenuSubTrigger className="flex items-center gap-2.5 px-3 py-2 text-md rounded-xl cursor-pointer">
+            <DropdownMenuSubTrigger className="flex items-center gap-2.5 px-2 py-2 text-md rounded-xl cursor-pointer">
               <Sun className="w-4 h-4 dark:hidden text-muted-foreground group-hover:text-foreground" />
               <Moon className="w-4 h-4 hidden dark:block text-muted-foreground group-hover:text-foreground" />
               <span>Theme</span>
@@ -618,7 +620,7 @@ export function Sidebar({
               (e.currentTarget as HTMLElement)?.blur();
               setAccountSubView("help");
             }}
-            className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-md text-foreground [@media(hover:hover)]:hover:bg-secondary active:bg-secondary/80 transition-colors cursor-pointer outline-none focus:outline-none focus:bg-transparent focus-visible:outline-none"
+            className="w-full flex items-center justify-between px-2 py-2 rounded-xl text-md text-foreground [@media(hover:hover)]:hover:bg-secondary active:bg-secondary/80 transition-colors cursor-pointer outline-none focus:outline-none focus:bg-transparent focus-visible:outline-none"
           >
             <div className="flex items-center gap-2.5">
               <LifeBuoy className="w-4 h-4 text-muted-foreground" />
@@ -628,7 +630,7 @@ export function Sidebar({
           </button>
         ) : (
           <DropdownMenuSub>
-            <DropdownMenuSubTrigger className="flex items-center gap-2.5 px-3 py-2 text-md rounded-xl cursor-pointer">
+            <DropdownMenuSubTrigger className="flex items-center gap-2.5 px-2 py-2 text-md rounded-xl cursor-pointer">
               <LifeBuoy className="w-4 h-4 text-muted-foreground group-hover:text-foreground" />
               <span>Help</span>
             </DropdownMenuSubTrigger>
@@ -640,7 +642,7 @@ export function Sidebar({
               <DropdownMenuItem asChild>
                 <Link
                   href="/support/help"
-                  className="flex items-center gap-2.5 px-3 py-2 cursor-pointer rounded-xl text-md"
+                  className="flex items-center gap-2.5 px-2 py-2 cursor-pointer rounded-xl text-md"
                 >
                   <HelpCircle className="w-4 h-4 text-muted-foreground group-hover:text-foreground" />
                   <span>Help center</span>
@@ -649,23 +651,24 @@ export function Sidebar({
               <DropdownMenuItem asChild>
                 <Link
                   href="/company/blog"
-                  className="flex items-center gap-2.5 px-3 py-2 cursor-pointer rounded-xl text-md"
+                  className="flex items-center gap-2.5 px-2 py-2 cursor-pointer rounded-xl text-md"
                 >
                   <PenLine className="w-4 h-4 text-muted-foreground group-hover:text-foreground" />
                   <span>Release notes</span>
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem
+                onSelect={(e) => e.preventDefault()}
                 onClick={(e) => e.preventDefault()}
-                className="flex items-center gap-2.5 px-3 py-2 cursor-pointer rounded-xl text-md text-muted-foreground select-none outline-none"
+                className="flex items-center gap-2.5 px-2 py-2 rounded-xl text-md font-medium transition-colors outline-none focus:outline-none focus:bg-transparent focus-visible:outline-none whitespace-nowrap text-left cursor-not-allowed select-none text-muted-foreground [@media(hover:hover)]:hover:bg-secondary dark:[@media(hover:hover)]:hover:bg-[#2f2f2f]"
               >
-                <Download className="w-4 h-4 text-muted-foreground group-hover:text-foreground shrink-0" />
+                <Download className="w-4 h-4 text-muted-foreground shrink-0" />
                 <AnimatedComingSoonText label="Download apps" comingSoonText="Coming soon" />
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
                 <Link
                   href="/settings"
-                  className="flex items-center gap-2.5 px-3 py-2 cursor-pointer rounded-xl text-md"
+                  className="flex items-center gap-2.5 px-2 py-2 cursor-pointer rounded-xl text-md"
                 >
                   <Command className="w-4 h-4 text-muted-foreground group-hover:text-foreground" />
                   <span>Keyboard shortcuts</span>
@@ -677,7 +680,7 @@ export function Sidebar({
                   href="/support/terms"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="group flex items-center justify-between px-3 py-2 cursor-pointer rounded-xl text-md text-foreground"
+                  className="group flex items-center justify-between px-2 py-2 cursor-pointer rounded-xl text-md text-foreground"
                 >
                   <div className="flex items-center gap-2.5">
                     <FileText className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors shrink-0" />
@@ -691,7 +694,7 @@ export function Sidebar({
                   href="/support/privacy"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="group flex items-center justify-between px-3 py-2 cursor-pointer rounded-xl text-md text-foreground"
+                  className="group flex items-center justify-between px-2 py-2 cursor-pointer rounded-xl text-md text-foreground"
                 >
                   <div className="flex items-center gap-2.5">
                     <Info className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors shrink-0" />
@@ -705,7 +708,7 @@ export function Sidebar({
                   href="/company/contact"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="group flex items-center justify-between px-3 py-2 cursor-pointer rounded-xl text-md text-foreground"
+                  className="group flex items-center justify-between px-2 py-2 cursor-pointer rounded-xl text-md text-foreground"
                 >
                   <div className="flex items-center gap-2.5">
                     <Bug className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors shrink-0" />
@@ -723,7 +726,7 @@ export function Sidebar({
         {/* Log out */}
         <DropdownMenuItem
           onClick={() => setShowLogoutModal(true)}
-          className="flex items-center gap-2.5 px-3 py-2 cursor-pointer rounded-xl"
+          className="flex items-center gap-2.5 px-2 py-2 cursor-pointer rounded-xl"
         >
           <LogOut className="w-4 h-4 text-muted-foreground group-hover:text-foreground" />
           <span>Log out</span>
@@ -756,7 +759,7 @@ export function Sidebar({
         onTouchEnd={() => setPressedChatId(null)}
         onTouchCancel={() => setPressedChatId(null)}
         className={cn(
-          "group relative flex items-center justify-between px-3 py-2 rounded-xl text-md cursor-pointer transition-all duration-150",
+          "group relative flex items-center justify-between px-2 py-2 rounded-xl text-md cursor-pointer transition-all duration-150",
           isSelected
             ? "bg-secondary text-muted-foreground hover:text-foreground"
             : cn(
@@ -983,47 +986,76 @@ export function Sidebar({
           </div>
 
           {/* Bottom User Profile Dock (Matching Open Sidebar Position) */}
-          <div className="w-full p-2 pb-[max(env(safe-area-inset-bottom),0.75rem)] mt-auto flex items-center justify-center relative z-20">
+          <div className="w-full p-2 pb-[max(env(safe-area-inset-bottom),0.75rem)] mt-auto flex flex-col items-center justify-center gap-1.5 relative z-20">
             {isLoading || !user ? (
               <div className="w-full flex items-center justify-center p-2 rounded-xl select-none">
                 <div className="w-8 h-8 rounded-full bg-secondary/80 dark:bg-neutral-800/80 animate-pulse shrink-0" />
               </div>
             ) : (
-              <DropdownMenu
-                onOpenChange={(open) => {
-                  if (!open) setAccountSubView("main");
-                }}
-              >
+              <>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <DropdownMenuTrigger asChild>
-                      <button className="w-full flex items-center justify-center p-1.5 rounded-xl hover:bg-secondary transition-colors cursor-pointer select-none outline-none focus:outline-none focus-visible:outline-none focus:ring-0 focus-visible:ring-0 ring-0 border-0">
-                        <div className="w-8 h-8 rounded-full overflow-hidden shrink-0">
-                          <Avatar className="w-full h-full bg-secondary">
-                            <AvatarImage src={avatarUrl} />
-                            <AvatarFallback className="text-md font-semibold">
-                              {displayName.charAt(0).toUpperCase()}
-                            </AvatarFallback>
-                          </Avatar>
-                        </div>
-                      </button>
-                    </DropdownMenuTrigger>
+                    <button
+                      type="button"
+                      disabled
+                      aria-disabled="true"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                      }}
+                      onMouseEnter={() => setIsDownloadBtnHovered(true)}
+                      onMouseLeave={() => setIsDownloadBtnHovered(false)}
+                      className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 bg-transparent hover:bg-secondary dark:hover:bg-[#212121] text-muted-foreground hover:text-foreground transition-colors cursor-not-allowed select-none"
+                      aria-label="Download apps (Coming soon)"
+                    >
+                      <Store className="w-5 h-5 shrink-0" />
+                    </button>
                   </TooltipTrigger>
-                  <TooltipContent side="right" className="text-md">
-                    {displayName}
+                  <TooltipContent side="right" sideOffset={8} className="text-md">
+                    <AnimatedComingSoonText
+                      label="Download apps"
+                      comingSoonText="Coming soon"
+                      isHovered={isDownloadBtnHovered}
+                    />
                   </TooltipContent>
                 </Tooltip>
 
-                <DropdownMenuContent
-                  side="top"
-                  align="start"
-                  alignOffset={-4}
-                  sideOffset={6}
-                  className="w-64 rounded-2xl p-1.5 bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/80 dark:border-none outline-none focus:outline-none ring-0"
+                <DropdownMenu
+                  onOpenChange={(open) => {
+                    if (!open) setAccountSubView("main");
+                  }}
                 >
-                  {renderAccountMenuItems()}
-                </DropdownMenuContent>
-              </DropdownMenu>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <DropdownMenuTrigger asChild>
+                        <button className="w-full flex items-center justify-center p-2 rounded-xl hover:bg-secondary transition-colors cursor-pointer select-none outline-none focus:outline-none focus-visible:outline-none focus:ring-0 focus-visible:ring-0 ring-0 border-0">
+                          <div className="w-8 h-8 rounded-full overflow-hidden shrink-0">
+                            <Avatar className="w-full h-full bg-secondary">
+                              <AvatarImage src={avatarUrl} />
+                              <AvatarFallback className="text-md font-semibold">
+                                {displayName.charAt(0).toUpperCase()}
+                              </AvatarFallback>
+                            </Avatar>
+                          </div>
+                        </button>
+                      </DropdownMenuTrigger>
+                    </TooltipTrigger>
+                    <TooltipContent side="right" className="text-md">
+                      {displayName}
+                    </TooltipContent>
+                  </Tooltip>
+
+                  <DropdownMenuContent
+                    side="top"
+                    align="start"
+                    alignOffset={-4}
+                    sideOffset={6}
+                    className="w-64 rounded-2xl p-1.5 bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/80 dark:border-none outline-none focus:outline-none ring-0"
+                  >
+                    {renderAccountMenuItems()}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </>
             )}
           </div>
         </div>
@@ -1108,7 +1140,7 @@ export function Sidebar({
             </div>
 
             {/* New Chat Button */}
-            <div className="px-3 pt-1 pb-2 space-y-2 relative z-20">
+            <div className="px-2 pt-1 pb-2 space-y-2 relative z-20">
               {showSearch && (
                 <div className="relative group">
                   <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-foreground transition-colors pointer-events-none" />
@@ -1133,7 +1165,7 @@ export function Sidebar({
                     onToggle();
                   }
                 }}
-                className="w-full flex items-center justify-between h-10 px-3 rounded-xl hover:bg-secondary text-muted-foreground hover:text-foreground text-md group cursor-pointer transition-all duration-150"
+                className="w-full flex items-center justify-between h-10 px-2 rounded-xl hover:bg-secondary text-muted-foreground hover:text-foreground text-md group cursor-pointer transition-all duration-150"
               >
                 <div className="flex items-center gap-2.5">
                   <Plus className="w-4 h-4 text-muted-foreground group-hover:text-foreground" />
@@ -1178,7 +1210,7 @@ export function Sidebar({
                     <button
                       type="button"
                       onClick={() => toggleSection("Pinned")}
-                      className="w-full flex items-center justify-between px-3 py-1 text-[15px] font-semibold tracking-wider text-muted-foreground hover:text-foreground select-none cursor-pointer transition-colors group/section text-left"
+                      className="w-full flex items-center justify-between px-2 py-1 text-[15px] font-semibold tracking-wider text-muted-foreground hover:text-foreground select-none cursor-pointer transition-colors group/section text-left"
                     >
                       <span>Pinned</span>
                       <AnimatedChevron
@@ -1192,7 +1224,7 @@ export function Sidebar({
                     {!collapsedSections["Pinned"] && (
                       <>
                         {(groupedChats["Pinned"] || []).length === 0 ? (
-                          <div className="px-3 py-1 text-[13.5px] text-muted-foreground/60 select-none font-normal">
+                          <div className="px-2 py-1 text-[13.5px] text-muted-foreground/60 select-none font-normal">
                             No pinned chats
                           </div>
                         ) : (
@@ -1209,7 +1241,7 @@ export function Sidebar({
                     <button
                       type="button"
                       onClick={() => toggleSection("Archived")}
-                      className="w-full flex items-center justify-between px-3 py-1 text-[15px] font-semibold tracking-wider text-muted-foreground hover:text-foreground select-none cursor-pointer transition-colors group/section text-left"
+                      className="w-full flex items-center justify-between px-2 py-1 text-[15px] font-semibold tracking-wider text-muted-foreground hover:text-foreground select-none cursor-pointer transition-colors group/section text-left"
                     >
                       <span>Archived</span>
                       <AnimatedChevron
@@ -1223,7 +1255,7 @@ export function Sidebar({
                     {!collapsedSections["Archived"] && (
                       <>
                         {(groupedChats["Archived"] || []).length === 0 ? (
-                          <div className="px-3 py-1 text-[13.5px] text-muted-foreground/60 select-none font-normal">
+                          <div className="px-2 py-1 text-[13.5px] text-muted-foreground/60 select-none font-normal">
                             No archived chats
                           </div>
                         ) : (
@@ -1237,12 +1269,12 @@ export function Sidebar({
 
                   {/* Chats Section */}
                   <div className="space-y-0.5">
-                    <div className="px-3 py-1 text-[15px] font-semibold tracking-wider text-foreground select-none">
+                    <div className="px-2 py-1 text-[15px] font-semibold tracking-wider text-foreground select-none">
                       Chats
                     </div>
 
                     {groupedChats["Chats"].length === 0 ? (
-                      <div className="px-3 py-1 text-[13.5px] text-muted-foreground/60 select-none font-normal">
+                      <div className="px-2 py-1 text-[13.5px] text-muted-foreground/60 select-none font-normal">
                         {searchQuery ? "No chats found" : "No chats"}
                       </div>
                     ) : (
@@ -1264,45 +1296,77 @@ export function Sidebar({
                   </div>
                 </div>
               ) : (
-                <DropdownMenu
-                  onOpenChange={(open) => {
-                    if (!open) setAccountSubView("main");
-                  }}
-                >
-                  <DropdownMenuTrigger asChild>
-                    <button className="w-full flex items-center justify-center p-1 pl-1.5 gap-2 rounded-xl hover:bg-secondary transition-colors text-left group cursor-pointer select-none outline-none focus:outline-none focus-visible:outline-none focus:ring-0 focus-visible:ring-0 ring-0 border-0">
-                      <div className="w-8 h-8 rounded-full overflow-hidden shrink-0">
-                        <Avatar className="w-full h-full bg-secondary">
-                          <AvatarImage src={avatarUrl} />
-                          <AvatarFallback className="text-md font-semibold">
-                            {displayName.charAt(0).toUpperCase()}
-                          </AvatarFallback>
-                        </Avatar>
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-md font-medium text-muted-foreground group-hover:text-foreground truncate leading-snug">
-                          {displayName}
-                        </p>
-                        <p
-                          className="text-sm text-muted-foreground leading-none"
-                          suppressHydrationWarning
-                        >
-                          {planDisplay}
-                        </p>
-                      </div>
-                    </button>
-                  </DropdownMenuTrigger>
-
-                  <DropdownMenuContent
-                    side="top"
-                    align="start"
-                    alignOffset={0}
-                    sideOffset={6}
-                    className="w-[var(--radix-dropdown-menu-trigger-width)] min-w-[var(--radix-dropdown-menu-trigger-width)] max-w-[calc(100vw-24px)] max-h-[calc(100dvh-5rem)] overflow-y-auto rounded-2xl p-1.5 bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/80 dark:border-none outline-none focus:outline-none ring-0"
+                <div className="group/profile relative w-full flex items-center rounded-xl hover:bg-secondary transition-colors">
+                  <DropdownMenu
+                    onOpenChange={(open) => {
+                      if (!open) setAccountSubView("main");
+                    }}
                   >
-                    {renderAccountMenuItems()}
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <button className="flex-1 min-w-0 flex items-center justify-start p-2 pl-1.5 pr-1 gap-2 text-left cursor-pointer select-none outline-none focus:outline-none focus-visible:outline-none focus:ring-0 focus-visible:ring-0 ring-0 border-0">
+                        <div className="w-8 h-8 rounded-full overflow-hidden shrink-0">
+                          <Avatar className="w-full h-full bg-secondary">
+                            <AvatarImage src={avatarUrl} />
+                            <AvatarFallback className="text-md font-semibold">
+                              {displayName.charAt(0).toUpperCase()}
+                            </AvatarFallback>
+                          </Avatar>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-md font-medium text-foreground truncate leading-snug">
+                            {displayName}
+                          </p>
+                          <p
+                            className="text-sm text-muted-foreground leading-none"
+                            suppressHydrationWarning
+                          >
+                            {planDisplay}
+                          </p>
+                        </div>
+                      </button>
+                    </DropdownMenuTrigger>
+
+                    <DropdownMenuContent
+                      side="top"
+                      align="start"
+                      alignOffset={0}
+                      sideOffset={6}
+                      className="w-[260px] max-w-[calc(100vw-24px)] max-h-[calc(100dvh-5rem)] overflow-y-auto rounded-2xl p-1.5 bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/80 dark:border-none outline-none focus:outline-none ring-0"
+                    >
+                      {renderAccountMenuItems()}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+
+                  {/* Download apps button inside the profile row */}
+                  <div className="pr-1.5 flex items-center shrink-0">
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <button
+                          type="button"
+                          disabled
+                          aria-disabled="true"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                          }}
+                          onMouseEnter={() => setIsDownloadBtnHovered(true)}
+                          onMouseLeave={() => setIsDownloadBtnHovered(false)}
+                          className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 text-muted-foreground hover:text-foreground bg-transparent hover:bg-black/10 dark:hover:bg-white/10 transition-colors cursor-not-allowed select-none"
+                          aria-label="Download apps (Coming soon)"
+                        >
+                          <Store className="w-5 h-5 shrink-0" />
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent side="top" sideOffset={8} className="text-md">
+                        <AnimatedComingSoonText
+                          label="Download apps"
+                          comingSoonText="Coming soon"
+                          isHovered={isDownloadBtnHovered}
+                        />
+                      </TooltipContent>
+                    </Tooltip>
+                  </div>
+                </div>
               )}
             </div>
           </aside>

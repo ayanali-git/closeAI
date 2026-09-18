@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { usePathname } from 'next/navigation';
 import { Chat, chatService } from '@/lib/chat-service';
 import { supabase } from '@/lib/supabase';
@@ -14,6 +14,7 @@ interface SidebarContextType {
   setChats: React.Dispatch<React.SetStateAction<Chat[]>>;
   isChatsLoading: boolean;
   loadChats: () => Promise<void>;
+  deleteChat: (chatId: string) => Promise<void>;
 }
 
 const SidebarContext = createContext<SidebarContextType>({
@@ -24,6 +25,7 @@ const SidebarContext = createContext<SidebarContextType>({
   setChats: () => {},
   isChatsLoading: true,
   loadChats: async () => {},
+  deleteChat: async () => {},
 });
 
 export function SidebarProvider({
@@ -39,6 +41,7 @@ export function SidebarProvider({
   const [mounted, setMounted] = useState<boolean>(false);
   const [chats, setChats] = useState<Chat[]>([]);
   const [isChatsLoading, setIsChatsLoading] = useState<boolean>(true);
+  const deletedChatIdsRef = useRef<Set<string>>(new Set());
 
   const loadChats = useCallback(async () => {
     if (!user) {
@@ -47,13 +50,37 @@ export function SidebarProvider({
     }
     try {
       const userChats = await chatService.getUserChats(supabase, user.id);
-      setChats(userChats);
+      const filtered = userChats.filter((c) => !deletedChatIdsRef.current.has(c.id));
+      setChats(filtered);
     } catch (error) {
       console.error('Error loading chats:', error);
     } finally {
       setIsChatsLoading(false);
     }
   }, [user]);
+
+  const deleteChat = useCallback(
+    async (chatIdToDelete: string) => {
+      // 1. Immediately track as deleted
+      deletedChatIdsRef.current.add(chatIdToDelete);
+      // 2. Instantly remove from local sidebar state (0ms)
+      setChats((prev) => prev.filter((c) => c.id !== chatIdToDelete));
+      // 3. Delete in database asynchronously
+      try {
+        await chatService.deleteChat(supabase, chatIdToDelete);
+        // Retain in deleted set for 5s to prevent concurrent loadChats races
+        setTimeout(() => {
+          deletedChatIdsRef.current.delete(chatIdToDelete);
+        }, 5000);
+      } catch (err) {
+        console.error('Failed to delete chat in background:', err);
+        deletedChatIdsRef.current.delete(chatIdToDelete);
+        loadChats();
+        throw err;
+      }
+    },
+    [loadChats]
+  );
 
   useEffect(() => {
     if (user) {
@@ -122,6 +149,7 @@ export function SidebarProvider({
         setChats,
         isChatsLoading,
         loadChats,
+        deleteChat,
       }}
     >
       {children}

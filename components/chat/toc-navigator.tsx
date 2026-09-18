@@ -437,9 +437,15 @@ export function TocNavigator({
   useEffect(() => {
     if (headings.length === 0) return;
 
+    let rafId: number | null = null;
+
     const syncScrollState = () => {
       if (userClickedSectionIdRef.current) {
-        setScrollActiveSectionId(userClickedSectionIdRef.current);
+        setScrollActiveSectionId((prev) =>
+          prev !== userClickedSectionIdRef.current
+            ? (userClickedSectionIdRef.current as string)
+            : prev
+        );
         if (clickLockTimerRef.current) {
           window.clearTimeout(clickLockTimerRef.current);
         }
@@ -457,7 +463,8 @@ export function TocNavigator({
         const isAtBottom =
           container.scrollHeight - container.scrollTop - container.clientHeight <= 100;
         if (isAtBottom && headings.length > 0) {
-          setScrollActiveSectionId(headings[headings.length - 1].id);
+          const lastId = headings[headings.length - 1].id;
+          setScrollActiveSectionId((prev) => (prev !== lastId ? lastId : prev));
           return;
         }
 
@@ -469,12 +476,14 @@ export function TocNavigator({
             const elemRect = elem.getBoundingClientRect();
             const relativeTop = elemRect.top - containerRect.top;
             if (relativeTop <= readingLinePx) {
-              setScrollActiveSectionId(headings[i].id);
+              const targetId = headings[i].id;
+              setScrollActiveSectionId((prev) => (prev !== targetId ? targetId : prev));
               return;
             }
           }
         }
-        setScrollActiveSectionId(headings[0]?.id || "");
+        const firstId = headings[0]?.id || "";
+        setScrollActiveSectionId((prev) => (prev !== firstId ? firstId : prev));
       } else {
         const {
           scrollActiveSectionId: nextScrollActiveSectionId,
@@ -482,18 +491,29 @@ export function TocNavigator({
           headingElements: headingElementsRef.current,
           parsedHeadings: parsedHeadingsRef.current,
         });
-        setScrollActiveSectionId(nextScrollActiveSectionId);
+        setScrollActiveSectionId((prev) =>
+          prev !== nextScrollActiveSectionId ? nextScrollActiveSectionId : prev
+        );
       }
     };
 
+    const handleScrollPassive = () => {
+      if (rafId !== null) return;
+      rafId = window.requestAnimationFrame(() => {
+        rafId = null;
+        syncScrollState();
+      });
+    };
+
     const target = containerRef?.current || window;
-    target.addEventListener("scroll", syncScrollState, { passive: true });
-    window.addEventListener("resize", syncScrollState);
+    target.addEventListener("scroll", handleScrollPassive, { passive: true });
+    window.addEventListener("resize", handleScrollPassive, { passive: true });
     syncScrollState();
 
     return () => {
-      target.removeEventListener("scroll", syncScrollState);
-      window.removeEventListener("resize", syncScrollState);
+      if (rafId !== null) window.cancelAnimationFrame(rafId);
+      target.removeEventListener("scroll", handleScrollPassive);
+      window.removeEventListener("resize", handleScrollPassive);
     };
   }, [headings, containerRef]);
 

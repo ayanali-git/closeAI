@@ -147,10 +147,10 @@ export default function SettingsPage() {
           <Button
             variant="ghost"
             size="sm"
-            className="text-muted-foreground hover:text-foreground"
+            className="text-foreground cursor-pointer group/btn"
             onClick={() => router.push('/c')}
           >
-            <ChevronLeft className="w-4 h-4 mr-1" />
+            <ChevronLeft className="w-4 h-4 mr-1 text-muted-foreground group-hover/btn:text-foreground" />
             Back
           </Button>
         </div>

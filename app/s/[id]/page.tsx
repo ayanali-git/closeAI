@@ -465,19 +465,26 @@ function SharedChatInputPill({
             type="button"
             onClick={() => setThinkMode(!thinkMode)}
             className={cn(
-              "h-9 sm:h-10 px-2.5 sm:px-3 rounded-full flex items-center justify-center gap-1.5 text-[13px] sm:text-[14px] font-medium select-none transition-all shrink-0 cursor-pointer",
+              "h-9 sm:h-10 px-2.5 sm:px-5 group/think-btn rounded-full flex items-center justify-center gap-1.5 text-[13px] sm:text-[14px] font-medium select-none transition-all shrink-0 cursor-pointer",
               thinkMode
-                ? "bg-foreground dark:bg-[#2F2F2F] text-background dark:text-foreground hover:opacity-90"
+                ? "bg-bubble dark:bg-[#2F2F2F] text-foreground"
                 : "text-muted-foreground hover:text-foreground hover:bg-secondary"
             )}
-            aria-label="Think"
+            aria-label="Think mode"
           >
-            <Brain className="w-4 h-4 sm:w-5 sm:h-5" />
+            <Brain
+              className={cn(
+                "w-5 h-5 transition-colors",
+                thinkMode
+                  ? "text-foreground"
+                  : "text-muted-foreground group-hover/think-btn:text-foreground"
+              )}
+            />
             <span className="hidden sm:inline">Think</span>
           </button>
         </TooltipTrigger>
         <TooltipContent className="text-md">
-          Think
+          Think mode
         </TooltipContent>
       </Tooltip>
 
@@ -492,7 +499,7 @@ function SharedChatInputPill({
                 ? "bg-red-500/15 text-red-500 hover:bg-red-500/25 ring-red-500/30"
                 : "text-muted-foreground hover:text-foreground hover:bg-secondary"
             )}
-            aria-label={isListening ? "Stop dictation" : "Dictate"}
+            aria-label={isListening ? "Stop dictation" : "Start dictation"}
           >
             {isListening ? (
               <MicOff className="w-5 h-5 text-red-500" />
@@ -502,7 +509,7 @@ function SharedChatInputPill({
           </button>
         </TooltipTrigger>
         <TooltipContent className="text-md">
-          {isListening ? "Stop dictation" : "Dictate"}
+          {isListening ? "Stop dictation" : "Start dictation"}
         </TooltipContent>
       </Tooltip>
 
@@ -597,6 +604,11 @@ function SharedChatInputPill({
                 }}
                 onKeyDown={handleKeyDown}
                 onPaste={handlePaste}
+                onBlur={() => {
+                  window.scrollTo({ top: 0, left: 0 });
+                  document.documentElement.scrollTop = 0;
+                  document.body.scrollTop = 0;
+                }}
                 placeholder="Continue chatting"
                 rows={1}
                 className={cn(
@@ -672,6 +684,11 @@ function SharedChatInputPill({
                 }}
                 onKeyDown={handleKeyDown}
                 onPaste={handlePaste}
+                onBlur={() => {
+                  window.scrollTo({ top: 0, left: 0 });
+                  document.documentElement.scrollTop = 0;
+                  document.body.scrollTop = 0;
+                }}
                 placeholder="Continue chatting"
                 rows={1}
                 className="w-full min-w-0 bg-transparent border-0 p-0 text-[16px] sm:text-[16.5px] text-foreground placeholder:text-muted-foreground focus:placeholder:text-foreground transition-colors focus:outline-none focus:ring-0 resize-none leading-normal h-[26px] overflow-hidden"
@@ -830,8 +847,30 @@ export default function PublicSharedChatPage() {
     };
   }, [cleanTitle]);
 
+  // Keep viewport locked without iOS Safari window scrolling offset on keyboard dismiss
+  useEffect(() => {
+    if (typeof window === "undefined" || !window.visualViewport) return;
+    const onResize = () => {
+      window.scrollTo(0, 0);
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+      handleScroll();
+    };
+    window.visualViewport.addEventListener("resize", onResize);
+    window.visualViewport.addEventListener("scroll", () => {
+      if (window.scrollY > 0) {
+        window.scrollTo(0, 0);
+        document.documentElement.scrollTop = 0;
+        document.body.scrollTop = 0;
+      }
+    });
+    return () => {
+      window.visualViewport?.removeEventListener("resize", onResize);
+    };
+  }, []);
+
   return (
-    <div className="flex flex-col h-[100dvh] w-full bg-background text-foreground overflow-hidden relative">
+    <div className="flex flex-col h-full w-full bg-background text-foreground overflow-hidden relative">
       <title>
         {cleanTitle
           ? `CloseAI \u007C Shared Chat\u003A ${cleanTitle}`
@@ -868,7 +907,7 @@ export default function PublicSharedChatPage() {
                 type="button"
                 disabled={isSharing}
                 onClick={handleShareClick}
-                className="group h-9 px-2.5 sm:px-3 gap-1.5 rounded-xl bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/80 dark:border-none text-neutral-700 dark:text-neutral-200 hover:text-foreground dark:hover:text-foreground flex items-center justify-center text-base font-medium transition-colors cursor-pointer outline-none focus:outline-none disabled:opacity-70 disabled:pointer-events-auto disabled:cursor-not-allowed"
+                className="group h-9 px-2.5 sm:px-3 gap-1.5 rounded-xl bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/80 dark:border-none text-foreground flex items-center justify-center text-base font-medium transition-colors cursor-pointer outline-none focus:outline-none disabled:opacity-70 disabled:pointer-events-auto disabled:cursor-not-allowed"
               >
                 {isSharing ? (
                   <Loader className="w-4 h-4 shrink-0 animate-spin text-muted-foreground group-hover:text-foreground" />
@@ -910,7 +949,7 @@ export default function PublicSharedChatPage() {
       <div
         ref={scrollContainerRef}
         onScroll={handleScroll}
-        className="flex-1 w-full overflow-x-hidden relative no-overscroll flex flex-col pt-14 overflow-y-scroll [scrollbar-gutter:stable] scroll-smooth"
+        className="flex-1 w-full overflow-x-hidden relative flex flex-col pt-14 overflow-y-scroll overscroll-y-contain [scrollbar-gutter:stable]"
       >
         {/* Message Stream & Content */}
         <div className="flex-1 flex flex-col min-h-full items-center">

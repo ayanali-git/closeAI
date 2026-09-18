@@ -52,7 +52,9 @@ export default async function SharedChatLayout({
           __html: `:root { --shared-title-w: ${initialWidth}px; }`,
         }}
       />
-      {children}
+      <div className="fixed inset-0 h-[100dvh] w-full overflow-hidden flex flex-col no-overscroll">
+        {children}
+      </div>
     </>
   );
 }

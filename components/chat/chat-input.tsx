@@ -532,7 +532,7 @@ export const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(function Cha
               ref={plusButtonRef}
               type="button"
               disabled={isTyping || isUploading}
-              className="w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary dark:hover:bg-[#2f2f2f] transition-colors shrink-0 cursor-pointer outline-none focus:outline-none"
+              className="w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary dark:hover:bg-[#2f2f2f] transition-colors shrink-0 cursor-pointer outline-none focus:outline-none focus-visible:ring-2 focus-visible:ring-foreground/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
               aria-label="Add files and more"
             >
               <Plus className="w-5 h-5" />
@@ -587,19 +587,26 @@ export const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(function Cha
             type="button"
             onClick={() => onThinkModeChange?.(!thinkMode)}
             className={cn(
-              "h-9 sm:h-10 px-2.5 sm:px-3 rounded-full flex items-center justify-center gap-1.5 text-[13px] sm:text-[14px] font-medium select-none transition-all shrink-0 cursor-pointer",
+              "h-9 sm:h-10 px-2.5 sm:px-5 group/think-btn rounded-full flex items-center justify-center gap-1.5 text-[13px] sm:text-[14px] font-medium select-none transition-all shrink-0 cursor-pointer outline-none focus:outline-none focus-visible:ring-2 focus-visible:ring-foreground/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
               thinkMode
-                ? "bg-foreground dark:bg-[#2F2F2F] text-background dark:text-foreground hover:opacity-90"
+                ? "bg-bubble dark:bg-[#2F2F2F] text-foreground"
                 : "text-muted-foreground hover:text-foreground hover:bg-secondary"
             )}
-            aria-label="Think"
+            aria-label="Think mode"
           >
-            <Brain className="w-4 h-4 sm:w-5 sm:h-5" />
+            <Brain
+              className={cn(
+                "w-5 h-5 transition-colors",
+                thinkMode
+                  ? "text-foreground"
+                  : "text-muted-foreground group-hover/think-btn:text-foreground"
+              )}
+            />
             <span className="hidden sm:inline">Think</span>
           </button>
         </TooltipTrigger>
         <TooltipContent className="text-md">
-          Think
+          Think mode
         </TooltipContent>
       </Tooltip>
 
@@ -610,12 +617,12 @@ export const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(function Cha
             type="button"
             onClick={toggleDictation}
             className={cn(
-              "w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-all cursor-pointer shrink-0",
+              "w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-all cursor-pointer shrink-0 outline-none focus:outline-none focus-visible:ring-2 focus-visible:ring-foreground/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
               isListening
                 ? "bg-red-500/15 text-red-500 hover:bg-red-500/25 ring-red-500/30"
                 : "text-muted-foreground hover:text-foreground hover:bg-secondary"
             )}
-            aria-label={isListening ? "Stop dictation" : "Dictate"}
+            aria-label={isListening ? "Stop dictation" : "Start dictation"}
           >
             {isListening ? (
               <MicOff className="w-5 h-5 text-red-500" />
@@ -625,7 +632,7 @@ export const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(function Cha
           </button>
         </TooltipTrigger>
         <TooltipContent className="text-md">
-          {isListening ? "Stop dictation" : "Dictate"}
+          {isListening ? "Stop dictation" : "Start dictation"}
         </TooltipContent>
       </Tooltip>
 
@@ -637,7 +644,7 @@ export const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(function Cha
             onClick={isTyping ? onStop : () => { setIsFullyExpanded(false); onSend(); }}
             disabled={(!hasContent && !isTyping) || isUploading}
             className={cn(
-              "w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-all shrink-0",
+              "w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-all shrink-0 outline-none focus:outline-none focus-visible:ring-2 focus-visible:ring-foreground/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
               isTyping
                 ? "bg-foreground text-background cursor-pointer hover:opacity-85 active:scale-95"
                 : isUploading
@@ -754,7 +761,7 @@ export const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(function Cha
                 rows={1}
                 disabled={isTyping || isUploading}
                 className={cn(
-                  "w-full min-w-0 bg-transparent border-0 p-0 text-[16px] sm:text-[16.5px] text-foreground placeholder:text-muted-foreground focus:placeholder:text-foreground transition-colors focus:outline-none focus:ring-0 resize-none leading-relaxed",
+                  "w-full min-w-0 bg-transparent border-0 p-0 text-[16px] sm:text-[16.5px] placeholder:text-muted-foreground transition-colors focus:outline-none focus:ring-0 resize-none leading-relaxed",
                   isFullyExpanded ? "min-h-[280px]" : "min-h-[44px]",
                   isBigContent && "pr-14 sm:pr-16"
                 )}
@@ -768,7 +775,7 @@ export const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(function Cha
                       <button
                         type="button"
                         onClick={() => setIsFullyExpanded((prev) => !prev)}
-                        className="w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary transition-all shrink-0 cursor-pointer"
+                        className="w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary transition-all shrink-0 cursor-pointer outline-none focus:outline-none focus-visible:ring-2 focus-visible:ring-foreground/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                         aria-label={isFullyExpanded ? "Collapse" : "Expand"}
                       >
                         {isFullyExpanded ? (
@@ -792,7 +799,7 @@ export const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(function Cha
                 {renderPlusButton()}
               </div>
 
-              <div className="flex items-center gap-1 sm:gap-1.5 shrink-0 pr-0.5">
+              <div className="flex items-center gap-1.5 sm:gap-2 shrink-0 pr-0.5">
                 {renderRightActions()}
               </div>
             </div>
@@ -832,11 +839,11 @@ export const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(function Cha
                 placeholder="Ask anything"
                 rows={1}
                 disabled={isTyping || isUploading}
-                className="w-full min-w-0 bg-transparent border-0 px-0.5 sm:px-1 py-0 text-[16px] sm:text-[16.5px] text-foreground placeholder:text-muted-foreground focus:placeholder:text-foreground transition-colors focus:outline-none focus:ring-0 resize-none h-[26px] leading-[26px] overflow-hidden scrollbar-none"
+                className="w-full min-w-0 bg-transparent border-0 px-0.5 sm:px-1 py-0 text-[16px] sm:text-[16.5px] placeholder:text-muted-foreground transition-colors focus:outline-none focus:ring-0 resize-none h-[26px] leading-[26px] overflow-hidden scrollbar-none"
               />
             </div>
 
-            <div className="flex items-center gap-1 sm:gap-1.5 shrink-0 pr-0.5 sm:pr-1">
+            <div className="flex items-center gap-1.5 sm:gap-2 shrink-0 pr-0.5 sm:pr-1">
               {renderRightActions()}
             </div>
           </div>

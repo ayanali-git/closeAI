@@ -40,15 +40,31 @@ import {
   Pencil,
   Upload,
   Trash2,
+  BookOpen,
+  GitBranch,
+  Package,
+  ArrowUp,
+  Globe,
 } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSub,
+  DropdownMenuSubTrigger,
+  DropdownMenuSubContent,
+} from "@/components/ui/dropdown-menu";
+import { AnimatedComingSoonText } from "@/components/ui/animated";
 import { cn } from "@/lib/utils";
 import toast from "@/lib/toast";
 import { SharePromptModal } from "@/components/modals/share-prompt-modal";
+import { ShareResponseModal } from "@/components/modals/share-response-modal";
 import { DeleteMessageModal } from "@/components/modals/delete-message-modal";
 import { ThinkReasoning } from "@/components/chat/think-reasoning";
 import { FilePreviewModal } from "@/components/modals/file-preview-modal";
@@ -65,6 +81,7 @@ export interface MessageListProps {
     isThinkMode?: boolean;
   } | null;
   onRegenerate?: (message?: Message, index?: number) => void;
+  onSendMessage?: (content: string) => void;
   onEditMessage?: (content: string) => void;
   onEditAndResend?: (
     messageId: string,
@@ -447,12 +464,84 @@ function setFeedbackCookie(data: Record<string, "up" | "down">) {
   }
 }
 
+function formatMessageTime(dateInput?: string | Date): string {
+  try {
+    if (!dateInput) {
+      const now = new Date();
+      return `Today, ${now.toLocaleTimeString([], {
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: true,
+      })}`;
+    }
+    const cleanInput =
+      typeof dateInput === "string" ? dateInput.replace(" ", "T") : dateInput;
+    const d = new Date(cleanInput);
+    if (isNaN(d.getTime())) {
+      const now = new Date();
+      return `Today, ${now.toLocaleTimeString([], {
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: true,
+      })}`;
+    }
+    const now = new Date();
+    const isToday =
+      d.getDate() === now.getDate() &&
+      d.getMonth() === now.getMonth() &&
+      d.getFullYear() === now.getFullYear();
+
+    const timeStr = d.toLocaleTimeString([], {
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
+    });
+
+    if (isToday) {
+      return `Today, ${timeStr}`;
+    }
+
+    const yesterday = new Date(now);
+    yesterday.setDate(yesterday.getDate() - 1);
+    const isYesterday =
+      d.getDate() === yesterday.getDate() &&
+      d.getMonth() === yesterday.getMonth() &&
+      d.getFullYear() === yesterday.getFullYear();
+
+    if (isYesterday) {
+      return `Yesterday, ${timeStr}`;
+    }
+
+    const isThisYear = d.getFullYear() === now.getFullYear();
+    const dateStr = isThisYear
+      ? d.toLocaleDateString([], {
+          month: "short",
+          day: "numeric",
+        })
+      : d.toLocaleDateString([], {
+          month: "short",
+          day: "numeric",
+          year: "numeric",
+        });
+
+    return `${dateStr}, ${timeStr}`;
+  } catch {
+    const now = new Date();
+    return `Today, ${now.toLocaleTimeString([], {
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
+    })}`;
+  }
+}
+
 export function MessageList({
   messages,
   user,
   isTyping,
   pendingMessage,
   onRegenerate,
+  onSendMessage,
   onEditMessage,
   onEditAndResend,
   onDeleteMessage,
@@ -463,6 +552,7 @@ export function MessageList({
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [copyingId, setCopyingId] = useState<string | null>(null);
   const [showScrollBottom, setShowScrollBottom] = useState(false);
+  const [changePrompts, setChangePrompts] = useState<Record<string, string>>({});
   const [feedback, setFeedback] = useState<Record<string, "up" | "down">>({});
   const [loadingFeedbackId, setLoadingFeedbackId] = useState<string | null>(
     null
@@ -477,6 +567,10 @@ export function MessageList({
   const [sharePromptMsg, setSharePromptMsg] = useState<{
     text: string;
     files?: any[];
+  } | null>(null);
+  const [shareResponseMsg, setShareResponseMsg] = useState<{
+    text: string;
+    model?: string;
   } | null>(null);
   const [loadingShareId, setLoadingShareId] = useState<string | null>(null);
   const [deleteMessageTarget, setDeleteMessageTarget] = useState<{
@@ -501,6 +595,22 @@ export function MessageList({
       }
     };
   }, []);
+
+  const handleSendChangePrompt = (msgId: string) => {
+    const text = (changePrompts[msgId] || "").trim();
+    if (!text) return;
+    setChangePrompts((prev) => ({ ...prev, [msgId]: "" }));
+    if (typeof document !== "undefined") {
+      document.dispatchEvent(
+        new KeyboardEvent("keydown", { key: "Escape", bubbles: true })
+      );
+    }
+    if (onSendMessage) {
+      onSendMessage(text);
+    } else if (onRegenerate) {
+      onRegenerate();
+    }
+  };
 
   const handleReadAloud = (msgId: string, content: string) => {
     if (typeof window === "undefined" || !window.speechSynthesis) {
@@ -701,7 +811,7 @@ export function MessageList({
 
                 {isEditing ? (
                   /* Inline Editor */
-                  <div className="w-full bg-foreground dark:bg-[#2F2F2F] rounded-2xl sm:rounded-3xl p-3 sm:p-4 border">
+                  <div className="w-full bg-bubble dark:bg-[#2F2F2F] rounded-2xl sm:rounded-3xl p-3 sm:p-4 border">
                     <textarea
                       ref={editTextareaRef}
                       value={editDraftText}
@@ -754,19 +864,19 @@ export function MessageList({
                 ) : (
                   <>
                     {/* User Bubble Capsule */}
-                    <div className="bg-foreground dark:bg-[#2F2F2F] text-background dark:text-foreground text-[15px] sm:text-[15.5px] leading-relaxed rounded-2xl sm:rounded-3xl px-4 sm:px-5 py-2.5 sm:py-3 max-w-[85%] sm:max-w-[75%] whitespace-pre-wrap select-text break-words">
+                    <div className="bg-bubble dark:bg-[#2F2F2F] text-foreground text-[15px] sm:text-[15.5px] leading-relaxed rounded-2xl sm:rounded-3xl px-4 sm:px-5 py-2.5 sm:py-3 max-w-[85%] sm:max-w-[75%] whitespace-pre-wrap select-text break-words">
                       {msg.content}
                     </div>
 
                     {/* User Hover Actions Toolbar */}
-                    <div className="flex items-center gap-1 mt-1.5 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+                    <div className="flex items-center gap-1 mt-1.5 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:focus-within:opacity-100 sm:group-focus-within:opacity-100 transition-opacity">
                       {/* 1. Copy message */}
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <button
                             type="button"
                             onClick={() => copyToClipboard(msg.content, msgId)}
-                            className="p-1.5 rounded-sm hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                            className="p-1.5 rounded-sm hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors cursor-pointer outline-none focus:outline-none focus-visible:ring-1.5 focus-visible:ring-foreground/40"
                             aria-label="Copy message"
                           >
                             {isCopied ? (
@@ -793,7 +903,7 @@ export function MessageList({
                               <button
                                 type="button"
                                 onClick={() => startEditing(msgId, msg.content)}
-                                className="p-1.5 rounded-sm hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                                className="p-1.5 rounded-sm hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors cursor-pointer outline-none focus:outline-none focus-visible:ring-1.5 focus-visible:ring-foreground/40"
                                 aria-label="Edit prompt"
                               >
                                 <Pencil className="w-4 h-4" />
@@ -826,7 +936,7 @@ export function MessageList({
                                   });
                                 }, 300);
                               }}
-                              className="p-1.5 rounded-sm hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                              className="p-1.5 rounded-sm hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors cursor-pointer outline-none focus:outline-none focus-visible:ring-1.5 focus-visible:ring-foreground/40"
                               aria-label="Share prompt"
                             >
                               {loadingShareId === msgId ? (
@@ -860,7 +970,7 @@ export function MessageList({
                                   files: msg.files,
                                 })
                               }
-                              className="p-1.5 rounded-sm hover:bg-secondary text-muted-foreground hover:text-destructive transition-colors cursor-pointer"
+                              className="p-1.5 rounded-sm hover:bg-secondary text-muted-foreground hover:text-destructive transition-colors cursor-pointer outline-none focus:outline-none focus-visible:ring-1.5 focus-visible:ring-foreground/40"
                               aria-label="Delete message"
                             >
                               <Trash2 className="w-4 h-4" />
@@ -1162,29 +1272,29 @@ export function MessageList({
                       </TooltipContent>
                     </Tooltip>
 
+                    {/* Share response */}
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <button
-                          onClick={() => handleReadAloud(msgId, msg.content)}
-                          disabled={loadingSpeechId === msgId}
-                          className={cn(
-                            "p-1.5 rounded-sm transition-colors cursor-pointer disabled:opacity-70 disabled:pointer-events-auto disabled:cursor-not-allowed",
-                            speakingMessageId === msgId
-                              ? "text-foreground"
-                              : "text-muted-foreground hover:bg-secondary hover:text-foreground"
-                          )}
-                          aria-label={
-                            speakingMessageId === msgId
-                              ? "Stop reading"
-                              : "Read aloud"
-                          }
+                          type="button"
+                          data-message-action="share-response"
+                          onClick={() => {
+                            setLoadingShareId(msgId);
+                            setTimeout(() => {
+                              setLoadingShareId(null);
+                              setShareResponseMsg({
+                                text: msg.content,
+                                model: (msg.metadata as any)?.model || "CloseAI",
+                              });
+                            }, 300);
+                          }}
+                          className="p-1.5 rounded-sm hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                          aria-label="Share response"
                         >
-                          {loadingSpeechId === msgId ? (
+                          {loadingShareId === msgId ? (
                             <Loader className="w-4 h-4 animate-spin text-foreground shrink-0" />
-                          ) : speakingMessageId === msgId ? (
-                            <VolumeX className="w-4 h-4 text-foreground" />
                           ) : (
-                            <Volume2 className="w-4 h-4" />
+                            <Upload className="w-4 h-4" />
                           )}
                         </button>
                       </TooltipTrigger>
@@ -1193,35 +1303,167 @@ export function MessageList({
                         sideOffset={4}
                         className="text-md"
                       >
-                        {loadingSpeechId === msgId
-                          ? "Loading..."
-                          : speakingMessageId === msgId
-                          ? "Stop"
-                          : "Read aloud"}
+                        Share response
                       </TooltipContent>
                     </Tooltip>
 
-                    {onRegenerate && (
+                    {/* More options Dropdown (Read aloud, Try again, Models, Sources) */}
+                    <DropdownMenu>
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <button
-                            onClick={() => onRegenerate(msg, index)}
-                            disabled={isTyping}
-                            className="p-1.5 rounded-sm hover:bg-secondary hover:text-foreground transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                            aria-label="Try again"
-                          >
-                            <RefreshCw className="w-4 h-4" />
-                          </button>
+                          <DropdownMenuTrigger asChild>
+                            <button
+                              type="button"
+                              className={cn(
+                                "p-1.5 rounded-sm transition-colors outline-none focus:outline-none cursor-pointer",
+                                speakingMessageId === msgId
+                                  ? "text-foreground bg-secondary"
+                                  : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+                              )}
+                              aria-label="More options"
+                            >
+                              <MoreHorizontal className="w-4 h-4" />
+                            </button>
+                          </DropdownMenuTrigger>
                         </TooltipTrigger>
                         <TooltipContent
                           side="bottom"
                           sideOffset={4}
                           className="text-md"
                         >
-                          Try again
+                          More options
                         </TooltipContent>
                       </Tooltip>
-                    )}
+                      <DropdownMenuContent
+                        side="top"
+                        align="start"
+                        sideOffset={4}
+                        className="w-56 rounded-2xl p-1.5 bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/80 dark:border-none outline-none select-none z-50"
+                      >
+                        <div className="px-3 py-1.5 text-xs text-muted-foreground font-medium select-none">
+                          {formatMessageTime(msg.createdAt || (msg as any).created_at)}
+                        </div>
+
+                        {/* Read aloud / Stop reading */}
+                        <DropdownMenuItem
+                          onClick={() => handleReadAloud(msgId, msg.content)}
+                          className="flex items-center gap-2.5 px-3 py-2 text-md rounded-xl cursor-pointer text-foreground hover:bg-secondary dark:hover:bg-[#2f2f2f] transition-colors outline-none"
+                        >
+                          {speakingMessageId === msgId ? (
+                            <>
+                              <VolumeX className="w-4 h-4 text-muted-foreground group-hover:text-foreground shrink-0" />
+                              <span>Stop reading</span>
+                            </>
+                          ) : (
+                            <>
+                              <Volume2 className="w-4 h-4 text-muted-foreground group-hover:text-foreground shrink-0" />
+                              <span>Read aloud</span>
+                            </>
+                          )}
+                        </DropdownMenuItem>
+
+                        {/* Try again Submenu (Input + Try again + Don't search web) */}
+                        {onRegenerate && (
+                          <DropdownMenuSub>
+                            <DropdownMenuSubTrigger className="flex items-center justify-between w-full px-3 py-2 text-md rounded-xl cursor-pointer text-foreground hover:bg-secondary dark:hover:bg-[#2f2f2f] data-[state=open]:bg-secondary dark:data-[state=open]:bg-[#2f2f2f] transition-colors outline-none">
+                              <div className="flex items-center gap-2.5">
+                                <RefreshCw className="w-4 h-4 text-muted-foreground group-hover:text-foreground shrink-0" />
+                                <span>Try again</span>
+                              </div>
+                            </DropdownMenuSubTrigger>
+                            <DropdownMenuSubContent
+                              sideOffset={4}
+                              alignOffset={-93}
+                              avoidCollisions={true}
+                              collisionPadding={12}
+                              className="w-56 rounded-2xl p-1.5 bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/80 dark:border-none outline-none select-none z-50"
+                            >
+                              {/* Top Input Bar: Ask to change response */}
+                              <div
+                                className="px-2 py-1"
+                                onClick={(e) => e.stopPropagation()}
+                                onKeyDown={(e) => e.stopPropagation()}
+                              >
+                                <div className="relative flex items-center justify-between gap-1.5 bg-transparent">
+                                  <input
+                                    type="text"
+                                    placeholder="Try to change response"
+                                    value={changePrompts[msgId] || ""}
+                                    onChange={(e) =>
+                                      setChangePrompts((prev) => ({
+                                        ...prev,
+                                        [msgId]: e.target.value,
+                                      }))
+                                    }
+                                    onKeyDown={(e) => {
+                                      e.stopPropagation();
+                                      if (
+                                        e.key === "Enter" &&
+                                        (changePrompts[msgId] || "").trim()
+                                      ) {
+                                        e.preventDefault();
+                                        handleSendChangePrompt(msgId);
+                                      }
+                                    }}
+                                    className="w-full bg-transparent text-foreground placeholder:text-muted-foreground/60 text-sm outline-none py-1 font-normal min-w-0"
+                                    autoFocus
+                                  />
+                                  <button
+                                    type="button"
+                                    onClick={() => handleSendChangePrompt(msgId)}
+                                    disabled={!(changePrompts[msgId] || "").trim()}
+                                    className={cn(
+                                      "w-6 h-6 rounded-full flex items-center justify-center shrink-0 transition-all",
+                                      (changePrompts[msgId] || "").trim()
+                                        ? "bg-foreground text-background cursor-pointer hover:opacity-90 active:scale-95"
+                                        : "bg-neutral-300 dark:bg-[#383838] text-muted-foreground/50 cursor-not-allowed opacity-50"
+                                    )}
+                                    aria-label="Send change request"
+                                  >
+                                    <ArrowUp className="w-3.5 h-3.5 stroke-[2.5]" />
+                                  </button>
+                                </div>
+                              </div>
+
+                              <div className="h-[1px] bg-neutral-200/80 dark:bg-[#383838] my-1 -mx-0.5" />
+
+                              {/* Option 1: Try again */}
+                              <DropdownMenuItem
+                                onClick={() => onRegenerate(msg, index)}
+                                className="flex items-center gap-2.5 px-3 py-2 text-md rounded-xl cursor-pointer text-foreground hover:bg-secondary dark:hover:bg-[#2f2f2f] transition-colors outline-none"
+                              >
+                                <RefreshCw className="w-4 h-4 text-muted-foreground group-hover:text-foreground shrink-0" />
+                                <span>Try again</span>
+                              </DropdownMenuItem>
+
+                              {/* Option 2: Web search (Disabled) */}
+                              <DropdownMenuItem
+                                onSelect={(e) => e.preventDefault()}
+                                onClick={(e) => e.preventDefault()}
+                                className="flex items-center gap-2.5 px-3 py-2 text-md rounded-xl font-medium transition-colors outline-none focus:outline-none focus:bg-transparent focus-visible:outline-none whitespace-nowrap text-left cursor-not-allowed select-none text-muted-foreground [@media(hover:hover)]:hover:bg-secondary dark:[@media(hover:hover)]:hover:bg-[#2f2f2f]"
+                              >
+                                <Globe className="w-4 h-4 text-muted-foreground group-hover:text-foreground shrink-0" />
+                                <AnimatedComingSoonText
+                                  label="Web search"
+                                  comingSoonText="Coming soon"
+                                />
+                              </DropdownMenuItem>
+                            </DropdownMenuSubContent>
+                          </DropdownMenuSub>
+                        )}
+
+                        {/* View sources */}
+                        <DropdownMenuItem
+                          onClick={() => {
+                            toast.info("Viewing sources for this response");
+                          }}
+                          className="flex items-center gap-2.5 px-3 py-2 text-md rounded-xl cursor-pointer text-foreground hover:bg-secondary dark:hover:bg-[#2f2f2f] transition-colors outline-none"
+                        >
+                          <BookOpen className="w-4 h-4 text-muted-foreground group-hover:text-foreground shrink-0" />
+                          <span>View sources</span>
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </div>
                 )}
               </div>
@@ -1243,12 +1485,12 @@ export function MessageList({
                 ))}
               </div>
             )}
-            <div className="bg-foreground dark:bg-[#2F2F2F] text-background dark:text-foreground text-[15px] sm:text-[15.5px] leading-relaxed rounded-2xl sm:rounded-3xl px-4 sm:px-5 py-2.5 sm:py-3 max-w-[85%] sm:max-w-[75%] whitespace-pre-wrap select-text break-words">
+            <div className="bg-bubble dark:bg-[#2F2F2F] text-foreground text-[15px] sm:text-[15.5px] leading-relaxed rounded-2xl sm:rounded-3xl px-4 sm:px-5 py-2.5 sm:py-3 max-w-[85%] sm:max-w-[75%] whitespace-pre-wrap select-text break-words">
               {pendingMessage.content}
             </div>
 
             {/* User Hover Actions Toolbar — Copy button during pending/thinking (Edit hidden while thinking) */}
-            <div className="flex items-center gap-1 mt-1.5 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+            <div className="flex items-center gap-1 mt-1.5 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:focus-within:opacity-100 sm:group-focus-within:opacity-100 transition-opacity">
               <Tooltip>
                 <TooltipTrigger asChild>
                   <button
@@ -1256,7 +1498,7 @@ export function MessageList({
                     onClick={() =>
                       copyToClipboard(pendingMessage.content, "pending-msg")
                     }
-                    className="p-1.5 rounded-sm hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                    className="p-1.5 rounded-sm hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors cursor-pointer outline-none focus:outline-none focus-visible:ring-1.5 focus-visible:ring-foreground/40"
                     aria-label="Copy prompt"
                   >
                     {copiedId === "pending-msg" ? (
@@ -1318,6 +1560,15 @@ export function MessageList({
         }}
         promptText={sharePromptMsg?.text || ""}
         files={sharePromptMsg?.files}
+      />
+
+      <ShareResponseModal
+        open={!!shareResponseMsg}
+        onOpenChange={(open) => {
+          if (!open) setShareResponseMsg(null);
+        }}
+        responseText={shareResponseMsg?.text || ""}
+        modelName={shareResponseMsg?.model || "CloseAI"}
       />
 
       <DeleteMessageModal

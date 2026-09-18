@@ -1,35 +1,33 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { BottomSheet } from "@/components/ui/bottom-sheet";
-import { AlertTriangle, X } from "lucide-react";
+import { AlertTriangle } from "lucide-react";
 import { isImageFile, getFileIconInfo } from "@/lib/file-utils";
 import { cn } from "@/lib/utils";
 
-export interface DeleteMessageModalProps {
+export interface DeleteModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onConfirm: () => void;
-  promptText: string;
+  title?: string;
+  description?: string;
+  itemTitle?: string;
+  promptText?: string;
   files?: any[];
 }
 
-export function DeleteMessageModal({
+export function DeleteModal({
   open,
   onOpenChange,
   onConfirm,
+  title,
+  description,
+  itemTitle,
   promptText,
   files,
-}: DeleteMessageModalProps) {
-  const [isMobileScreen, setIsMobileScreen] = useState(false);
-
-  useEffect(() => {
-    const checkMobile = () => setIsMobileScreen(window.innerWidth < 1025);
-    checkMobile();
-    window.addEventListener("resize", checkMobile);
-    return () => window.removeEventListener("resize", checkMobile);
-  }, []);
-
+}: DeleteModalProps) {
+  const displayText = promptText || itemTitle || "New chat";
   const hasFiles = files && files.length > 0;
 
   return (
@@ -40,21 +38,21 @@ export function DeleteMessageModal({
       className="max-w-[600px]"
     >
       <div className="flex flex-col space-y-4 pt-1 pb-2">
-        {/* Header — Share prompt style with X close button on desktop */}
+        {/* Header */}
         <div className="flex items-center justify-between">
           <h2 className="text-2xl font-bold tracking-tight text-foreground">
-            Delete message?
+            {title || "Delete chat?"}
           </h2>
         </div>
 
-        {/* Message Preview Card — same to same as Share Prompt card, without scrollable and without CloseAI text */}
+        {/* Message / Chat Preview Card — same to same as Delete Message card */}
         <div className="relative w-full rounded-2xl sm:rounded-3xl overflow-hidden dark:bg-neutral-800 border border-border/80 dark:border-none">
           {/* Bottom gradient overlay */}
           <div className="absolute bottom-0 left-0 right-0 h-[30%] min-h-[95px] sm:min-h-[105px] z-10 pointer-events-none bg-gradient-to-t from-background via-background/90 to-transparent dark:from-neutral-800 dark:via-neutral-800/95 to-transparent" />
 
           <div
             className={cn(
-              "relative z-0 max-h-[380px] sm:max-h-[420px] min-h-[300px] sm:min-h-[330px] flex flex-col items-end justify-start gap-2.5 px-5 sm:px-6 pt-5 sm:pt-6 pb-12 sm:pb-14 overflow-hidden select-text",
+              "relative z-0 max-h-[100px] sm:max-h-[200px] min-h-[100px] sm:min-h-[200px] flex flex-col items-end justify-start gap-2.5 px-5 sm:px-6 pt-5 sm:pt-6 pb-12 sm:pb-14 overflow-hidden select-text",
             )}
           >
             {/* Files Preview */}
@@ -63,7 +61,7 @@ export function DeleteMessageModal({
                 {files!.map((file: any, i: number) => {
                   const fileUrl = file.url || file.publicUrl;
                   const isImg = isImageFile(file);
-                  const { Icon, label } = getFileIconInfo(file);
+                  const { Icon } = getFileIconInfo(file);
                   const displayName = file.name || file.filename || "File";
                   return (
                     <div
@@ -95,20 +93,20 @@ export function DeleteMessageModal({
               </div>
             )}
 
-            {/* Prompt Text Bubble */}
-            {promptText && (
+            {/* Prompt Text / Chat Title Bubble */}
+            {displayText && (
               <p className="bg-bubble dark:bg-[#2F2F2F] text-foreground text-[15px] sm:text-[15.5px] leading-relaxed rounded-2xl sm:rounded-3xl px-4 sm:px-5 py-2.5 sm:py-3 max-w-[85%] whitespace-pre-wrap break-words">
-                {promptText}
+                {displayText}
               </p>
             )}
           </div>
         </div>
 
-        {/* Warning / Info Box — from delete-modal style */}
+        {/* Warning / Info Box */}
         <div className="w-full flex items-start gap-2.5 p-3 rounded-2xl bg-secondary/50 text-left text-xs text-muted-foreground">
           <AlertTriangle className="w-4 h-4 shrink-0 text-muted-foreground mt-0.5" />
           <span className="leading-normal">
-            This will permanently delete this prompt, any attached files, and its associated response.
+            {description || "This will permanently delete this conversation."}
           </span>
         </div>
 
@@ -122,7 +120,7 @@ export function DeleteMessageModal({
             }}
             className="w-full h-11 rounded-full bg-red-600 text-white font-semibold text-sm hover:bg-red-500 active:scale-[0.99] transition-all cursor-pointer select-none"
           >
-            Delete message
+            Delete chat
           </button>
           <button
             type="button"
@@ -136,3 +134,5 @@ export function DeleteMessageModal({
     </BottomSheet>
   );
 }
+
+export const DeleteChatModal = DeleteModal;

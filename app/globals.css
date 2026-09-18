@@ -278,10 +278,10 @@ html:not(.dark) .gooey-title {
 /* Animated Shimmer for Thinking / Loading text */
 @keyframes shimmer-sweep {
   0% {
-    background-position: -200% 0;
+    background-position: 200% 0;
   }
   100% {
-    background-position: 200% 0;
+    background-position: -200% 0;
   }
 }
 

@@ -121,7 +121,7 @@ export default function SignupPage() {
           <Button
             variant="outline"
             type="button"
-            className="w-full h-11 rounded-xl border border-border font-medium hover:bg-secondary text-foreground transition-colors flex items-center justify-center gap-2.5"
+            className="w-full h-11 rounded-xl border border-border font-medium hover:bg-secondary text-muted-foreground group-hover:text-foreground transition-colors flex items-center justify-center gap-2.5"
             onClick={handleGoogleSignup}
           >
             <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
@@ -149,7 +149,7 @@ export default function SignupPage() {
           <Button
             variant="outline"
             type="button"
-            className="w-full h-11 rounded-xl border border-border font-medium hover:bg-secondary text-foreground transition-colors flex items-center justify-center gap-2.5"
+            className="w-full h-11 rounded-xl border border-border font-medium hover:bg-secondary text-muted-foreground group-hover:text-foreground transition-colors flex items-center justify-center gap-2.5"
             onClick={handleGithubSignup}
           >
             <svg className="w-4 h-4 shrink-0 fill-current" viewBox="0 0 24 24">

@@ -26,7 +26,7 @@ export const AuthContext = createContext<AuthContextType>({
   refreshSession: async () => null,
 });
 
-function hasActiveAuthCookie(): boolean {
+export function hasActiveAuthCookie(): boolean {
   if (typeof document === 'undefined') return false;
   try {
     const cookies = document.cookie.split(';');
@@ -160,6 +160,11 @@ export function AuthProvider({
   useEffect(() => {
     let isMounted = true;
 
+    // Fast path: If client browser has no active auth cookie, immediately finish loading (guest)
+    if (typeof document !== 'undefined' && !hasActiveAuthCookie()) {
+      setLoading(false);
+    }
+
     // Fast initial check to populate session immediately on mount
     supabase.auth.getSession().then(({ data: { session: initialSession }, error }) => {
       if (!isMounted) return;
@@ -175,6 +180,26 @@ export function AuthProvider({
     }).catch(() => {
       if (isMounted && !isSigningOutRef.current) setLoading(false);
     });
+
+    // Browser load synchronization: ensure loading smoothly resolves with browser load
+    const syncWithBrowserLoad = () => {
+      if (!isMounted) return;
+      if (!isSigningOutRef.current) {
+        setLoading(false);
+      }
+    };
+
+    let safetyTimer: NodeJS.Timeout | null = null;
+    let loadTimer: NodeJS.Timeout | null = null;
+
+    if (typeof document !== 'undefined') {
+      if (document.readyState === 'complete') {
+        loadTimer = setTimeout(syncWithBrowserLoad, 200);
+      } else {
+        window.addEventListener('load', syncWithBrowserLoad);
+      }
+      safetyTimer = setTimeout(syncWithBrowserLoad, 400);
+    }
 
     // Authoritative listener for auth state changes & token refreshes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -204,6 +229,11 @@ export function AuthProvider({
 
     return () => {
       isMounted = false;
+      if (safetyTimer) clearTimeout(safetyTimer);
+      if (loadTimer) clearTimeout(loadTimer);
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('load', syncWithBrowserLoad);
+      }
       subscription.unsubscribe();
     };
   }, [ensureProfile, healBloatedSession]);

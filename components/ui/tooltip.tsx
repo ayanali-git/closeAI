@@ -7,9 +7,135 @@ import { cn } from '@/lib/utils';
 
 const TooltipProvider = TooltipPrimitive.Provider;
 
-const Tooltip = TooltipPrimitive.Root;
+interface TooltipContextValue {
+  isFocusedRef: React.MutableRefObject<boolean>;
+  focusTimestampRef: React.MutableRefObject<number>;
+  triggerRef: React.MutableRefObject<HTMLElement | null>;
+  setOpenState: (open: boolean) => void;
+}
 
-const TooltipTrigger = TooltipPrimitive.Trigger;
+const TooltipContext = React.createContext<TooltipContextValue | null>(null);
+
+const Tooltip = ({
+  open: controlledOpen,
+  defaultOpen = false,
+  onOpenChange,
+  children,
+  ...props
+}: React.ComponentPropsWithoutRef<typeof TooltipPrimitive.Root>) => {
+  const [internalOpen, setInternalOpen] = React.useState(defaultOpen);
+  const isFocusedRef = React.useRef(false);
+  const focusTimestampRef = React.useRef(0);
+  const triggerRef = React.useRef<HTMLElement | null>(null);
+
+  const isControlled = controlledOpen !== undefined;
+  const isOpen = isControlled ? controlledOpen : internalOpen;
+
+  const handleOpenChange = React.useCallback(
+    (nextOpen: boolean) => {
+      if (!nextOpen) {
+        // When tabbing to an element that causes a container scroll (e.g., auto scroll-into-view),
+        // Radix's internal handleScroll listener automatically calls onClose().
+        // If the trigger was focused via keyboard within 600ms and is still the active element,
+        // ignore this premature close to allow the tooltip to remain open for the user.
+        const now = Date.now();
+        const timeSinceFocus = now - focusTimestampRef.current;
+        const isStillFocused =
+          isFocusedRef.current ||
+          (triggerRef.current &&
+            (document.activeElement === triggerRef.current ||
+              triggerRef.current.contains(document.activeElement)));
+
+        if (isStillFocused && timeSinceFocus < 600) {
+          return;
+        }
+      }
+
+      if (!isControlled) {
+        setInternalOpen(nextOpen);
+      }
+      onOpenChange?.(nextOpen);
+    },
+    [isControlled, onOpenChange]
+  );
+
+  return (
+    <TooltipContext.Provider
+      value={{
+        isFocusedRef,
+        focusTimestampRef,
+        triggerRef,
+        setOpenState: (open: boolean) => {
+          if (!isControlled) {
+            setInternalOpen(open);
+          }
+          onOpenChange?.(open);
+        },
+      }}
+    >
+      <TooltipPrimitive.Root
+        open={isOpen}
+        onOpenChange={handleOpenChange}
+        {...props}
+      >
+        {children}
+      </TooltipPrimitive.Root>
+    </TooltipContext.Provider>
+  );
+};
+
+const TooltipTrigger = React.forwardRef<
+  React.ElementRef<typeof TooltipPrimitive.Trigger>,
+  React.ComponentPropsWithoutRef<typeof TooltipPrimitive.Trigger>
+>(({ onFocus, onBlur, onClick, onKeyDown, ...props }, ref) => {
+  const ctx = React.useContext(TooltipContext);
+
+  return (
+    <TooltipPrimitive.Trigger
+      ref={(node: any) => {
+        if (ctx) {
+          ctx.triggerRef.current = node;
+        }
+        if (typeof ref === 'function') {
+          ref(node);
+        } else if (ref) {
+          (ref as any).current = node;
+        }
+      }}
+      onFocus={(e) => {
+        if (ctx) {
+          ctx.isFocusedRef.current = true;
+          ctx.focusTimestampRef.current = Date.now();
+        }
+        onFocus?.(e);
+      }}
+      onBlur={(e) => {
+        if (ctx) {
+          ctx.isFocusedRef.current = false;
+          ctx.setOpenState(false);
+        }
+        onBlur?.(e);
+      }}
+      onClick={(e) => {
+        if (ctx) {
+          ctx.setOpenState(false);
+        }
+        onClick?.(e);
+      }}
+      onKeyDown={(e) => {
+        if (e.key === 'Escape') {
+          if (ctx) {
+            ctx.isFocusedRef.current = false;
+            ctx.setOpenState(false);
+          }
+        }
+        onKeyDown?.(e);
+      }}
+      {...props}
+    />
+  );
+});
+TooltipTrigger.displayName = TooltipPrimitive.Trigger.displayName;
 
 const TooltipContent = React.forwardRef<
   React.ElementRef<typeof TooltipPrimitive.Content>,

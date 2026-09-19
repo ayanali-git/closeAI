@@ -57,6 +57,8 @@ interface ChatInputProps {
   onTierChange?: (tier: number) => void;
   thinkMode?: boolean;
   onThinkModeChange?: (enabled: boolean) => void;
+  placeholder?: string;
+  disableAttach?: boolean;
 }
 
 /** preview card with thumbnail or code icon */
@@ -95,7 +97,7 @@ function FilePreviewCard({
         title={`Preview ${file.name}`}
       >
         <ImagePreview src={imageUrl || ""} alt={file.name}>
-          <div className="w-14 h-14 rounded-2xl overflow-hidden bg-neutral-100 dark:bg-[#262626] border border-neutral-200/90 dark:border-white/10 flex items-center justify-center shrink-0 hover:opacity-90 active:scale-[0.98] transition-all cursor-pointer">
+          <div className="w-14 h-14 rounded-2xl overflow-hidden bg-neutral-100 dark:bg-[#262626] flex items-center justify-center shrink-0 hover:opacity-90 transition-all cursor-pointer">
             {imageUrl ? (
               <img
                 src={imageUrl}
@@ -171,12 +173,14 @@ export const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(function Cha
     centered = false,
     showDisclaimer = false,
     children,
-    selectedModel = "GPT-5.4",
+    selectedModel = "gemini-3.8 flash",
     onModelChange,
     selectedTier = 4,
     onTierChange,
     thinkMode = false,
     onThinkModeChange,
+    placeholder = "Ask anything",
+    disableAttach = false,
   },
   ref
 ) {
@@ -517,6 +521,15 @@ export const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(function Cha
 
   const hasContent = message.trim().length > 0 || uploadedFiles.length > 0;
 
+  const handlePillButtonKeyDown = (e: React.KeyboardEvent<HTMLButtonElement>) => {
+    if (e.key === "Enter" || e.key === " ") {
+      const btn = e.currentTarget;
+      setTimeout(() => {
+        btn?.blur();
+      }, 0);
+    }
+  };
+
   const renderPlusButton = () => (
     <DropdownMenu
       open={plusMenuOpen}
@@ -532,6 +545,7 @@ export const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(function Cha
               ref={plusButtonRef}
               type="button"
               disabled={isTyping || isUploading}
+              onKeyDown={handlePillButtonKeyDown}
               className="w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary dark:hover:bg-[#2f2f2f] transition-colors shrink-0 cursor-pointer outline-none focus:outline-none focus-visible:ring-2 focus-visible:ring-foreground/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
               aria-label="Add files and more"
             >
@@ -573,6 +587,7 @@ export const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(function Cha
           selectedTier={selectedTier}
           onTierChange={onTierChange}
           isOpen={plusMenuOpen}
+          disableAttach={disableAttach}
         />
       </DropdownMenuContent>
     </DropdownMenu>
@@ -585,7 +600,11 @@ export const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(function Cha
         <TooltipTrigger asChild>
           <button
             type="button"
-            onClick={() => onThinkModeChange?.(!thinkMode)}
+            onClick={(e) => {
+              (e.currentTarget as HTMLElement)?.blur();
+              onThinkModeChange?.(!thinkMode);
+            }}
+            onKeyDown={handlePillButtonKeyDown}
             className={cn(
               "h-9 sm:h-10 px-2.5 sm:px-5 group/think-btn rounded-full flex items-center justify-center gap-1.5 text-[13px] sm:text-[14px] font-medium select-none transition-all shrink-0 cursor-pointer outline-none focus:outline-none focus-visible:ring-2 focus-visible:ring-foreground/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
               thinkMode
@@ -615,7 +634,11 @@ export const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(function Cha
         <TooltipTrigger asChild>
           <button
             type="button"
-            onClick={toggleDictation}
+            onClick={(e) => {
+              (e.currentTarget as HTMLElement)?.blur();
+              toggleDictation();
+            }}
+            onKeyDown={handlePillButtonKeyDown}
             className={cn(
               "w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-all cursor-pointer shrink-0 outline-none focus:outline-none focus-visible:ring-2 focus-visible:ring-foreground/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
               isListening
@@ -641,7 +664,16 @@ export const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(function Cha
         <TooltipTrigger asChild>
           <button
             type="button"
-            onClick={isTyping ? onStop : () => { setIsFullyExpanded(false); onSend(); }}
+            onClick={(e) => {
+              (e.currentTarget as HTMLElement)?.blur();
+              if (isTyping) {
+                onStop?.();
+              } else {
+                setIsFullyExpanded(false);
+                onSend();
+              }
+            }}
+            onKeyDown={handlePillButtonKeyDown}
             disabled={(!hasContent && !isTyping) || isUploading}
             className={cn(
               "w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-all shrink-0 outline-none focus:outline-none focus-visible:ring-2 focus-visible:ring-foreground/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
@@ -757,7 +789,7 @@ export const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(function Cha
                 }}
                 onKeyDown={handleKeyDown}
                 onPaste={handlePaste}
-                placeholder="Ask anything"
+                placeholder={placeholder}
                 rows={1}
                 disabled={isTyping || isUploading}
                 className={cn(
@@ -774,7 +806,11 @@ export const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(function Cha
                     <TooltipTrigger asChild>
                       <button
                         type="button"
-                        onClick={() => setIsFullyExpanded((prev) => !prev)}
+                        onClick={(e) => {
+                          (e.currentTarget as HTMLElement)?.blur();
+                          setIsFullyExpanded((prev) => !prev);
+                        }}
+                        onKeyDown={handlePillButtonKeyDown}
                         className="w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary transition-all shrink-0 cursor-pointer outline-none focus:outline-none focus-visible:ring-2 focus-visible:ring-foreground/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                         aria-label={isFullyExpanded ? "Collapse" : "Expand"}
                       >
@@ -836,7 +872,7 @@ export const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(function Cha
                 }}
                 onKeyDown={handleKeyDown}
                 onPaste={handlePaste}
-                placeholder="Ask anything"
+                placeholder={placeholder}
                 rows={1}
                 disabled={isTyping || isUploading}
                 className="w-full min-w-0 bg-transparent border-0 px-0.5 sm:px-1 py-0 text-[16px] sm:text-[16.5px] placeholder:text-muted-foreground transition-colors focus:outline-none focus:ring-0 resize-none h-[26px] leading-[26px] overflow-hidden scrollbar-none"

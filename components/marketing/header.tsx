@@ -227,18 +227,15 @@ const SITE_SEARCH_INDEX: SiteSearchItem[] = [
   {
     id: "dev-apps",
     category: "Page",
-    title: "Download Apps (Desktop & Mobile)",
+    title: "Download App",
     description:
       "Get native CloseAI apps for macOS, Windows, iOS, and Android for instant keyboard shortcuts and offline access.",
     url: "/product/docs",
     date: "Jun 2026",
     keywords: [
       "download",
-      "apps",
-      "desktop",
+      "app",
       "mobile",
-      "mac",
-      "windows",
       "ios",
       "android",
     ],
@@ -1167,12 +1164,12 @@ export function MarketingHeader() {
                     <p className="text-md font-semibold text-muted-foreground tracking-wider uppercase mb-5">
                       Explore Research
                     </p>
-                    <ul className="space-y-4">
+                    <ul className="space-y-4 nav-dropdown-group">
                       <li>
                         <Link
                           href="/research/overview"
                           onClick={() => setActiveMenu(null)}
-                          className="text-2xl font-medium text-foreground hover:opacity-70 transition-opacity"
+                          className="text-2xl font-medium text-foreground transition-colors"
                         >
                           Research Index
                         </Link>
@@ -1181,7 +1178,7 @@ export function MarketingHeader() {
                         <Link
                           href="/research/overview"
                           onClick={() => setActiveMenu(null)}
-                          className="text-2xl font-medium text-foreground hover:opacity-70 transition-opacity"
+                          className="text-2xl font-medium text-foreground transition-colors"
                         >
                           Research Overview
                         </Link>
@@ -1190,7 +1187,7 @@ export function MarketingHeader() {
                         <Link
                           href="/research/overview"
                           onClick={() => setActiveMenu(null)}
-                          className="text-2xl font-medium text-foreground hover:opacity-70 transition-opacity"
+                          className="text-2xl font-medium text-foreground transition-colors"
                         >
                           Research Residency
                         </Link>
@@ -1199,7 +1196,7 @@ export function MarketingHeader() {
                         <Link
                           href="/research/safety"
                           onClick={() => setActiveMenu(null)}
-                          className="text-2xl font-medium text-foreground hover:opacity-70 transition-opacity"
+                          className="text-2xl font-medium text-foreground transition-colors"
                         >
                           Safety
                         </Link>
@@ -1211,12 +1208,12 @@ export function MarketingHeader() {
                     <p className="text-md font-semibold text-muted-foreground tracking-wider uppercase mb-5">
                       Latest Advancements
                     </p>
-                    <ul className="space-y-3 text-md text-muted-foreground">
+                    <ul className="space-y-3 text-md nav-dropdown-group">
                       <li>
                         <Link
                           href="/research/overview"
                           onClick={() => setActiveMenu(null)}
-                          className="hover:text-foreground transition-colors"
+                          className="text-foreground transition-colors"
                         >
                           GPT-5.6
                         </Link>
@@ -1225,7 +1222,7 @@ export function MarketingHeader() {
                         <Link
                           href="/research/overview"
                           onClick={() => setActiveMenu(null)}
-                          className="hover:text-foreground transition-colors"
+                          className="text-foreground transition-colors"
                         >
                           GPT-5.5
                         </Link>
@@ -1234,7 +1231,7 @@ export function MarketingHeader() {
                         <Link
                           href="/research/overview"
                           onClick={() => setActiveMenu(null)}
-                          className="hover:text-foreground transition-colors"
+                          className="text-foreground transition-colors"
                         >
                           GPT-5.4
                         </Link>
@@ -1243,7 +1240,7 @@ export function MarketingHeader() {
                         <Link
                           href="/research/overview"
                           onClick={() => setActiveMenu(null)}
-                          className="hover:text-foreground transition-colors"
+                          className="text-foreground transition-colors"
                         >
                           GPT-5.3 Instant
                         </Link>
@@ -1252,7 +1249,7 @@ export function MarketingHeader() {
                         <Link
                           href="/research/overview"
                           onClick={() => setActiveMenu(null)}
-                          className="hover:text-foreground transition-colors"
+                          className="text-foreground transition-colors"
                         >
                           GPT-5.3-Codex
                         </Link>
@@ -1276,24 +1273,24 @@ export function MarketingHeader() {
                     <p className="text-md font-semibold text-muted-foreground tracking-wider uppercase mb-5">
                       Explore Products
                     </p>
-                    <ul className="space-y-4">
+                    <ul className="space-y-4 nav-dropdown-group">
                       <li>
                         <Link
                           href="/c"
                           target="_blank"
                           rel="noopener noreferrer"
                           onClick={() => setActiveMenu(null)}
-                          className="group inline-flex items-center text-2xl font-medium text-foreground hover:opacity-70 transition-opacity"
+                          className="group inline-flex items-center text-2xl font-medium text-foreground transition-colors"
                         >
                           <span>CloseAI Chat</span>
-                          <ArrowUpRight className="w-4 h-4 ml-1.5 text-foreground group-hover:text-foreground" />
+                          <ArrowUpRight className="w-4 h-4 ml-1.5 transition-colors" />
                         </Link>
                       </li>
                       <li>
                         <Link
                           href="/product/features"
                           onClick={() => setActiveMenu(null)}
-                          className="text-2xl font-medium text-foreground hover:opacity-70 transition-opacity"
+                          className="text-2xl font-medium text-foreground transition-colors"
                         >
                           Codex & Canvas
                         </Link>
@@ -1305,12 +1302,12 @@ export function MarketingHeader() {
                     <p className="text-md font-semibold text-muted-foreground tracking-wider uppercase mb-5">
                       Products
                     </p>
-                    <ul className="space-y-3 text-md text-muted-foreground">
+                    <ul className="space-y-3 text-md nav-dropdown-group">
                       <li>
                         <Link
                           href="/business/enterprise"
                           onClick={() => setActiveMenu(null)}
-                          className="hover:text-foreground transition-colors"
+                          className="text-foreground transition-colors"
                         >
                           CloseAI Work & Teams
                         </Link>
@@ -1319,7 +1316,7 @@ export function MarketingHeader() {
                         <Link
                           href="/business/enterprise"
                           onClick={() => setActiveMenu(null)}
-                          className="hover:text-foreground transition-colors"
+                          className="text-foreground transition-colors"
                         >
                           Codex Enterprise
                         </Link>
@@ -1328,7 +1325,7 @@ export function MarketingHeader() {
                         <Link
                           href="/business/enterprise"
                           onClick={() => setActiveMenu(null)}
-                          className="hover:text-foreground transition-colors"
+                          className="text-foreground transition-colors"
                         >
                           CloseAI Frontier
                         </Link>
@@ -1337,7 +1334,7 @@ export function MarketingHeader() {
                         <Link
                           href="/business/enterprise"
                           onClick={() => setActiveMenu(null)}
-                          className="hover:text-foreground transition-colors"
+                          className="text-foreground transition-colors"
                         >
                           CloseAI Presence
                         </Link>
@@ -1361,12 +1358,12 @@ export function MarketingHeader() {
                     <p className="text-md font-semibold text-muted-foreground tracking-wider uppercase mb-5">
                       Explore Business
                     </p>
-                    <ul className="space-y-4">
+                    <ul className="space-y-4 nav-dropdown-group">
                       <li>
                         <Link
                           href="/business/enterprise"
                           onClick={() => setActiveMenu(null)}
-                          className="text-2xl font-medium text-foreground hover:opacity-70 transition-opacity"
+                          className="text-2xl font-medium text-foreground transition-colors"
                         >
                           Overview
                         </Link>
@@ -1375,7 +1372,7 @@ export function MarketingHeader() {
                         <Link
                           href="/business/enterprise"
                           onClick={() => setActiveMenu(null)}
-                          className="text-2xl font-medium text-foreground hover:opacity-70 transition-opacity"
+                          className="text-2xl font-medium text-foreground transition-colors"
                         >
                           Solutions
                         </Link>
@@ -1384,7 +1381,7 @@ export function MarketingHeader() {
                         <Link
                           href="/business/enterprise"
                           onClick={() => setActiveMenu(null)}
-                          className="text-2xl font-medium text-foreground hover:opacity-70 transition-opacity"
+                          className="text-2xl font-medium text-foreground transition-colors"
                         >
                           Resources
                         </Link>
@@ -1393,7 +1390,7 @@ export function MarketingHeader() {
                         <Link
                           href="/business/enterprise"
                           onClick={() => setActiveMenu(null)}
-                          className="text-2xl font-medium text-foreground hover:opacity-70 transition-opacity"
+                          className="text-2xl font-medium text-foreground transition-colors"
                         >
                           Customer Stories
                         </Link>
@@ -1402,7 +1399,7 @@ export function MarketingHeader() {
                         <Link
                           href="/product/pricing"
                           onClick={() => setActiveMenu(null)}
-                          className="text-2xl font-medium text-foreground hover:opacity-70 transition-opacity"
+                          className="text-2xl font-medium text-foreground transition-colors"
                         >
                           Pricing
                         </Link>
@@ -1411,7 +1408,7 @@ export function MarketingHeader() {
                         <Link
                           href="/company/contact"
                           onClick={() => setActiveMenu(null)}
-                          className="text-2xl font-medium text-foreground hover:opacity-70 transition-opacity"
+                          className="text-2xl font-medium text-foreground transition-colors"
                         >
                           Contact Sales
                         </Link>
@@ -1423,12 +1420,12 @@ export function MarketingHeader() {
                     <p className="text-md font-semibold text-muted-foreground tracking-wider uppercase mb-5">
                       Resources
                     </p>
-                    <ul className="space-y-3 text-md text-muted-foreground">
+                    <ul className="space-y-3 text-md nav-dropdown-group">
                       <li>
                         <Link
                           href="/company/blog"
                           onClick={() => setActiveMenu(null)}
-                          className="hover:text-foreground transition-colors"
+                          className="text-foreground transition-colors"
                         >
                           Release Notes
                         </Link>
@@ -1437,7 +1434,7 @@ export function MarketingHeader() {
                         <Link
                           href="/product/api-docs"
                           onClick={() => setActiveMenu(null)}
-                          className="hover:text-foreground transition-colors"
+                          className="text-foreground transition-colors"
                         >
                           API Platform
                         </Link>
@@ -1446,7 +1443,7 @@ export function MarketingHeader() {
                         <Link
                           href="/product/pricing"
                           onClick={() => setActiveMenu(null)}
-                          className="hover:text-foreground transition-colors"
+                          className="text-foreground transition-colors"
                         >
                           CloseAI Academy & Guides
                         </Link>
@@ -1470,12 +1467,12 @@ export function MarketingHeader() {
                     <p className="text-md font-semibold text-muted-foreground tracking-wider uppercase mb-5">
                       Explore Developers
                     </p>
-                    <ul className="space-y-4">
+                    <ul className="space-y-4 nav-dropdown-group">
                       <li>
                         <Link
                           href="/product/features"
                           onClick={() => setActiveMenu(null)}
-                          className="text-2xl font-medium text-foreground hover:opacity-70 transition-opacity"
+                          className="text-2xl font-medium text-foreground transition-colors"
                         >
                           Codex
                         </Link>
@@ -1484,7 +1481,7 @@ export function MarketingHeader() {
                         <Link
                           href="/product/api-docs"
                           onClick={() => setActiveMenu(null)}
-                          className="text-2xl font-medium text-foreground hover:opacity-70 transition-opacity"
+                          className="text-2xl font-medium text-foreground transition-colors"
                         >
                           API Platform
                         </Link>
@@ -1495,17 +1492,17 @@ export function MarketingHeader() {
                           target="_blank"
                           rel="noopener noreferrer"
                           onClick={() => setActiveMenu(null)}
-                          className="group inline-flex items-center text-2xl font-medium text-foreground hover:opacity-70 transition-opacity"
+                          className="group inline-flex items-center text-2xl font-medium text-foreground transition-colors"
                         >
                           <span>Autonomous Agents</span>
-                          <ArrowUpRight className="w-4 h-4 ml-1.5 text-foreground group-hover:text-foreground" />
+                          <ArrowUpRight className="w-4 h-4 ml-1.5 transition-colors" />
                         </Link>
                       </li>
                       <li>
                         <Link
                           href="/research/overview"
                           onClick={() => setActiveMenu(null)}
-                          className="text-2xl font-medium text-foreground hover:opacity-70 transition-opacity"
+                          className="text-2xl font-medium text-foreground transition-colors"
                         >
                           Open Models
                         </Link>
@@ -1516,10 +1513,10 @@ export function MarketingHeader() {
                           target="_blank"
                           rel="noopener noreferrer"
                           onClick={() => setActiveMenu(null)}
-                          className="group inline-flex items-center text-2xl font-medium text-foreground hover:opacity-70 transition-opacity"
+                          className="group inline-flex items-center text-2xl font-medium text-foreground transition-colors"
                         >
                           <span>Apps SDK</span>
-                          <ArrowUpRight className="w-4 h-4 ml-1.5 text-foreground group-hover:text-foreground" />
+                          <ArrowUpRight className="w-4 h-4 ml-1.5 transition-colors" />
                         </Link>
                       </li>
                     </ul>
@@ -1529,12 +1526,12 @@ export function MarketingHeader() {
                     <p className="text-md font-semibold text-muted-foreground tracking-wider uppercase mb-5">
                       Resources
                     </p>
-                    <ul className="space-y-3 text-md text-muted-foreground">
+                    <ul className="space-y-3 text-md nav-dropdown-group">
                       <li>
                         <Link
                           href="/product/api-docs"
                           onClick={() => setActiveMenu(null)}
-                          className="inline-flex items-center hover:text-foreground transition-colors"
+                          className="inline-flex items-center text-foreground transition-colors"
                         >
                           <span>Docs</span>
                         </Link>
@@ -1543,7 +1540,7 @@ export function MarketingHeader() {
                         <Link
                           href="/product/api-docs"
                           onClick={() => setActiveMenu(null)}
-                          className="inline-flex items-center hover:text-foreground transition-colors"
+                          className="inline-flex items-center text-foreground transition-colors"
                         >
                           <span>Codex Use Cases</span>
                         </Link>
@@ -1552,7 +1549,7 @@ export function MarketingHeader() {
                         <Link
                           href="/product/api-docs"
                           onClick={() => setActiveMenu(null)}
-                          className="inline-flex items-center hover:text-foreground transition-colors"
+                          className="inline-flex items-center text-foreground transition-colors"
                         >
                           <span>Cookbook & Recipes</span>
                         </Link>
@@ -1561,7 +1558,7 @@ export function MarketingHeader() {
                         <Link
                           href="/company/blog"
                           onClick={() => setActiveMenu(null)}
-                          className="inline-flex items-center hover:text-foreground transition-colors"
+                          className="inline-flex items-center text-foreground transition-colors"
                         >
                           <span>Developer Showcase</span>
                         </Link>
@@ -1570,7 +1567,7 @@ export function MarketingHeader() {
                         <Link
                           href="/company/blog"
                           onClick={() => setActiveMenu(null)}
-                          className="inline-flex items-center hover:text-foreground transition-colors"
+                          className="inline-flex items-center text-foreground transition-colors"
                         >
                           <span>Developer Blog</span>
                         </Link>
@@ -1579,7 +1576,7 @@ export function MarketingHeader() {
                         <Link
                           href="/company/about"
                           onClick={() => setActiveMenu(null)}
-                          className="inline-flex items-center hover:text-foreground transition-colors"
+                          className="inline-flex items-center text-foreground transition-colors"
                         >
                           <span>Community & Discord</span>
                         </Link>
@@ -1603,12 +1600,12 @@ export function MarketingHeader() {
                     <p className="text-md font-semibold text-muted-foreground tracking-wider uppercase mb-5">
                       Explore Company
                     </p>
-                    <ul className="space-y-4">
+                    <ul className="space-y-4 nav-dropdown-group">
                       <li>
                         <Link
                           href="/company/about"
                           onClick={() => setActiveMenu(null)}
-                          className="text-2xl font-medium text-foreground hover:opacity-70 transition-opacity"
+                          className="text-2xl font-medium text-foreground transition-colors"
                         >
                           About Us
                         </Link>
@@ -1619,17 +1616,17 @@ export function MarketingHeader() {
                           target="_blank"
                           rel="noopener noreferrer"
                           onClick={() => setActiveMenu(null)}
-                          className="group inline-flex items-center text-2xl font-medium text-foreground hover:opacity-70 transition-opacity"
+                          className="group inline-flex items-center text-2xl font-medium text-foreground transition-colors"
                         >
                           <span>Careers</span>
-                          <ArrowUpRight className="w-4 h-4 ml-1.5 text-foreground group-hover:text-foreground" />
+                          <ArrowUpRight className="w-4 h-4 ml-1.5 transition-colors" />
                         </Link>
                       </li>
                       <li>
                         <Link
                           href="/company/blog"
                           onClick={() => setActiveMenu(null)}
-                          className="text-2xl font-medium text-foreground hover:opacity-70 transition-opacity"
+                          className="text-2xl font-medium text-foreground transition-colors"
                         >
                           News
                         </Link>
@@ -1637,7 +1634,7 @@ export function MarketingHeader() {
                       <li>
                         <Link
                           href="/company/contact"
-                          className="text-2xl font-medium text-foreground hover:opacity-70 transition-opacity"
+                          className="text-2xl font-medium text-foreground transition-colors"
                         >
                           Contact Us
                         </Link>
@@ -1649,12 +1646,12 @@ export function MarketingHeader() {
                     <p className="text-md font-semibold text-muted-foreground tracking-wider uppercase mb-5">
                       Resources
                     </p>
-                    <ul className="space-y-3 text-md text-muted-foreground">
+                    <ul className="space-y-3 text-md nav-dropdown-group">
                       <li>
                         <Link
                           href="/company/about"
                           onClick={() => setActiveMenu(null)}
-                          className="hover:text-foreground transition-colors"
+                          className="text-foreground transition-colors"
                         >
                           Brand Guidelines
                         </Link>
@@ -1663,7 +1660,7 @@ export function MarketingHeader() {
                         <Link
                           href="/support/privacy"
                           onClick={() => setActiveMenu(null)}
-                          className="hover:text-foreground transition-colors"
+                          className="text-foreground transition-colors"
                         >
                           Public Policy & Governance
                         </Link>
@@ -1672,7 +1669,7 @@ export function MarketingHeader() {
                         <Link
                           href="/support/terms"
                           onClick={() => setActiveMenu(null)}
-                          className="hover:text-foreground transition-colors"
+                          className="text-foreground transition-colors"
                         >
                           Terms of Use
                         </Link>
@@ -1681,7 +1678,7 @@ export function MarketingHeader() {
                         <Link
                           href="/support/privacy"
                           onClick={() => setActiveMenu(null)}
-                          className="hover:text-foreground transition-colors"
+                          className="text-foreground transition-colors"
                         >
                           Privacy Policy
                         </Link>
@@ -1711,41 +1708,41 @@ export function MarketingHeader() {
             {mobileSubMenu === null ? (
               /* LEVEL 1: MAIN NAVIGATION LIST (Image 3) */
               <div className="flex flex-col justify-between h-full">
-                <div className="space-y-4 pt-2">
+                <div className="space-y-4 pt-2 nav-dropdown-group">
                   <button
                     onClick={() => setMobileSubMenu("research")}
-                    className="w-full text-left text-3xl sm:text-4xl font-medium tracking-tight text-foreground hover:opacity-80 transition-opacity flex items-center justify-between py-1.5"
+                    className="w-full text-left text-3xl sm:text-4xl font-medium tracking-tight text-foreground transition-colors flex items-center justify-between py-1.5"
                   >
                     <span>Research</span>
                   </button>
                   <button
                     onClick={() => setMobileSubMenu("products")}
-                    className="w-full text-left text-3xl sm:text-4xl font-medium tracking-tight text-foreground hover:opacity-80 transition-opacity flex items-center justify-between py-1.5"
+                    className="w-full text-left text-3xl sm:text-4xl font-medium tracking-tight text-foreground transition-colors flex items-center justify-between py-1.5"
                   >
                     <span>Products</span>
                   </button>
                   <button
                     onClick={() => setMobileSubMenu("business")}
-                    className="w-full text-left text-3xl sm:text-4xl font-medium tracking-tight text-foreground hover:opacity-80 transition-opacity flex items-center justify-between py-1.5"
+                    className="w-full text-left text-3xl sm:text-4xl font-medium tracking-tight text-foreground transition-colors flex items-center justify-between py-1.5"
                   >
                     <span>Business</span>
                   </button>
                   <button
                     onClick={() => setMobileSubMenu("developers")}
-                    className="w-full text-left text-3xl sm:text-4xl font-medium tracking-tight text-foreground hover:opacity-80 transition-opacity flex items-center justify-between py-1.5"
+                    className="w-full text-left text-3xl sm:text-4xl font-medium tracking-tight text-foreground transition-colors flex items-center justify-between py-1.5"
                   >
                     <span>Developers</span>
                   </button>
                   <button
                     onClick={() => setMobileSubMenu("company")}
-                    className="w-full text-left text-3xl sm:text-4xl font-medium tracking-tight text-foreground hover:opacity-80 transition-opacity flex items-center justify-between py-1.5"
+                    className="w-full text-left text-3xl sm:text-4xl font-medium tracking-tight text-foreground transition-colors flex items-center justify-between py-1.5"
                   >
                     <span>Company</span>
                   </button>
                   <Link
                     href="/foundation"
                     onClick={() => setMobileNavOpen(false)}
-                    className="flex items-center gap-1.5 text-3xl sm:text-4xl font-medium tracking-tight text-foreground hover:opacity-80 transition-opacity py-1.5"
+                    className="flex items-center gap-1.5 text-3xl sm:text-4xl font-medium tracking-tight text-foreground transition-colors py-1.5"
                   >
                     <span>Foundation</span>
                   </Link>
@@ -1804,55 +1801,49 @@ export function MarketingHeader() {
                     <span>Home</span>
                   </button>
 
-                  <div className="text-md uppercase tracking-wider text-muted-foreground font-semibold mb-2">
-                    {mobileSubMenu}
-                  </div>
-
                   {mobileSubMenu === "research" && (
                     <div className="space-y-6">
-                      <div className="space-y-3">
-                        {[
-                          {
-                            label: "Research Index",
-                            href: "/research/overview",
-                          },
-                          {
-                            label: "Research Overview",
-                            href: "/research/overview",
-                          },
-                          {
-                            label: "Research Residency",
-                            href: "/research/overview",
-                          },
-                          { label: "Safety", href: "/research/overview" },
-                          {
-                            label: "Economic Research",
-                            href: "/research/overview",
-                          },
-                        ].map((item, i) => (
-                          <Link
-                            key={i}
-                            href={item.href}
-                            onClick={() => setMobileNavOpen(false)}
-                            className="block text-2xl sm:text-3xl font-medium tracking-tight text-foreground hover:opacity-80 transition-opacity py-1"
-                          >
-                            {item.label}
-                          </Link>
-                        ))}
+                      <div>
+                        <div className="text-md uppercase tracking-wider text-muted-foreground font-semibold mb-3">
+                          Explore Research
+                        </div>
+                        <div className="space-y-3 nav-dropdown-group">
+                          {[
+                            {
+                              label: "Research Index",
+                              href: "/research/overview",
+                            },
+                            {
+                              label: "Research Overview",
+                              href: "/research/overview",
+                            },
+                            {
+                              label: "Research Residency",
+                              href: "/research/overview",
+                            },
+                            { label: "Safety", href: "/research/safety" },
+                          ].map((item, i) => (
+                            <Link
+                              key={i}
+                              href={item.href}
+                              onClick={() => setMobileNavOpen(false)}
+                              className="block text-2xl sm:text-3xl font-medium tracking-tight text-foreground transition-colors py-1"
+                            >
+                              {item.label}
+                            </Link>
+                          ))}
+                        </div>
                       </div>
 
                       <div className="pt-4 border-t border-border/80">
                         <div className="text-md uppercase tracking-wider text-muted-foreground font-semibold mb-3">
                           Latest Advancements
                         </div>
-                        <div className="space-y-2.5">
+                        <div className="space-y-2.5 nav-dropdown-group">
                           {[
-                            {
-                              label: "GPT-6 Astra",
-                              href: "/research/overview",
-                            },
                             { label: "GPT-5.6", href: "/research/overview" },
                             { label: "GPT-5.5", href: "/research/overview" },
+                            { label: "GPT-5.4", href: "/research/overview" },
                             {
                               label: "GPT-5.3 Instant",
                               href: "/research/overview",
@@ -1866,7 +1857,7 @@ export function MarketingHeader() {
                               key={i}
                               href={adv.href}
                               onClick={() => setMobileNavOpen(false)}
-                              className="block text-base font-medium text-foreground hover:opacity-80 transition-opacity"
+                              className="block text-base font-medium text-foreground transition-colors"
                             >
                               {adv.label}
                             </Link>
@@ -1878,54 +1869,59 @@ export function MarketingHeader() {
 
                   {mobileSubMenu === "products" && (
                     <div className="space-y-6">
-                      <div className="space-y-3">
-                        {[
-                          { label: "CloseAI Web & Chat", href: "/c" },
-                          {
-                            label: "Canvas & Studio",
-                            href: "/product/features",
-                          },
-                          {
-                            label: "Mobile & Voice",
-                            href: "/product/features",
-                          },
-                          {
-                            label: "Enterprise Platform",
-                            href: "/business/enterprise",
-                          },
-                        ].map((item, i) => (
+                      <div>
+                        <div className="text-md uppercase tracking-wider text-muted-foreground font-semibold mb-3">
+                          Explore Products
+                        </div>
+                        <div className="space-y-3 nav-dropdown-group">
                           <Link
-                            key={i}
-                            href={item.href}
+                            href="/c"
+                            target="_blank"
+                            rel="noopener noreferrer"
                             onClick={() => setMobileNavOpen(false)}
-                            className="block text-2xl sm:text-3xl font-medium tracking-tight text-foreground hover:opacity-80 transition-opacity py-1"
+                            className="group inline-flex items-center text-2xl sm:text-3xl font-medium tracking-tight text-foreground transition-colors py-1"
                           >
-                            {item.label}
+                            <span>CloseAI Chat</span>
+                            <ArrowUpRight className="w-4 h-4 ml-1.5 transition-colors" />
                           </Link>
-                        ))}
+                          <Link
+                            href="/product/features"
+                            onClick={() => setMobileNavOpen(false)}
+                            className="block text-2xl sm:text-3xl font-medium tracking-tight text-foreground transition-colors py-1"
+                          >
+                            Codex & Canvas
+                          </Link>
+                        </div>
                       </div>
 
                       <div className="pt-4 border-t border-border/80">
                         <div className="text-md uppercase tracking-wider text-muted-foreground font-semibold mb-3">
-                          Platforms & Capabilities
+                          Products
                         </div>
-                        <div className="space-y-2.5">
+                        <div className="space-y-2.5 nav-dropdown-group">
                           {[
-                            { label: "Search & Deep Browse", href: "/c" },
                             {
-                              label: "Advanced Code Engine",
-                              href: "/product/features",
+                              label: "CloseAI Work & Teams",
+                              href: "/business/enterprise",
                             },
                             {
-                              label: "Generative Audio & Speech",
-                              href: "/product/features",
+                              label: "Codex Enterprise",
+                              href: "/business/enterprise",
+                            },
+                            {
+                              label: "CloseAI Frontier",
+                              href: "/business/enterprise",
+                            },
+                            {
+                              label: "CloseAI Presence",
+                              href: "/business/enterprise",
                             },
                           ].map((adv, i) => (
                             <Link
                               key={i}
                               href={adv.href}
                               onClick={() => setMobileNavOpen(false)}
-                              className="block text-base font-medium text-foreground hover:opacity-80 transition-opacity"
+                              className="block text-base font-medium text-foreground transition-colors"
                             >
                               {adv.label}
                             </Link>
@@ -1937,57 +1933,73 @@ export function MarketingHeader() {
 
                   {mobileSubMenu === "business" && (
                     <div className="space-y-6">
-                      <div className="space-y-3">
-                        {[
-                          {
-                            label: "Enterprise Overview",
-                            href: "/business/enterprise",
-                          },
-                          { label: "Pricing & Tiers", href: "/upgrade" },
-                          {
-                            label: "Security & Privacy",
-                            href: "/support/privacy",
-                          },
-                          {
-                            label: "Compliance & Safety",
-                            href: "/research/overview",
-                          },
-                        ].map((item, i) => (
-                          <Link
-                            key={i}
-                            href={item.href}
-                            onClick={() => setMobileNavOpen(false)}
-                            className="block text-2xl sm:text-3xl font-medium tracking-tight text-foreground hover:opacity-80 transition-opacity py-1"
-                          >
-                            {item.label}
-                          </Link>
-                        ))}
+                      <div>
+                        <div className="text-md uppercase tracking-wider text-muted-foreground font-semibold mb-3">
+                          Explore Business
+                        </div>
+                        <div className="space-y-3 nav-dropdown-group">
+                          {[
+                            {
+                              label: "Overview",
+                              href: "/business/enterprise",
+                            },
+                            {
+                              label: "Solutions",
+                              href: "/business/enterprise",
+                            },
+                            {
+                              label: "Resources",
+                              href: "/business/enterprise",
+                            },
+                            {
+                              label: "Customer Stories",
+                              href: "/business/enterprise",
+                            },
+                            {
+                              label: "Pricing",
+                              href: "/product/pricing",
+                            },
+                            {
+                              label: "Contact Sales",
+                              href: "/company/contact",
+                            },
+                          ].map((item, i) => (
+                            <Link
+                              key={i}
+                              href={item.href}
+                              onClick={() => setMobileNavOpen(false)}
+                              className="block text-2xl sm:text-3xl font-medium tracking-tight text-foreground transition-colors py-1"
+                            >
+                              {item.label}
+                            </Link>
+                          ))}
+                        </div>
                       </div>
 
                       <div className="pt-4 border-t border-border/80">
                         <div className="text-md uppercase tracking-wider text-muted-foreground font-semibold mb-3">
-                          Industry Solutions
+                          Resources
                         </div>
-                        <div className="space-y-2.5">
+                        <div className="space-y-2.5 nav-dropdown-group">
                           {[
                             {
-                              label: "Engineering & Codebases",
-                              href: "/business/enterprise",
+                              label: "Release Notes",
+                              href: "/company/blog",
                             },
                             {
-                              label: "Financial Services",
-                              href: "/business/enterprise",
+                              label: "API Platform",
+                              href: "/product/api-docs",
                             },
                             {
-                              label: "Healthcare & Biotech",
-                              href: "/business/enterprise",
+                              label: "CloseAI Academy & Guides",
+                              href: "/product/pricing",
                             },
                           ].map((adv, i) => (
                             <Link
                               key={i}
                               href={adv.href}
                               onClick={() => setMobileNavOpen(false)}
-                              className="block text-base font-medium text-foreground hover:opacity-80 transition-opacity"
+                              className="block text-base font-medium text-foreground transition-colors"
                             >
                               {adv.label}
                             </Link>
@@ -1999,51 +2011,88 @@ export function MarketingHeader() {
 
                   {mobileSubMenu === "developers" && (
                     <div className="space-y-6">
-                      <div className="space-y-3">
-                        {[
-                          { label: "API Overview", href: "/product/api-docs" },
-                          { label: "Documentation", href: "/product/api-docs" },
-                          {
-                            label: "Pricing Calculator",
-                            href: "/product/api-docs",
-                          },
-                          {
-                            label: "Developer Community",
-                            href: "/product/api-docs",
-                          },
-                        ].map((item, i) => (
+                      <div>
+                        <div className="text-md uppercase tracking-wider text-muted-foreground font-semibold mb-3">
+                          Explore Developers
+                        </div>
+                        <div className="space-y-3 nav-dropdown-group">
                           <Link
-                            key={i}
-                            href={item.href}
+                            href="/product/features"
                             onClick={() => setMobileNavOpen(false)}
-                            className="block text-2xl sm:text-3xl font-medium tracking-tight text-foreground hover:opacity-80 transition-opacity py-1"
+                            className="block text-2xl sm:text-3xl font-medium tracking-tight text-foreground transition-colors py-1"
                           >
-                            {item.label}
+                            Codex
                           </Link>
-                        ))}
+                          <Link
+                            href="/product/api-docs"
+                            onClick={() => setMobileNavOpen(false)}
+                            className="block text-2xl sm:text-3xl font-medium tracking-tight text-foreground transition-colors py-1"
+                          >
+                            API Platform
+                          </Link>
+                          <Link
+                            href="/product/api-docs"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            onClick={() => setMobileNavOpen(false)}
+                            className="group inline-flex items-center text-2xl sm:text-3xl font-medium tracking-tight text-foreground transition-colors py-1"
+                          >
+                            <span>Autonomous Agents</span>
+                            <ArrowUpRight className="w-4 h-4 ml-1.5 transition-colors" />
+                          </Link>
+                          <Link
+                            href="/research/overview"
+                            onClick={() => setMobileNavOpen(false)}
+                            className="block text-2xl sm:text-3xl font-medium tracking-tight text-foreground transition-colors py-1"
+                          >
+                            Open Models
+                          </Link>
+                          <Link
+                            href="/product/api-docs"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            onClick={() => setMobileNavOpen(false)}
+                            className="group inline-flex items-center text-2xl sm:text-3xl font-medium tracking-tight text-foreground transition-colors py-1"
+                          >
+                            <span>Apps SDK</span>
+                            <ArrowUpRight className="w-4 h-4 ml-1.5 transition-colors" />
+                          </Link>
+                        </div>
                       </div>
 
                       <div className="pt-4 border-t border-border/80">
                         <div className="text-md uppercase tracking-wider text-muted-foreground font-semibold mb-3">
-                          Libraries & SDKs
+                          Resources
                         </div>
-                        <div className="space-y-2.5">
+                        <div className="space-y-2.5 nav-dropdown-group">
                           {[
-                            { label: "Python SDK", href: "/product/api-docs" },
+                            { label: "Docs", href: "/product/api-docs" },
                             {
-                              label: "TypeScript SDK",
+                              label: "Codex Use Cases",
                               href: "/product/api-docs",
                             },
                             {
-                              label: "REST API Reference",
+                              label: "Cookbook & Recipes",
                               href: "/product/api-docs",
+                            },
+                            {
+                              label: "Developer Showcase",
+                              href: "/company/blog",
+                            },
+                            {
+                              label: "Developer Blog",
+                              href: "/company/blog",
+                            },
+                            {
+                              label: "Community & Discord",
+                              href: "/company/about",
                             },
                           ].map((adv, i) => (
                             <Link
                               key={i}
                               href={adv.href}
                               onClick={() => setMobileNavOpen(false)}
-                              className="block text-base font-medium text-foreground hover:opacity-80 transition-opacity"
+                              className="block text-base font-medium text-foreground transition-colors"
                             >
                               {adv.label}
                             </Link>
@@ -2055,30 +2104,59 @@ export function MarketingHeader() {
 
                   {mobileSubMenu === "company" && (
                     <div className="space-y-6">
-                      <div className="space-y-3">
-                        {[
-                          { label: "About CloseAI", href: "/company/about" },
-                          { label: "News & Releases", href: "/company/blog" },
-                          { label: "Careers", href: "/company/careers" },
-                          { label: "Security", href: "/company/contact" },
-                        ].map((item, i) => (
+                      <div>
+                        <div className="text-md uppercase tracking-wider text-muted-foreground font-semibold mb-3">
+                          Explore Company
+                        </div>
+                        <div className="space-y-3 nav-dropdown-group">
                           <Link
-                            key={i}
-                            href={item.href}
+                            href="/company/about"
                             onClick={() => setMobileNavOpen(false)}
-                            className="block text-2xl sm:text-3xl font-medium tracking-tight text-foreground hover:opacity-80 transition-opacity py-1"
+                            className="block text-2xl sm:text-3xl font-medium tracking-tight text-foreground transition-colors py-1"
                           >
-                            {item.label}
+                            About Us
                           </Link>
-                        ))}
+                          <Link
+                            href="/company/careers"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            onClick={() => setMobileNavOpen(false)}
+                            className="group inline-flex items-center text-2xl sm:text-3xl font-medium tracking-tight text-foreground transition-colors py-1"
+                          >
+                            <span>Careers</span>
+                            <ArrowUpRight className="w-4 h-4 ml-1.5 transition-colors" />
+                          </Link>
+                          <Link
+                            href="/company/blog"
+                            onClick={() => setMobileNavOpen(false)}
+                            className="block text-2xl sm:text-3xl font-medium tracking-tight text-foreground transition-colors py-1"
+                          >
+                            News
+                          </Link>
+                          <Link
+                            href="/company/contact"
+                            onClick={() => setMobileNavOpen(false)}
+                            className="block text-2xl sm:text-3xl font-medium tracking-tight text-foreground transition-colors py-1"
+                          >
+                            Contact Us
+                          </Link>
+                        </div>
                       </div>
 
                       <div className="pt-4 border-t border-border/80">
                         <div className="text-md uppercase tracking-wider text-muted-foreground font-semibold mb-3">
-                          Legal & Trust
+                          Resources
                         </div>
-                        <div className="space-y-2.5">
+                        <div className="space-y-2.5 nav-dropdown-group">
                           {[
+                            {
+                              label: "Brand Guidelines",
+                              href: "/company/about",
+                            },
+                            {
+                              label: "Public Policy & Governance",
+                              href: "/support/privacy",
+                            },
                             {
                               label: "Terms of Use",
                               href: "/support/terms",
@@ -2087,13 +2165,12 @@ export function MarketingHeader() {
                               label: "Privacy Policy",
                               href: "/support/privacy",
                             },
-                            { label: "Contact Us", href: "/company/contact" },
                           ].map((adv, i) => (
                             <Link
                               key={i}
                               href={adv.href}
                               onClick={() => setMobileNavOpen(false)}
-                              className="block text-base font-medium text-foreground hover:opacity-80 transition-opacity"
+                              className="block text-base font-medium text-foreground transition-colors"
                             >
                               {adv.label}
                             </Link>
@@ -2105,28 +2182,33 @@ export function MarketingHeader() {
 
                   {mobileSubMenu === "login" && (
                     <div className="space-y-6">
-                      <div className="space-y-3">
-                        <Link
-                          href="/auth/login"
-                          onClick={() => setMobileNavOpen(false)}
-                          className="block text-2xl sm:text-3xl font-medium tracking-tight text-foreground hover:opacity-80 transition-opacity py-1"
-                        >
-                          CloseAI Chat
-                        </Link>
-                        <div
-                          role="button"
-                          aria-disabled="true"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                          }}
-                          className="block text-2xl sm:text-3xl font-medium tracking-tight text-muted-foreground py-1 cursor-not-allowed select-none"
-                        >
-                          <AnimatedComingSoonText
-                            label="API Platform"
-                            comingSoonText="Coming soon"
-                            align="start"
-                          />
+                      <div>
+                        <div className="text-md uppercase tracking-wider text-muted-foreground font-semibold mb-3">
+                          Log In
+                        </div>
+                        <div className="space-y-3 nav-dropdown-group">
+                          <Link
+                            href="/auth/login"
+                            onClick={() => setMobileNavOpen(false)}
+                            className="block text-2xl sm:text-3xl font-medium tracking-tight text-foreground transition-colors py-1"
+                          >
+                            CloseAI Chat
+                          </Link>
+                          <div
+                            role="button"
+                            aria-disabled="true"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                            }}
+                            className="block text-2xl sm:text-3xl font-medium tracking-tight text-muted-foreground py-1 cursor-not-allowed select-none"
+                          >
+                            <AnimatedComingSoonText
+                              label="API Platform"
+                              comingSoonText="Coming soon"
+                              align="start"
+                            />
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -2134,21 +2216,26 @@ export function MarketingHeader() {
 
                   {mobileSubMenu === "account" && (
                     <div className="space-y-6">
-                      <div className="space-y-3">
-                        {[
-                          { label: "Open Chat", href: "/c" },
-                          { label: "Settings & Profile", href: "/settings" },
-                          { label: "Upgrade Plan", href: "/upgrade" },
-                        ].map((item, i) => (
-                          <Link
-                            key={i}
-                            href={item.href}
-                            onClick={() => setMobileNavOpen(false)}
-                            className="block text-2xl sm:text-3xl font-medium tracking-tight text-foreground hover:opacity-80 transition-opacity py-1"
-                          >
-                            {item.label}
-                          </Link>
-                        ))}
+                      <div>
+                        <div className="text-md uppercase tracking-wider text-muted-foreground font-semibold mb-3">
+                          Account
+                        </div>
+                        <div className="space-y-3 nav-dropdown-group">
+                          {[
+                            { label: "Open Chat", href: "/c" },
+                            { label: "Settings & Profile", href: "/settings" },
+                            { label: "Upgrade Plan", href: "/upgrade" },
+                          ].map((item, i) => (
+                            <Link
+                              key={i}
+                              href={item.href}
+                              onClick={() => setMobileNavOpen(false)}
+                              className="block text-2xl sm:text-3xl font-medium tracking-tight text-foreground transition-colors py-1"
+                            >
+                              {item.label}
+                            </Link>
+                          ))}
+                        </div>
                       </div>
 
                       <div className="pt-4 border-t border-border/80">

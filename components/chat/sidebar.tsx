@@ -64,10 +64,10 @@ import { cn } from "@/lib/utils";
 import {
   AnimatedChevron,
   AnimatedSearchClose,
-  AnimatedComingSoonText,
 } from "@/components/ui/animated";
 import { LogoutModal } from "@/components/modals/log-out-modal";
 import { DeleteModal } from "@/components/modals/delete-chat-modal";
+import toast from "@/lib/toast";
 
 interface SidebarProps {
   user: User | null;
@@ -215,12 +215,16 @@ export function Sidebar({
   const [pressedChatId, setPressedChatId] = useState<string | null>(null);
   const [isLogoHovered, setIsLogoHovered] = useState(false);
   const [isCloseBtnHovered, setIsCloseBtnHovered] = useState(false);
+
+  useEffect(() => {
+    setIsLogoHovered(false);
+    setIsCloseBtnHovered(false);
+  }, [isOpen]);
   const [collapsedSections, setCollapsedSections] = useState<
     Record<string, boolean>
   >({});
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [chatToDelete, setChatToDelete] = useState<Chat | null>(null);
-  const [isDownloadBtnHovered, setIsDownloadBtnHovered] = useState(false);
 
   const toggleSection = (group: string) => {
     setCollapsedSections((prev) => ({
@@ -337,12 +341,14 @@ export function Sidebar({
             <PenLine className="w-4 h-4 text-muted-foreground" />
             <span>Release notes</span>
           </Link>
-          <div
-            className="flex items-center gap-2.5 px-2 py-2 rounded-xl text-md font-medium transition-colors outline-none focus:outline-none focus:bg-transparent focus-visible:outline-none whitespace-nowrap text-left cursor-not-allowed select-none text-muted-foreground [@media(hover:hover)]:hover:bg-secondary dark:[@media(hover:hover)]:hover:bg-[#2f2f2f]"
+          <button
+            type="button"
+            onClick={() => toast.info("CloseAI app coming soon")}
+            className="w-full flex items-center gap-2.5 px-2 py-2 rounded-xl text-md font-medium transition-colors outline-none focus:outline-none focus:bg-transparent focus-visible:outline-none whitespace-nowrap text-left cursor-pointer select-none text-foreground [@media(hover:hover)]:hover:bg-secondary dark:[@media(hover:hover)]:hover:bg-[#2f2f2f]"
           >
             <Download className="w-4 h-4 text-muted-foreground shrink-0" />
-            <AnimatedComingSoonText label="Download apps" comingSoonText="Coming soon" />
-          </div>
+            <span>Download app</span>
+          </button>
           <Link
             href="/settings"
             className="flex items-center gap-2.5 px-2 py-2 rounded-xl text-md text-foreground [@media(hover:hover)]:hover:bg-secondary active:bg-secondary/80 transition-colors outline-none focus:outline-none focus:bg-transparent focus-visible:outline-none"
@@ -658,12 +664,14 @@ export function Sidebar({
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem
-                onSelect={(e) => e.preventDefault()}
-                onClick={(e) => e.preventDefault()}
-                className="flex items-center gap-2.5 px-2 py-2 rounded-xl text-md font-medium transition-colors outline-none focus:outline-none focus:bg-transparent focus-visible:outline-none whitespace-nowrap text-left cursor-not-allowed select-none text-muted-foreground [@media(hover:hover)]:hover:bg-secondary dark:[@media(hover:hover)]:hover:bg-[#2f2f2f]"
+                onSelect={(e) => {
+                  e.preventDefault();
+                  toast.info("CloseAI app coming soon");
+                }}
+                className="flex items-center gap-2.5 px-2 py-2 rounded-xl text-md font-medium transition-colors outline-none focus:outline-none focus:bg-transparent focus-visible:outline-none whitespace-nowrap text-left cursor-pointer select-none text-foreground [@media(hover:hover)]:hover:bg-secondary dark:[@media(hover:hover)]:hover:bg-[#2f2f2f]"
               >
                 <Download className="w-4 h-4 text-muted-foreground shrink-0" />
-                <AnimatedComingSoonText label="Download apps" comingSoonText="Coming soon" />
+                <span>Download app</span>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
                 <Link
@@ -875,10 +883,16 @@ export function Sidebar({
         // ----------------------------------------------------
         // Collapsed Mini Sidebar (60px Rail on Desktop, Hidden on Mobile)
         // ----------------------------------------------------
-        <div className="hidden xl:flex w-[60px] h-[100dvh] bg-sidebar border-r border-border flex-col items-center justify-between shrink-0 select-none z-30 relative group/rail">
+        <div
+          onMouseLeave={() => setIsLogoHovered(false)}
+          className="hidden xl:flex w-[60px] h-[100dvh] bg-sidebar border-r border-border flex-col items-center justify-between shrink-0 select-none z-30 relative group/rail"
+        >
           {/* Full-height border resize/toggle handle */}
           <div
-            onClick={onToggle}
+            onClick={() => {
+              setIsLogoHovered(false);
+              onToggle();
+            }}
             style={{ cursor: "ew-resize" }}
             className="absolute -right-[3px] top-0 bottom-0 w-[6px] z-10 hover:bg-foreground/15 transition-colors cursor-ew-resize"
           />
@@ -889,7 +903,10 @@ export function Sidebar({
               <TooltipTrigger asChild>
                 <button
                   type="button"
-                  onClick={onToggle}
+                  onClick={() => {
+                    setIsLogoHovered(false);
+                    onToggle();
+                  }}
                   onMouseEnter={() => setIsLogoHovered(true)}
                   onMouseLeave={() => setIsLogoHovered(false)}
                   onBlur={() => setIsLogoHovered(false)}
@@ -986,7 +1003,7 @@ export function Sidebar({
           </div>
 
           {/* Bottom User Profile Dock (Matching Open Sidebar Position) */}
-          <div className="w-full p-2 pb-[max(env(safe-area-inset-bottom),0.75rem)] mt-auto flex flex-col items-center justify-center gap-1.5 relative z-20">
+          <div className="w-full p-3 pb-[max(env(safe-area-inset-bottom),0.75rem)] mt-auto flex flex-col items-center justify-center gap-1.5 relative z-20">
             {isLoading || !user ? (
               <div className="w-full flex items-center justify-center p-2 rounded-xl select-none">
                 <div className="w-8 h-8 rounded-full bg-secondary/80 dark:bg-neutral-800/80 animate-pulse shrink-0" />
@@ -997,26 +1014,15 @@ export function Sidebar({
                   <TooltipTrigger asChild>
                     <button
                       type="button"
-                      disabled
-                      aria-disabled="true"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                      }}
-                      onMouseEnter={() => setIsDownloadBtnHovered(true)}
-                      onMouseLeave={() => setIsDownloadBtnHovered(false)}
-                      className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 bg-transparent hover:bg-secondary dark:hover:bg-[#212121] text-muted-foreground hover:text-foreground transition-colors cursor-not-allowed select-none"
-                      aria-label="Download apps (Coming soon)"
+                      onClick={() => toast.info("CloseAI app coming soon")}
+                      className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 bg-transparent hover:bg-secondary dark:hover:bg-[#212121] text-muted-foreground hover:text-foreground transition-colors cursor-pointer select-none"
+                      aria-label="Download app"
                     >
                       <Store className="w-5 h-5 shrink-0" />
                     </button>
                   </TooltipTrigger>
                   <TooltipContent side="right" sideOffset={8} className="text-md">
-                    <AnimatedComingSoonText
-                      label="Download apps"
-                      comingSoonText="Coming soon"
-                      isHovered={isDownloadBtnHovered}
-                    />
+                    Download app
                   </TooltipContent>
                 </Tooltip>
 
@@ -1337,32 +1343,21 @@ export function Sidebar({
                     </DropdownMenuContent>
                   </DropdownMenu>
 
-                  {/* Download apps button inside the profile row */}
+                  {/* Download app button inside the profile row */}
                   <div className="pr-1.5 flex items-center shrink-0">
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <button
                           type="button"
-                          disabled
-                          aria-disabled="true"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                          }}
-                          onMouseEnter={() => setIsDownloadBtnHovered(true)}
-                          onMouseLeave={() => setIsDownloadBtnHovered(false)}
-                          className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 text-muted-foreground hover:text-foreground bg-transparent hover:bg-black/10 dark:hover:bg-white/10 transition-colors cursor-not-allowed select-none"
-                          aria-label="Download apps (Coming soon)"
+                          onClick={() => toast.info("CloseAI app coming soon")}
+                          className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 text-muted-foreground hover:text-foreground bg-transparent hover:bg-black/10 dark:hover:bg-white/10 transition-colors cursor-pointer select-none"
+                          aria-label="Download app"
                         >
                           <Store className="w-5 h-5 shrink-0" />
                         </button>
                       </TooltipTrigger>
                       <TooltipContent side="top" sideOffset={8} className="text-md">
-                        <AnimatedComingSoonText
-                          label="Download apps"
-                          comingSoonText="Coming soon"
-                          isHovered={isDownloadBtnHovered}
-                        />
+                        Download app
                       </TooltipContent>
                     </Tooltip>
                   </div>

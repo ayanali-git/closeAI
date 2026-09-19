@@ -44,10 +44,10 @@ const SPEED_OPTIONS = [
 ];
 
 const MODEL_OPTIONS = [
+  { key: "gemini-3.8 flash", label: "gemini-3.8 flash" },
   { key: "GPT-5.4", label: "GPT-5.4" },
   { key: "GPT-4o", label: "GPT-4o" },
   { key: "GPT-4o mini", label: "GPT-4o mini" },
-  { key: "gemini-3.8 flash", label: "gemini-3.8 flash" },
 ];
 
 /**
@@ -124,7 +124,7 @@ function TierMarqueeText({
 }
 
 /**
- * Auto-scrolling model name on hover (e.g. gemini-3.6-flash, GPT-5.4 Thinking)
+ * Auto-scrolling model name on hover (e.g. gemini-3.8-flash, GPT-5.4 Thinking)
  * Matching the effort type tier slider marquee animation
  */
 function ModelMarqueeText({
@@ -629,7 +629,7 @@ function ModelSliderCard({
 
 export function PlusMenuContent({
   onAddFiles,
-  selectedModel = "GPT-5.4",
+  selectedModel = "gemini-3.8 flash",
   onModelChange,
   selectedTier = 4,
   onTierChange,
@@ -809,49 +809,55 @@ export function PlusMenuContent({
         </button>
         <div className="h-[1px] bg-neutral-200 dark:bg-[#383838] my-1 -mx-0.5" />
 
-        {MODEL_OPTIONS.slice(0, 3).map((m, idx) => (
-          <button
-            key={m.key}
-            type="button"
-            onClick={(e) => {
-              (e.currentTarget as HTMLElement)?.blur();
-              e.stopPropagation();
-              handleModelSelect(m.key);
-              setSubView("models");
-            }}
-            onMouseEnter={() => setHoveredModelIdx(idx)}
-            onMouseLeave={() => setHoveredModelIdx(null)}
-            onFocus={() => setHoveredModelIdx(idx)}
-            onBlur={() => setHoveredModelIdx(null)}
-            className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-[15px] text-foreground [@media(hover:hover)]:hover:bg-secondary dark:[@media(hover:hover)]:hover:bg-[#2f2f2f] active:bg-secondary/80 dark:active:bg-[#2f2f2f]/80 transition-colors cursor-pointer min-w-0 outline-none focus:outline-none focus:bg-transparent focus-visible:outline-none text-left"
-          >
-            <TierMarqueeText text={m.label} isHovered={hoveredModelIdx === idx} />
-            {model === m.key && <Check className="w-4 h-4 text-foreground shrink-0 ml-2" />}
-          </button>
-        ))}
+        {MODEL_OPTIONS.filter((m) => m.key.toLowerCase().includes("gemini")).map((m) => {
+          const globalIdx = MODEL_OPTIONS.indexOf(m);
+          return (
+            <button
+              key={m.key}
+              type="button"
+              onClick={(e) => {
+                (e.currentTarget as HTMLElement)?.blur();
+                e.stopPropagation();
+                handleModelSelect(m.key);
+                setSubView("models");
+              }}
+              onMouseEnter={() => setHoveredModelIdx(globalIdx)}
+              onMouseLeave={() => setHoveredModelIdx(null)}
+              onFocus={() => setHoveredModelIdx(globalIdx)}
+              onBlur={() => setHoveredModelIdx(null)}
+              className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-[15px] text-foreground [@media(hover:hover)]:hover:bg-secondary dark:[@media(hover:hover)]:hover:bg-[#2f2f2f] active:bg-secondary/80 dark:active:bg-[#2f2f2f]/80 transition-colors cursor-pointer min-w-0 outline-none focus:outline-none focus:bg-transparent focus-visible:outline-none text-left"
+            >
+              <TierMarqueeText text={m.label} isHovered={hoveredModelIdx === globalIdx} />
+              {model === m.key && <Check className="w-4 h-4 text-foreground shrink-0 ml-2" />}
+            </button>
+          );
+        })}
 
         <div className="h-[1px] bg-neutral-200 dark:bg-[#383838] my-1 -mx-0.5" />
 
-        {MODEL_OPTIONS.slice(3).map((m, idx) => (
-          <button
-            key={m.key}
-            type="button"
-            onClick={(e) => {
-              (e.currentTarget as HTMLElement)?.blur();
-              e.stopPropagation();
-              handleModelSelect(m.key);
-              setSubView("models");
-            }}
-            onMouseEnter={() => setHoveredModelIdx(idx + 3)}
-            onMouseLeave={() => setHoveredModelIdx(null)}
-            onFocus={() => setHoveredModelIdx(idx + 3)}
-            onBlur={() => setHoveredModelIdx(null)}
-            className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-[15px] text-foreground [@media(hover:hover)]:hover:bg-secondary dark:[@media(hover:hover)]:hover:bg-[#2f2f2f] active:bg-secondary/80 dark:active:bg-[#2f2f2f]/80 transition-colors cursor-pointer min-w-0 outline-none focus:outline-none focus:bg-transparent focus-visible:outline-none text-left"
-          >
-            <TierMarqueeText text={m.label} isHovered={hoveredModelIdx === idx + 3} />
-            {model === m.key && <Check className="w-4 h-4 text-foreground shrink-0 ml-2" />}
-          </button>
-        ))}
+        {MODEL_OPTIONS.filter((m) => !m.key.toLowerCase().includes("gemini")).map((m) => {
+          const globalIdx = MODEL_OPTIONS.indexOf(m);
+          return (
+            <button
+              key={m.key}
+              type="button"
+              onClick={(e) => {
+                (e.currentTarget as HTMLElement)?.blur();
+                e.stopPropagation();
+                handleModelSelect(m.key);
+                setSubView("models");
+              }}
+              onMouseEnter={() => setHoveredModelIdx(globalIdx)}
+              onMouseLeave={() => setHoveredModelIdx(null)}
+              onFocus={() => setHoveredModelIdx(globalIdx)}
+              onBlur={() => setHoveredModelIdx(null)}
+              className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-[15px] text-foreground [@media(hover:hover)]:hover:bg-secondary dark:[@media(hover:hover)]:hover:bg-[#2f2f2f] active:bg-secondary/80 dark:active:bg-[#2f2f2f]/80 transition-colors cursor-pointer min-w-0 outline-none focus:outline-none focus:bg-transparent focus-visible:outline-none text-left"
+            >
+              <TierMarqueeText text={m.label} isHovered={hoveredModelIdx === globalIdx} />
+              {model === m.key && <Check className="w-4 h-4 text-foreground shrink-0 ml-2" />}
+            </button>
+          );
+        })}
       </div>
     );
   }
@@ -1055,35 +1061,41 @@ export function PlusMenuContent({
                   value={model}
                   onValueChange={(val) => handleModelSelect(val)}
                 >
-                  {MODEL_OPTIONS.slice(0, 3).map((m, idx) => (
-                    <DropdownMenuRadioItem
-                      key={m.key}
-                      value={m.key}
-                      onMouseEnter={() => setHoveredModelIdx(idx)}
-                      onMouseLeave={() => setHoveredModelIdx(null)}
-                      onFocus={() => setHoveredModelIdx(idx)}
-                      onBlur={() => setHoveredModelIdx(null)}
-                      className="cursor-pointer text-[15px] rounded-xl px-3 py-2 text-foreground transition-colors hover:bg-secondary dark:hover:bg-[#2f2f2f] flex items-center justify-between min-w-0 text-left"
-                    >
-                      <TierMarqueeText text={m.label} isHovered={hoveredModelIdx === idx} />
-                    </DropdownMenuRadioItem>
-                  ))}
+                  {MODEL_OPTIONS.filter((m) => m.key.toLowerCase().includes("gemini")).map((m) => {
+                    const globalIdx = MODEL_OPTIONS.indexOf(m);
+                    return (
+                      <DropdownMenuRadioItem
+                        key={m.key}
+                        value={m.key}
+                        onMouseEnter={() => setHoveredModelIdx(globalIdx)}
+                        onMouseLeave={() => setHoveredModelIdx(null)}
+                        onFocus={() => setHoveredModelIdx(globalIdx)}
+                        onBlur={() => setHoveredModelIdx(null)}
+                        className="cursor-pointer text-[15px] rounded-xl px-3 py-2 text-foreground transition-colors hover:bg-secondary dark:hover:bg-[#2f2f2f] flex items-center justify-between min-w-0 text-left"
+                      >
+                        <TierMarqueeText text={m.label} isHovered={hoveredModelIdx === globalIdx} />
+                      </DropdownMenuRadioItem>
+                    );
+                  })}
 
                   <div className="h-[1px] bg-neutral-200 dark:bg-[#383838] my-1 -mx-0.5" />
 
-                  {MODEL_OPTIONS.slice(3).map((m, idx) => (
-                    <DropdownMenuRadioItem
-                      key={m.key}
-                      value={m.key}
-                      onMouseEnter={() => setHoveredModelIdx(idx + 3)}
-                      onMouseLeave={() => setHoveredModelIdx(null)}
-                      onFocus={() => setHoveredModelIdx(idx + 3)}
-                      onBlur={() => setHoveredModelIdx(null)}
-                      className="cursor-pointer text-[15px] rounded-xl px-3 py-2 text-foreground transition-colors hover:bg-secondary dark:hover:bg-[#2f2f2f] flex items-center justify-between min-w-0 text-left"
-                    >
-                      <TierMarqueeText text={m.label} isHovered={hoveredModelIdx === idx + 3} />
-                    </DropdownMenuRadioItem>
-                  ))}
+                  {MODEL_OPTIONS.filter((m) => !m.key.toLowerCase().includes("gemini")).map((m) => {
+                    const globalIdx = MODEL_OPTIONS.indexOf(m);
+                    return (
+                      <DropdownMenuRadioItem
+                        key={m.key}
+                        value={m.key}
+                        onMouseEnter={() => setHoveredModelIdx(globalIdx)}
+                        onMouseLeave={() => setHoveredModelIdx(null)}
+                        onFocus={() => setHoveredModelIdx(globalIdx)}
+                        onBlur={() => setHoveredModelIdx(null)}
+                        className="cursor-pointer text-[15px] rounded-xl px-3 py-2 text-foreground transition-colors hover:bg-secondary dark:hover:bg-[#2f2f2f] flex items-center justify-between min-w-0 text-left"
+                      >
+                        <TierMarqueeText text={m.label} isHovered={hoveredModelIdx === globalIdx} />
+                      </DropdownMenuRadioItem>
+                    );
+                  })}
                 </DropdownMenuRadioGroup>
               </DropdownMenuSubContent>
             </DropdownMenuSub>

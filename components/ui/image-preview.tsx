@@ -68,11 +68,15 @@ export function ImagePreview({
       <DialogPrimitive.Root open={isOpen} onOpenChange={setIsOpen}>
         <DialogPrimitive.Portal>
           {/* Simple dark backdrop without animation */}
-          <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm" />
+          <DialogPrimitive.Overlay
+            onClick={() => setIsOpen(false)}
+            className="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm"
+          />
 
-          {/* Simple content container without zoom animations */}
+          {/* Simple content container covering full screen */}
           <DialogPrimitive.Content
-            className="fixed left-1/2 top-1/2 z-50 -translate-x-1/2 -translate-y-1/2 max-w-[85vw] max-h-[85vh] w-auto h-auto p-0 bg-transparent border-0 outline-none focus:outline-none flex items-center justify-center"
+            className="fixed inset-0 z-50 w-screen h-screen p-0 bg-transparent border-0 outline-none focus:outline-none flex items-center justify-center pointer-events-auto"
+            onClick={() => setIsOpen(false)}
             onPointerDownOutside={() => setIsOpen(false)}
           >
             <DialogPrimitive.Title className="sr-only">
@@ -82,22 +86,30 @@ export function ImagePreview({
               Preview image full size
             </DialogPrimitive.Description>
 
-            {/* Image Preview Container */}
-            <div className="relative inline-block max-w-[85vw] max-h-[85vh] overflow-hidden rounded-2xl">
-              {/* Top-Right Toolbar — inside the image preview container with comfortable padding */}
-              <div className="absolute top-3.5 right-3.5 sm:top-4 sm:right-4 z-20 flex items-center gap-1 p-1 rounded-2xl bg-card backdrop-blur-sm select-none">
+            {/* Header toolbar matching Share & More buttons position */}
+            <header className="fixed top-0 left-0 right-0 z-50 h-14 pt-[env(safe-area-inset-top,0px)] px-3 sm:px-4 flex items-center justify-end select-none pointer-events-none bg-transparent">
+              <div
+                className="flex items-center gap-1.5 sm:gap-2 pointer-events-auto mt-3 pr-3 sm:pr-1 select-none"
+                onClick={(e) => e.stopPropagation()}
+              >
                 <button
                   type="button"
                   onClick={() => setIsOpen(false)}
-                  className="p-1.5 rounded-sm hover:bg-white/15 text-white/80 hover:text-white transition-colors cursor-pointer"
-                  title="Close"
+                  className="w-9 h-9 rounded-xl bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/80 dark:border-none text-muted-foreground hover:text-foreground flex items-center justify-center transition-colors cursor-pointer outline-none focus:outline-none"
+                  title="Close preview"
+                  aria-label="Close preview"
                 >
-                  <X className="h-4 w-4" />
+                  <X className="w-4 h-4" />
                   <span className="sr-only">Close</span>
                 </button>
               </div>
+            </header>
 
-              {/* Image */}
+            {/* Centered Image Container */}
+            <div
+              className="relative inline-block max-w-[85vw] max-h-[85vh] overflow-hidden rounded-2xl"
+              onClick={(e) => e.stopPropagation()}
+            >
               <img
                 src={src}
                 alt={alt}

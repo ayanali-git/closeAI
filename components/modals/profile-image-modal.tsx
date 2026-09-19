@@ -120,7 +120,7 @@ export function ProfileImageModal({
   };
 
   const displayAvatar = previewUrl || currentAvatarUrl || undefined;
-  const initialChar = userName?.[0]?.toUpperCase() || userEmail?.[0]?.toUpperCase() || "U";
+  const initialChar = userName?.[0]?.toUpperCase() || userEmail?.[0]?.toUpperCase();
 
   return (
     <BottomSheet

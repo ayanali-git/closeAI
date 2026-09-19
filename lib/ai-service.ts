@@ -45,7 +45,7 @@ export class AIService {
     messages: Message[],
     fileContext?: string,
     imageUrls?: string[],
-    modelName: string = "GPT-5.4",
+    modelName: string = "gemini-3.8 flash",
     think: boolean = false
   ): Promise<AIResponse> {
     const isGemini = modelName.toLowerCase().includes('gemini');
@@ -67,7 +67,7 @@ export class AIService {
     if (Date.now() < AIService.openAiQuotaExceededUntil) {
       const genAI = this.getGenAIClient();
       if (genAI) {
-        return await this.generateGeminiResponse(messages, fileContext, imageUrls, "gemini-3.6-flash", think);
+        return await this.generateGeminiResponse(messages, fileContext, imageUrls, "gemini-3.8-flash", think);
       }
     }
 
@@ -76,7 +76,7 @@ export class AIService {
       // If OpenAI key is missing but Gemini is configured, use Gemini with fallback
       const genAI = this.getGenAIClient();
       if (genAI) {
-        return await this.generateGeminiResponse(messages, fileContext, imageUrls, "gemini-3.6-flash", think);
+        return await this.generateGeminiResponse(messages, fileContext, imageUrls, "gemini-3.8-flash", think);
       }
       throw new Error('OpenAI API key is not configured. Please add OPENAI_API_KEY in your .env file.');
     }
@@ -154,7 +154,7 @@ export class AIService {
         const genAI = this.getGenAIClient();
         if (genAI) {
           console.warn('OpenAI quota exceeded, falling back to Google Gemini...');
-          const fallbackRes = await this.generateGeminiResponse(messages, fileContext, imageUrls, "gemini-3.6-flash", think);
+          const fallbackRes = await this.generateGeminiResponse(messages, fileContext, imageUrls, "gemini-3.8-flash", think);
           return {
             ...fallbackRes,
           };
@@ -169,7 +169,7 @@ export class AIService {
     messages: Message[],
     fileContext?: string,
     imageUrls?: string[],
-    modelName: string = "gemini-3.6-flash",
+    modelName: string = "gemini-3.8-flash",
     think: boolean = false
   ): Promise<AIResponse> {
     const genAI = this.getGenAIClient();
@@ -181,9 +181,9 @@ export class AIService {
       throw new Error('Google Generative AI not initialized (Missing GOOGLE_API_KEY)');
     }
 
-    // Candidate models in fast priority order (gemini-3.6-flash is tested & active)
+    // Candidate models in fast priority order (gemini-3.8-flash is tested & active)
     const candidates = [
-      "gemini-3.6-flash",
+      "gemini-3.8-flash",
       "gemini-flash-latest",
       "gemini-3.1-flash-lite",
       "gemini-3.8-flash"

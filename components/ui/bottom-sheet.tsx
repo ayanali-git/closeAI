@@ -66,17 +66,32 @@ export function BottomSheet({
     if (open) setSnap(defaultSnap);
   }, [open, defaultSnap]);
 
-useEffect(() => {
-  if (!open) return;
-  const onKey = (event: KeyboardEvent) => {
-    if (event.key === "Escape") {
-      event.preventDefault();
-      onOpenChange(false);
-    }
-  };
-  window.addEventListener("keydown", onKey);
-  return () => window.removeEventListener("keydown", onKey);
-}, [open, onOpenChange]);
+  useEffect(() => {
+    if (!open) return;
+    const prevBodyOverflow = document.body.style.overflow;
+    const prevHtmlOverflow = document.documentElement.style.overflow;
+    document.body.style.overflow = "hidden";
+    document.documentElement.style.overflow = "hidden";
+    document.body.classList.add("modal-open-no-scroll");
+
+    return () => {
+      document.body.style.overflow = prevBodyOverflow;
+      document.documentElement.style.overflow = prevHtmlOverflow;
+      document.body.classList.remove("modal-open-no-scroll");
+    };
+  }, [open]);
+
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        onOpenChange(false);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open, onOpenChange]);
 
   const onDragEnd = (_: unknown, info: PanInfo) => {
     if (!isMobileScreen) return;
@@ -193,6 +208,7 @@ useEffect(() => {
                 aria-labelledby={title ? titleId : undefined}
                 aria-describedby={description ? descriptionId : undefined}
                 aria-label={title ? undefined : "Modal dialog"}
+                data-bottom-sheet="true"
               >
                 <div className="flex flex-col items-center px-6 pb-2 pt-4">
                   {/* Drag handle pill only on mobile */}
@@ -228,7 +244,12 @@ useEffect(() => {
                     </div>
                   ) : null}
                 </div>
-                <div className="flex-1 overflow-y-auto overscroll-contain px-6 pb-6">
+                <div
+                  className={cn(
+                    "flex-1 overflow-y-auto overscroll-contain px-6 pb-6 bottom-sheet-content",
+                    "max-sm:[-ms-overflow-style:none] max-sm:[scrollbar-width:none] max-sm:[&::-webkit-scrollbar]:hidden"
+                  )}
+                >
                   {children}
                 </div>
               </motion.div>

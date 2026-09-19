@@ -45,6 +45,8 @@ import {
   Package,
   ArrowUp,
   Globe,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import {
   Tooltip,
@@ -287,7 +289,7 @@ function CodeBlock({ language, code }: { language: string; code: string }) {
             group/copy-btn
             flex items-center gap-1.5
             px-2 py-2
-            rounded-full
+            rounded-xl
             text-base
             hover:bg-neutral-200/80
             dark:hover:bg-white/10
@@ -392,13 +394,13 @@ function MessageAttachmentItem({
     return (
       <ImagePreview src={imgSrc} alt={displayName}>
         <div
-          className="group relative block overflow-hidden rounded-xl bg-neutral-100 dark:bg-[#262626] border border-border/60 transition-all max-w-[100px] sm:max-w-[150px] cursor-pointer select-none hover:opacity-90"
+          className="group relative block overflow-hidden rounded-xl bg-neutral-100 dark:bg-[#262626] border border-border/80 transition-all max-w-[100px] sm:max-w-[150px] cursor-pointer select-none hover:opacity-90"
           title={`Preview ${displayName}`}
         >
           <img
             src={imgSrc}
             alt={displayName}
-            className="w-full max-h-[180px] sm:max-h-[220px] object-cover rounded-xl transition-transform group-hover:scale-105"
+            className="w-full max-h-[180px] sm:max-h-[220px] object-cover rounded-xl transition-transform"
             loading="lazy"
           />
         </div>
@@ -580,6 +582,20 @@ export function MessageList({
     files?: any[];
   } | null>(null);
   const [previewFile, setPreviewFile] = useState<any>(null);
+  const [isMobileScreen, setIsMobileScreen] = useState(false);
+  const [dropdownSubView, setDropdownSubView] = useState<"main" | "try-again">("main");
+  const [moreMenuOpenId, setMoreMenuOpenId] = useState<string | null>(null);
+  const [moreMenuJustClosedId, setMoreMenuJustClosedId] = useState<string | null>(null);
+  const moreMenuCloseTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobileScreen(window.innerWidth < 1025);
+    };
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
 
   // Sync feedback state from cookie on mount
   useEffect(() => {
@@ -775,22 +791,20 @@ export function MessageList({
           const userMsgIndex = isUser ? userMessageCounter++ : null;
           const msgId = msg.id || `msg-${index}`;
           const isCopied = copiedId === msgId;
-          const targetDomId = msg.id
-            ? `msg-${msg.id}`
-            : `message-${userMsgIndex}`;
+          const mId = msg.id
+            ? (msg.id.startsWith("m-") ? msg.id : `m-${msg.id}`)
+            : (isUser ? `m-${userMsgIndex}` : `m-${index}`);
 
           if (isUser) {
             const isEditing = editingMessageId === msgId;
             const isLastUserMsg =
-              index === messages.length - 1 ||
-              (index === messages.length - 2 &&
-                messages[messages.length - 1]?.role === "assistant");
+              !pendingMessage && index === messages.length - 1;
             const isThisMsgThinking = isLastUserMsg && isThinking;
 
             return (
               <div
                 key={msgId}
-                id={targetDomId}
+                id={mId}
                 className={cn(
                   "flex flex-col group transition-all",
                   isEditing ? "w-full items-stretch" : "items-end"
@@ -876,7 +890,7 @@ export function MessageList({
                           <button
                             type="button"
                             onClick={() => copyToClipboard(msg.content, msgId)}
-                            className="p-1.5 rounded-sm hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors cursor-pointer outline-none focus:outline-none focus-visible:ring-1.5 focus-visible:ring-foreground/40"
+                            className="p-1.5 rounded-sm hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
                             aria-label="Copy message"
                           >
                             {isCopied ? (
@@ -903,7 +917,7 @@ export function MessageList({
                               <button
                                 type="button"
                                 onClick={() => startEditing(msgId, msg.content)}
-                                className="p-1.5 rounded-sm hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors cursor-pointer outline-none focus:outline-none focus-visible:ring-1.5 focus-visible:ring-foreground/40"
+                                className="p-1.5 rounded-sm hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
                                 aria-label="Edit prompt"
                               >
                                 <Pencil className="w-4 h-4" />
@@ -936,7 +950,7 @@ export function MessageList({
                                   });
                                 }, 300);
                               }}
-                              className="p-1.5 rounded-sm hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors cursor-pointer outline-none focus:outline-none focus-visible:ring-1.5 focus-visible:ring-foreground/40"
+                              className="p-1.5 rounded-sm hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
                               aria-label="Share prompt"
                             >
                               {loadingShareId === msgId ? (
@@ -970,7 +984,7 @@ export function MessageList({
                                   files: msg.files,
                                 })
                               }
-                              className="p-1.5 rounded-sm hover:bg-secondary text-muted-foreground hover:text-destructive transition-colors cursor-pointer outline-none focus:outline-none focus-visible:ring-1.5 focus-visible:ring-foreground/40"
+                              className="p-1.5 rounded-sm hover:bg-secondary text-muted-foreground hover:text-destructive transition-colors cursor-pointer"
                               aria-label="Delete message"
                             >
                               <Trash2 className="w-4 h-4" />
@@ -994,7 +1008,11 @@ export function MessageList({
 
           // Assistant Message View
           return (
-            <div key={msgId} className="w-full group space-y-2">
+            <div
+              key={msgId}
+              id={mId}
+              className="w-full group space-y-2"
+            >
               <div className="w-full space-y-3">
                 {/* Collapsed Thought for Xs if this message was generated in think mode */}
                 {msg.metadata?.think && (
@@ -1167,7 +1185,7 @@ export function MessageList({
                             <ImagePreview
                               src={src}
                               alt={alt || "Image preview"}
-                              className="rounded-xl border border-border/60 max-h-[420px] object-contain cursor-pointer hover:opacity-95 transition-opacity"
+                              className="rounded-xl border border-border/60 max-h-[420px] object-contain cursor-pointer hover:opacity-90 transition-opacity"
                             />
                           </div>
                         );
@@ -1179,13 +1197,14 @@ export function MessageList({
                 </div>
 
                 {/* Assistant Action Toolbar — revealed when typing completes */}
-                {(!isTyping || index !== messages.length - 1) && (
+                {(!isTyping || Boolean(pendingMessage) || index !== messages.length - 1) && (
                   <div className="flex items-center gap-1.5 pt-1 text-muted-foreground">
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <button
+                          type="button"
                           onClick={() => copyToClipboard(msg.content, msgId)}
-                          className="p-1.5 rounded-sm hover:bg-secondary hover:text-foreground transition-colors"
+                          className="p-1.5 rounded-sm hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
                           aria-label="Copy response"
                         >
                           {isCopied ? (
@@ -1207,6 +1226,7 @@ export function MessageList({
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <button
+                          type="button"
                           onClick={() => handleFeedback(msgId, "up")}
                           disabled={loadingFeedbackId === `${msgId}-up`}
                           className={cn(
@@ -1241,6 +1261,7 @@ export function MessageList({
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <button
+                          type="button"
                           onClick={() => handleFeedback(msgId, "down")}
                           disabled={loadingFeedbackId === `${msgId}-down`}
                           className={cn(
@@ -1308,14 +1329,38 @@ export function MessageList({
                     </Tooltip>
 
                     {/* More options Dropdown (Read aloud, Try again, Models, Sources) */}
-                    <DropdownMenu>
-                      <Tooltip>
+                    <DropdownMenu
+                      open={moreMenuOpenId === msgId ? true : undefined}
+                      onOpenChange={(open) => {
+                        if (open) {
+                          setMoreMenuOpenId(msgId);
+                          setMoreMenuJustClosedId(null);
+                        } else {
+                          setMoreMenuOpenId(null);
+                          setMoreMenuJustClosedId(msgId);
+                          if (moreMenuCloseTimerRef.current) {
+                            clearTimeout(moreMenuCloseTimerRef.current);
+                          }
+                          moreMenuCloseTimerRef.current = setTimeout(() => {
+                            setMoreMenuJustClosedId(null);
+                          }, 400);
+                          setDropdownSubView("main");
+                        }
+                      }}
+                    >
+                      <Tooltip
+                        open={
+                          moreMenuOpenId === msgId || moreMenuJustClosedId === msgId
+                            ? false
+                            : undefined
+                        }
+                      >
                         <TooltipTrigger asChild>
                           <DropdownMenuTrigger asChild>
                             <button
                               type="button"
                               className={cn(
-                                "p-1.5 rounded-sm transition-colors outline-none focus:outline-none cursor-pointer",
+                                "p-1.5 rounded-sm transition-colors cursor-pointer",
                                 speakingMessageId === msgId
                                   ? "text-foreground bg-secondary"
                                   : "text-muted-foreground hover:bg-secondary hover:text-foreground"
@@ -1338,130 +1383,258 @@ export function MessageList({
                         side="top"
                         align="start"
                         sideOffset={4}
+                        avoidCollisions={true}
+                        collisionPadding={12}
+                        onCloseAutoFocus={(e) => {
+                          e.preventDefault();
+                          if (
+                            document.activeElement instanceof HTMLElement &&
+                            (document.activeElement.getAttribute("aria-label") === "More options" ||
+                              document.activeElement.closest('[role="menu"]'))
+                          ) {
+                            document.activeElement.blur();
+                          }
+                        }}
                         className="w-56 rounded-2xl p-1.5 bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/80 dark:border-none outline-none select-none z-50"
                       >
-                        <div className="px-3 py-1.5 text-xs text-muted-foreground font-medium select-none">
-                          {formatMessageTime(msg.createdAt || (msg as any).created_at)}
-                        </div>
-
-                        {/* Read aloud / Stop reading */}
-                        <DropdownMenuItem
-                          onClick={() => handleReadAloud(msgId, msg.content)}
-                          className="flex items-center gap-2.5 px-3 py-2 text-md rounded-xl cursor-pointer text-foreground hover:bg-secondary dark:hover:bg-[#2f2f2f] transition-colors outline-none"
-                        >
-                          {speakingMessageId === msgId ? (
-                            <>
-                              <VolumeX className="w-4 h-4 text-muted-foreground group-hover:text-foreground shrink-0" />
-                              <span>Stop reading</span>
-                            </>
-                          ) : (
-                            <>
-                              <Volume2 className="w-4 h-4 text-muted-foreground group-hover:text-foreground shrink-0" />
-                              <span>Read aloud</span>
-                            </>
-                          )}
-                        </DropdownMenuItem>
-
-                        {/* Try again Submenu (Input + Try again + Don't search web) */}
-                        {onRegenerate && (
-                          <DropdownMenuSub>
-                            <DropdownMenuSubTrigger className="flex items-center justify-between w-full px-3 py-2 text-md rounded-xl cursor-pointer text-foreground hover:bg-secondary dark:hover:bg-[#2f2f2f] data-[state=open]:bg-secondary dark:data-[state=open]:bg-[#2f2f2f] transition-colors outline-none">
-                              <div className="flex items-center gap-2.5">
-                                <RefreshCw className="w-4 h-4 text-muted-foreground group-hover:text-foreground shrink-0" />
-                                <span>Try again</span>
-                              </div>
-                            </DropdownMenuSubTrigger>
-                            <DropdownMenuSubContent
-                              sideOffset={4}
-                              alignOffset={-93}
-                              avoidCollisions={true}
-                              collisionPadding={12}
-                              className="w-56 rounded-2xl p-1.5 bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/80 dark:border-none outline-none select-none z-50"
+                        {isMobileScreen && dropdownSubView === "try-again" ? (
+                          <div className="space-y-0.5 p-0.5">
+                            {/* Back to main menu header */}
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                (e.currentTarget as HTMLElement)?.blur();
+                                e.stopPropagation();
+                                setDropdownSubView("main");
+                              }}
+                              className="flex items-center gap-2 px-2.5 py-1.5 text-md font-medium text-foreground [@media(hover:hover)]:hover:bg-secondary dark:[@media(hover:hover)]:hover:bg-[#2f2f2f] active:bg-secondary/80 dark:active:bg-[#2f2f2f]/80 rounded-xl cursor-pointer w-full text-left transition-colors outline-none focus:outline-none focus:bg-transparent focus-visible:outline-none"
                             >
-                              {/* Top Input Bar: Ask to change response */}
-                              <div
-                                className="px-2 py-1"
-                                onClick={(e) => e.stopPropagation()}
-                                onKeyDown={(e) => e.stopPropagation()}
-                              >
-                                <div className="relative flex items-center justify-between gap-1.5 bg-transparent">
-                                  <input
-                                    type="text"
-                                    placeholder="Try to change response"
-                                    value={changePrompts[msgId] || ""}
-                                    onChange={(e) =>
-                                      setChangePrompts((prev) => ({
-                                        ...prev,
-                                        [msgId]: e.target.value,
-                                      }))
-                                    }
-                                    onKeyDown={(e) => {
-                                      e.stopPropagation();
-                                      if (
-                                        e.key === "Enter" &&
-                                        (changePrompts[msgId] || "").trim()
-                                      ) {
-                                        e.preventDefault();
-                                        handleSendChangePrompt(msgId);
-                                      }
-                                    }}
-                                    className="w-full bg-transparent text-foreground placeholder:text-muted-foreground/60 text-sm outline-none py-1 font-normal min-w-0"
-                                    autoFocus
-                                  />
-                                  <button
-                                    type="button"
-                                    onClick={() => handleSendChangePrompt(msgId)}
-                                    disabled={!(changePrompts[msgId] || "").trim()}
-                                    className={cn(
-                                      "w-6 h-6 rounded-full flex items-center justify-center shrink-0 transition-all",
+                              <ChevronLeft className="w-4 h-4 stroke-[2.5]" />
+                              <span>Try again</span>
+                            </button>
+
+                            <div className="h-[1px] bg-neutral-200/80 dark:bg-[#383838] my-1 -mx-0.5" />
+
+                            {/* Top Input Bar: Ask anything to change */}
+                            <div
+                              className="px-2 py-1"
+                              onClick={(e) => e.stopPropagation()}
+                              onKeyDown={(e) => e.stopPropagation()}
+                            >
+                              <div className="relative flex items-center justify-between gap-1.5 bg-transparent">
+                                <input
+                                  type="text"
+                                  placeholder="Ask anything to change"
+                                  value={changePrompts[msgId] || ""}
+                                  onChange={(e) =>
+                                    setChangePrompts((prev) => ({
+                                      ...prev,
+                                      [msgId]: e.target.value,
+                                    }))
+                                  }
+                                  onKeyDown={(e) => {
+                                    e.stopPropagation();
+                                    if (
+                                      e.key === "Enter" &&
                                       (changePrompts[msgId] || "").trim()
-                                        ? "bg-foreground text-background cursor-pointer hover:opacity-90 active:scale-95"
-                                        : "bg-neutral-300 dark:bg-[#383838] text-muted-foreground/50 cursor-not-allowed opacity-50"
-                                    )}
-                                    aria-label="Send change request"
-                                  >
-                                    <ArrowUp className="w-3.5 h-3.5 stroke-[2.5]" />
-                                  </button>
-                                </div>
-                              </div>
-
-                              <div className="h-[1px] bg-neutral-200/80 dark:bg-[#383838] my-1 -mx-0.5" />
-
-                              {/* Option 1: Try again */}
-                              <DropdownMenuItem
-                                onClick={() => onRegenerate(msg, index)}
-                                className="flex items-center gap-2.5 px-3 py-2 text-md rounded-xl cursor-pointer text-foreground hover:bg-secondary dark:hover:bg-[#2f2f2f] transition-colors outline-none"
-                              >
-                                <RefreshCw className="w-4 h-4 text-muted-foreground group-hover:text-foreground shrink-0" />
-                                <span>Try again</span>
-                              </DropdownMenuItem>
-
-                              {/* Option 2: Web search (Disabled) */}
-                              <DropdownMenuItem
-                                onSelect={(e) => e.preventDefault()}
-                                onClick={(e) => e.preventDefault()}
-                                className="flex items-center gap-2.5 px-3 py-2 text-md rounded-xl font-medium transition-colors outline-none focus:outline-none focus:bg-transparent focus-visible:outline-none whitespace-nowrap text-left cursor-not-allowed select-none text-muted-foreground [@media(hover:hover)]:hover:bg-secondary dark:[@media(hover:hover)]:hover:bg-[#2f2f2f]"
-                              >
-                                <Globe className="w-4 h-4 text-muted-foreground group-hover:text-foreground shrink-0" />
-                                <AnimatedComingSoonText
-                                  label="Web search"
-                                  comingSoonText="Coming soon"
+                                    ) {
+                                      e.preventDefault();
+                                      handleSendChangePrompt(msgId);
+                                    }
+                                  }}
+                                  className="w-full bg-transparent text-foreground placeholder:text-muted-foreground/60 text-sm outline-none py-1 font-normal min-w-0"
+                                  autoFocus
                                 />
-                              </DropdownMenuItem>
-                            </DropdownMenuSubContent>
-                          </DropdownMenuSub>
-                        )}
+                                <button
+                                  type="button"
+                                  onClick={() => handleSendChangePrompt(msgId)}
+                                  disabled={!(changePrompts[msgId] || "").trim()}
+                                  className={cn(
+                                    "w-6 h-6 rounded-full flex items-center justify-center shrink-0 transition-all",
+                                    (changePrompts[msgId] || "").trim()
+                                      ? "bg-foreground text-background cursor-pointer hover:opacity-90 active:scale-95"
+                                      : "bg-neutral-300 dark:bg-[#383838] text-muted-foreground/50 cursor-not-allowed opacity-50"
+                                  )}
+                                  aria-label="Send change request"
+                                >
+                                  <ArrowUp className="w-3.5 h-3.5 stroke-[2.5]" />
+                                </button>
+                              </div>
+                            </div>
 
-                        {/* View sources */}
-                        <DropdownMenuItem
-                          onClick={() => {
-                            toast.info("Viewing sources for this response");
-                          }}
-                          className="flex items-center gap-2.5 px-3 py-2 text-md rounded-xl cursor-pointer text-foreground hover:bg-secondary dark:hover:bg-[#2f2f2f] transition-colors outline-none"
-                        >
-                          <BookOpen className="w-4 h-4 text-muted-foreground group-hover:text-foreground shrink-0" />
-                          <span>View sources</span>
-                        </DropdownMenuItem>
+                            <div className="h-[1px] bg-neutral-200/80 dark:bg-[#383838] my-1 -mx-0.5" />
+
+                            {/* Option 1: Try again */}
+                            <DropdownMenuItem
+                              onClick={() => {
+                                onRegenerate?.(msg, index);
+                                setDropdownSubView("main");
+                              }}
+                              className="flex items-center gap-2.5 px-3 py-2 text-md rounded-xl cursor-pointer text-foreground hover:bg-secondary dark:hover:bg-[#2f2f2f] transition-colors outline-none"
+                            >
+                              <RefreshCw className="w-4 h-4 text-muted-foreground group-hover:text-foreground shrink-0" />
+                              <span>Try again</span>
+                            </DropdownMenuItem>
+
+                            {/* Option 2: Web search (Disabled) */}
+                            <DropdownMenuItem
+                              onSelect={(e) => e.preventDefault()}
+                              onClick={(e) => e.preventDefault()}
+                              className="flex items-center gap-2.5 px-3 py-2 text-md rounded-xl transition-colors outline-none focus:outline-none focus:bg-transparent focus-visible:outline-none whitespace-nowrap text-left cursor-not-allowed select-none text-muted-foreground [@media(hover:hover)]:hover:bg-secondary dark:[@media(hover:hover)]:hover:bg-[#2f2f2f]"
+                            >
+                              <Globe className="w-4 h-4 text-muted-foreground group-hover:text-foreground shrink-0" />
+                              <AnimatedComingSoonText
+                                label="Web search"
+                                comingSoonText="Coming soon"
+                              />
+                            </DropdownMenuItem>
+                          </div>
+                        ) : (
+                          <>
+                            <div className="px-3 py-1.5 text-xs text-muted-foreground select-none">
+                              {formatMessageTime(msg.createdAt || (msg as any).created_at)}
+                            </div>
+
+                            {/* Read aloud / Stop reading */}
+                            <DropdownMenuItem
+                              onClick={() => handleReadAloud(msgId, msg.content)}
+                              className="flex items-center gap-2.5 px-3 py-2 text-md rounded-xl cursor-pointer text-foreground hover:bg-secondary dark:hover:bg-[#2f2f2f] transition-colors outline-none"
+                            >
+                              {speakingMessageId === msgId ? (
+                                <>
+                                  <VolumeX className="w-4 h-4 text-muted-foreground group-hover:text-foreground shrink-0" />
+                                  <span>Stop reading</span>
+                                </>
+                              ) : (
+                                <>
+                                  <Volume2 className="w-4 h-4 text-muted-foreground group-hover:text-foreground shrink-0" />
+                                  <span>Read aloud</span>
+                                </>
+                              )}
+                            </DropdownMenuItem>
+
+                            {/* Try again: Mobile In-Place Row vs Desktop Flyout */}
+                            {onRegenerate && (
+                              isMobileScreen ? (
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    (e.currentTarget as HTMLElement)?.blur();
+                                    e.stopPropagation();
+                                    setDropdownSubView("try-again");
+                                  }}
+                                  className="w-full flex items-center justify-between px-3 py-2 text-md rounded-xl cursor-pointer text-foreground hover:bg-secondary dark:hover:bg-[#2f2f2f] transition-colors outline-none focus:outline-none focus:bg-transparent focus-visible:outline-none text-left"
+                                >
+                                  <div className="flex items-center gap-2.5">
+                                    <RefreshCw className="w-4 h-4 text-muted-foreground group-hover:text-foreground shrink-0" />
+                                    <span>Try again</span>
+                                  </div>
+                                  <ChevronRight className="w-4 h-4 text-muted-foreground ml-auto shrink-0" />
+                                </button>
+                              ) : (
+                                <DropdownMenuSub>
+                                  <DropdownMenuSubTrigger className="flex items-center justify-between w-full px-3 py-2 text-md rounded-xl cursor-pointer text-foreground hover:bg-secondary dark:hover:bg-[#2f2f2f] data-[state=open]:bg-secondary dark:data-[state=open]:bg-[#2f2f2f] transition-colors outline-none">
+                                    <div className="flex items-center gap-2.5">
+                                      <RefreshCw className="w-4 h-4 text-muted-foreground group-hover:text-foreground shrink-0" />
+                                      <span>Try again</span>
+                                    </div>
+                                  </DropdownMenuSubTrigger>
+                                  <DropdownMenuSubContent
+                                    sideOffset={4}
+                                    alignOffset={-93}
+                                    avoidCollisions={true}
+                                    collisionPadding={12}
+                                    className="w-56 rounded-2xl p-1.5 bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/80 dark:border-none outline-none select-none z-50"
+                                  >
+                                    {/* Top Input Bar: Ask anything to change */}
+                                    <div
+                                      className="px-2 py-1"
+                                      onClick={(e) => e.stopPropagation()}
+                                      onKeyDown={(e) => e.stopPropagation()}
+                                    >
+                                      <div className="relative flex items-center justify-between gap-1.5 bg-transparent">
+                                        <input
+                                          type="text"
+                                          placeholder="Ask anything to change"
+                                          value={changePrompts[msgId] || ""}
+                                          onChange={(e) =>
+                                            setChangePrompts((prev) => ({
+                                              ...prev,
+                                              [msgId]: e.target.value,
+                                            }))
+                                          }
+                                          onKeyDown={(e) => {
+                                            e.stopPropagation();
+                                            if (
+                                              e.key === "Enter" &&
+                                              (changePrompts[msgId] || "").trim()
+                                            ) {
+                                              e.preventDefault();
+                                              handleSendChangePrompt(msgId);
+                                            }
+                                          }}
+                                          className="w-full bg-transparent text-foreground placeholder:text-muted-foreground/60 text-sm outline-none py-1 font-normal min-w-0"
+                                          autoFocus
+                                        />
+                                        <button
+                                          type="button"
+                                          onClick={() => handleSendChangePrompt(msgId)}
+                                          disabled={!(changePrompts[msgId] || "").trim()}
+                                          className={cn(
+                                            "w-6 h-6 rounded-full flex items-center justify-center shrink-0 transition-all",
+                                            (changePrompts[msgId] || "").trim()
+                                              ? "bg-foreground text-background cursor-pointer hover:opacity-90 active:scale-95"
+                                              : "bg-neutral-300 dark:bg-[#383838] text-muted-foreground/50 cursor-not-allowed opacity-50"
+                                          )}
+                                          aria-label="Send change request"
+                                        >
+                                          <ArrowUp className="w-3.5 h-3.5 stroke-[2.5]" />
+                                        </button>
+                                      </div>
+                                    </div>
+
+                                    <div className="h-[1px] bg-neutral-200/80 dark:bg-[#383838] my-1 -mx-0.5" />
+
+                                    {/* Option 1: Try again */}
+                                    <DropdownMenuItem
+                                      onClick={() => onRegenerate(msg, index)}
+                                      className="flex items-center gap-2.5 px-3 py-2 text-md rounded-xl cursor-pointer text-foreground hover:bg-secondary dark:hover:bg-[#2f2f2f] transition-colors outline-none"
+                                    >
+                                      <RefreshCw className="w-4 h-4 text-muted-foreground group-hover:text-foreground shrink-0" />
+                                      <span>Try again</span>
+                                    </DropdownMenuItem>
+
+                                    {/* Option 2: Web search (Disabled) */}
+                                    <DropdownMenuItem
+                                      onSelect={(e) => e.preventDefault()}
+                                      onClick={(e) => e.preventDefault()}
+                                      className="flex items-center gap-2.5 px-3 py-2 text-md rounded-xl transition-colors outline-none focus:outline-none focus:bg-transparent focus-visible:outline-none whitespace-nowrap text-left cursor-not-allowed select-none text-muted-foreground [@media(hover:hover)]:hover:bg-secondary dark:[@media(hover:hover)]:hover:bg-[#2f2f2f]"
+                                    >
+                                      <Globe className="w-4 h-4 text-muted-foreground group-hover:text-foreground shrink-0" />
+                                      <AnimatedComingSoonText
+                                        label="Web search"
+                                        comingSoonText="Coming soon"
+                                      />
+                                    </DropdownMenuItem>
+                                  </DropdownMenuSubContent>
+                                </DropdownMenuSub>
+                              )
+                            )}
+
+                            {/* View sources (Coming soon) */}
+                            <DropdownMenuItem
+                              onSelect={(e) => e.preventDefault()}
+                              onClick={(e) => e.preventDefault()}
+                              className="flex items-center gap-2.5 px-3 py-2 text-md rounded-xl transition-colors outline-none focus:outline-none focus:bg-transparent focus-visible:outline-none whitespace-nowrap text-left cursor-not-allowed select-none text-muted-foreground [@media(hover:hover)]:hover:bg-secondary dark:[@media(hover:hover)]:hover:bg-[#2f2f2f]"
+                            >
+                              <BookOpen className="w-4 h-4 text-muted-foreground group-hover:text-foreground shrink-0" />
+                              <AnimatedComingSoonText
+                                label="View sources"
+                                comingSoonText="Coming soon"
+                              />
+                            </DropdownMenuItem>
+                          </>
+                        )}
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </div>
@@ -1498,7 +1671,7 @@ export function MessageList({
                     onClick={() =>
                       copyToClipboard(pendingMessage.content, "pending-msg")
                     }
-                    className="p-1.5 rounded-sm hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors cursor-pointer outline-none focus:outline-none focus-visible:ring-1.5 focus-visible:ring-foreground/40"
+                    className="p-1.5 rounded-sm hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
                     aria-label="Copy prompt"
                   >
                     {copiedId === "pending-msg" ? (

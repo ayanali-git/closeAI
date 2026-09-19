@@ -208,7 +208,7 @@ export function ThinkReasoning({
   const stepTimerRef = useRef<any>(null);
   const stepsEndRef = useRef<HTMLDivElement>(null);
 
-  // Auto-scroll the thinking steps panel as new steps appear
+  // Auto-scroll the thinking steps panel and main chat container as new steps appear
   useEffect(() => {
     if (isThinking && open && stepsEndRef.current) {
       stepsEndRef.current.scrollIntoView({ behavior: "smooth", block: "nearest" });

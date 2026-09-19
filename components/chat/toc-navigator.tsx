@@ -9,11 +9,144 @@ import {
 import { cn } from "@/lib/utils";
 import { Message } from "@/lib/chat-service";
 
+export function getTargetElement(id: string): HTMLElement | null {
+  if (!id || typeof document === "undefined") return null;
+  const cleanId = decodeURIComponent(id).replace(/^#/, "").trim();
+  if (!cleanId) return null;
+
+  return (
+    document.getElementById(cleanId) ||
+    (!cleanId.startsWith("m-") ? document.getElementById(`m-${cleanId}`) : null)
+  );
+}
+
 export type Heading = {
   id: string;
   text: string;
   level?: number;
 };
+
+/** full TOC popup — shows all headings as a list with refined hover box */
+/**
+ * Auto-scrolling title on hover (exact consistent logic with sidebar.tsx)
+ */
+function TocTitleMarquee({
+  title,
+  isHovered,
+  isSelected,
+}: {
+  title: string;
+  isHovered: boolean;
+  isSelected: boolean;
+}) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const textRef = useRef<HTMLSpanElement>(null);
+  const [overflowWidth, setOverflowWidth] = useState(0);
+
+  useEffect(() => {
+    const measure = () => {
+      if (textRef.current && containerRef.current) {
+        const diff =
+          textRef.current.scrollWidth - containerRef.current.clientWidth;
+        setOverflowWidth(Math.max(diff, 0));
+      }
+    };
+
+    measure();
+
+    const ro = new ResizeObserver(() => measure());
+    if (containerRef.current) ro.observe(containerRef.current);
+
+    window.addEventListener("resize", measure);
+
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("resize", measure);
+    };
+  }, [title]);
+
+  const isScrolling = overflowWidth > 0 && isHovered;
+  const duration = Math.max(3.2, overflowWidth / 35 + 1.8);
+
+  return (
+    <div
+      ref={containerRef}
+      className="relative flex-1 min-w-0 overflow-hidden pr-1"
+      style={{
+        maskImage:
+          overflowWidth > 0
+            ? isScrolling
+              ? "linear-gradient(to right, transparent 0%, black 5px, black calc(100% - 5px), transparent 100%)"
+              : "linear-gradient(to right, black 0%, black calc(100% - 8px), transparent 100%)"
+            : "none",
+
+        WebkitMaskImage:
+          overflowWidth > 0
+            ? isScrolling
+              ? "linear-gradient(to right, transparent 0%, black 5px, black calc(100% - 5px), transparent 100%)"
+              : "linear-gradient(to right, black 0%, black calc(100% - 8px), transparent 100%)"
+            : "none",
+      }}
+    >
+      {/* Heading title */}
+      <span
+        ref={textRef}
+        style={
+          {
+            "--marquee-dist": `${overflowWidth + 10}px`,
+            animation: isScrolling
+              ? `chat-title-marquee ${duration}s ease-in-out infinite`
+              : "none",
+            transform: isScrolling ? undefined : "translateX(0px)",
+            transition: isScrolling ? "none" : "transform 0.25s ease-out",
+          } as React.CSSProperties
+        }
+        className="inline-block whitespace-nowrap text-[15px] leading-snug select-none will-change-transform"
+      >
+        {title || "Prompt"}
+      </span>
+    </div>
+  );
+}
+
+function TocItemRow({
+  heading,
+  isActive,
+  activeItemRef,
+  onNavigate,
+}: {
+  heading: Heading;
+  isActive: boolean;
+  activeItemRef?: React.Ref<HTMLAnchorElement>;
+  onNavigate: (event: MouseEvent<HTMLAnchorElement>, id: string) => void;
+}) {
+  const [isHovered, setIsHovered] = useState(false);
+
+  return (
+    <a
+      ref={activeItemRef}
+      href={`#${heading.id}`}
+      onClick={(event) => onNavigate(event, heading.id)}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      data-selected={isActive ? "true" : undefined}
+      title={heading.text}
+      className={cn(
+        "hover-box relative mx-1 rounded-xl px-3 py-2 text-[15px] leading-snug cursor-pointer transition-colors duration-150 flex items-center min-w-0 overflow-hidden text-left",
+        "text-muted-foreground hover:text-foreground",
+        isActive
+          ? "bg-secondary dark:bg-[#2f2f2f]"
+          : "hover:bg-secondary dark:hover:bg-[#2f2f2f] active:bg-secondary dark:active:bg-[#2f2f2f]"
+      )}
+    >
+      <TocTitleMarquee
+        title={heading.text}
+        isHovered={isHovered}
+        isSelected={isActive}
+      />
+    </a>
+  );
+}
 
 /** full TOC popup — shows all headings as a list with refined hover box */
 function TocPopup({
@@ -40,21 +173,13 @@ function TocPopup({
           const isActive = heading.id === scrollActiveSectionId;
 
           return (
-            <a
+            <TocItemRow
               key={heading.id}
-              ref={isActive ? activeItemRef : null}
-              href={`#${heading.id}`}
-              onClick={(event) => onNavigate(event, heading.id)}
-              data-selected={isActive ? "true" : undefined}
-              title={heading.text}
-              className={cn(
-                "hover-box relative mx-1 rounded-xl px-3 py-2 text-[15px] leading-snug cursor-pointer transition-colors duration-150",
-                "overflow-hidden text-ellipsis whitespace-nowrap text-left hover:bg-secondary dark:hover:bg-[#2f2f2f]",
-                isActive ? "bg-secondary dark:bg-[#2f2f2f] text-foreground font-medium" : "text-muted-foreground"
-              )}
-            >
-              <span className="relative z-10">{heading.text}</span>
-            </a>
+              heading={heading}
+              isActive={isActive}
+              activeItemRef={isActive ? activeItemRef : undefined}
+              onNavigate={onNavigate}
+            />
           );
         })}
       </nav>
@@ -378,11 +503,14 @@ export function TocNavigator({
           if (!text) {
             text = `Prompt #${index + 1}`;
           }
-          const truncated = text.length > 80 ? text.substring(0, 80) + "..." : text;
+          const promptText = text.length > 300 ? text.substring(0, 300) : text;
+          const mId = msg.id
+            ? (msg.id.startsWith("m-") ? msg.id : `m-${msg.id}`)
+            : `m-${index}`;
 
           return {
-            id: msg.id ? `msg-${msg.id}` : `message-${index}`,
-            text: truncated,
+            id: mId,
+            text: promptText,
             level: 2,
           };
         });
@@ -471,7 +599,7 @@ export function TocNavigator({
         const readingLinePx = Math.min(container.clientHeight * 0.4, 220);
 
         for (let i = headings.length - 1; i >= 0; i--) {
-          const elem = document.getElementById(headings[i].id);
+          const elem = getTargetElement(headings[i].id);
           if (elem) {
             const elemRect = elem.getBoundingClientRect();
             const relativeTop = elemRect.top - containerRect.top;
@@ -517,11 +645,63 @@ export function TocNavigator({
     };
   }, [headings, containerRef]);
 
+  // Handle browser URL hash change
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const handleHashChange = () => {
+      const hash = window.location.hash;
+      if (!hash) return;
+      const cleanId = decodeURIComponent(hash.replace(/^#/, "")).trim();
+      if (!cleanId) return;
+
+      const elem = getTargetElement(cleanId);
+      if (!elem) return;
+
+      userClickedSectionIdRef.current = cleanId;
+      setScrollActiveSectionId(cleanId);
+
+      if (clickLockTimerRef.current) {
+        window.clearTimeout(clickLockTimerRef.current);
+      }
+      clickLockTimerRef.current = window.setTimeout(() => {
+        userClickedSectionIdRef.current = null;
+      }, 1200);
+
+      if (containerRef?.current) {
+        const container = containerRef.current;
+        const containerRect = container.getBoundingClientRect();
+        const elemRect = elem.getBoundingClientRect();
+        const targetScrollTop =
+          container.scrollTop + (elemRect.top - containerRect.top) - 96;
+        const maxScroll = Math.max(0, container.scrollHeight - container.clientHeight);
+        const boundedTarget = Math.min(maxScroll, Math.max(0, targetScrollTop));
+
+        container.scrollTo({
+          top: boundedTarget,
+          behavior: "smooth",
+        });
+      } else {
+        const yOffset = -96;
+        const y = Math.max(
+          0,
+          elem.getBoundingClientRect().top + window.scrollY + yOffset
+        );
+        window.scrollTo({ top: y, behavior: "smooth" });
+      }
+    };
+
+    window.addEventListener("hashchange", handleHashChange);
+    return () => {
+      window.removeEventListener("hashchange", handleHashChange);
+    };
+  }, [headings, containerRef]);
+
   if (headings.length === 0) return null;
 
   const handleLinkClick = (e: MouseEvent<HTMLAnchorElement>, id: string) => {
     e.preventDefault();
-    const elem = document.getElementById(id);
+    const elem = getTargetElement(id);
     if (!elem) return;
 
     userClickedSectionIdRef.current = id;
@@ -539,8 +719,8 @@ export function TocNavigator({
       const containerRect = container.getBoundingClientRect();
       const elemRect = elem.getBoundingClientRect();
       const targetScrollTop =
-        container.scrollTop + (elemRect.top - containerRect.top) - 24;
-      const maxScroll = container.scrollHeight - container.clientHeight;
+        container.scrollTop + (elemRect.top - containerRect.top) - 96;
+      const maxScroll = Math.max(0, container.scrollHeight - container.clientHeight);
       const boundedTarget = Math.min(maxScroll, Math.max(0, targetScrollTop));
 
       container.scrollTo({
@@ -548,7 +728,7 @@ export function TocNavigator({
         behavior: "smooth",
       });
     } else {
-      const yOffset = -90;
+      const yOffset = -96;
       const y = Math.max(
         0,
         elem.getBoundingClientRect().top + window.scrollY + yOffset

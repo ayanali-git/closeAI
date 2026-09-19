@@ -8,20 +8,7 @@ import { cn } from '@/lib/utils';
 
 const DropdownMenu = DropdownMenuPrimitive.Root;
 
-const DropdownMenuTrigger = React.forwardRef<
-  React.ElementRef<typeof DropdownMenuPrimitive.Trigger>,
-  React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.Trigger>
->(({ className, ...props }, ref) => (
-  <DropdownMenuPrimitive.Trigger
-    ref={ref}
-    className={cn(
-      'outline-none focus:outline-none focus-visible:outline-none focus:ring-0 focus-visible:ring-0 ring-0 select-none',
-      className
-    )}
-    {...props}
-  />
-));
-DropdownMenuTrigger.displayName = DropdownMenuPrimitive.Trigger.displayName;
+const DropdownMenuTrigger = DropdownMenuPrimitive.Trigger;
 
 const DropdownMenuGroup = DropdownMenuPrimitive.Group;
 
@@ -61,33 +48,38 @@ DropdownMenuSubTrigger.displayName =
 const DropdownMenuSubContent = React.forwardRef<
   React.ElementRef<typeof DropdownMenuPrimitive.SubContent>,
   React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.SubContent>
->(({ className, sideOffset = 8, alignOffset = -4, ...props }, ref) => {
-  return (
-    <DropdownMenuPrimitive.Portal>
-      <DropdownMenuPrimitive.SubContent
-        ref={ref}
-        sideOffset={sideOffset}
-        alignOffset={alignOffset}
-        className={cn(
-          'z-[9999] min-w-[10rem] overflow-hidden rounded-2xl bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/80 dark:border-none p-1.5 text-foreground outline-none focus:outline-none focus:ring-0',
-          className
-        )}
-        {...props}
-      />
-    </DropdownMenuPrimitive.Portal>
-  );
-});
+>(({ className, sideOffset = 8, alignOffset = -4, ...props }, ref) => (
+  <DropdownMenuPrimitive.Portal>
+    <DropdownMenuPrimitive.SubContent
+      ref={ref}
+      sideOffset={sideOffset}
+      alignOffset={alignOffset}
+      className={cn(
+        'z-[9999] min-w-[10rem] overflow-hidden rounded-2xl bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/80 dark:border-none p-1.5 text-foreground outline-none focus:outline-none focus:ring-0',
+        className
+      )}
+      {...props}
+    />
+  </DropdownMenuPrimitive.Portal>
+));
 DropdownMenuSubContent.displayName =
   DropdownMenuPrimitive.SubContent.displayName;
 
 const DropdownMenuContent = React.forwardRef<
   React.ElementRef<typeof DropdownMenuPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.Content>
->(({ className, sideOffset = 8, ...props }, ref) => (
+>(({ className, sideOffset = 8, onCloseAutoFocus, ...props }, ref) => (
   <DropdownMenuPrimitive.Portal>
     <DropdownMenuPrimitive.Content
       ref={ref}
       sideOffset={sideOffset}
+      onCloseAutoFocus={(e) => {
+        if (onCloseAutoFocus) {
+          onCloseAutoFocus(e);
+        } else {
+          e.preventDefault();
+        }
+      }}
       className={cn(
         'z-[9999] min-w-[8rem] overflow-hidden rounded-2xl bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/80 dark:border-none p-1.5 text-foreground outline-none focus:outline-none focus:ring-0',
         className

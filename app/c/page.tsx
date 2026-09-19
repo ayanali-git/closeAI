@@ -42,7 +42,7 @@ function NewChatContent() {
   const [isTyping, setIsTyping] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [isAutoCreating, setIsAutoCreating] = useState(false);
-  const [selectedModel, setSelectedModel] = useState("GPT-5.4");
+  const [selectedModel, setSelectedModel] = useState("gemini-3.8 flash");
   const [selectedModelTier, setSelectedModelTier] = useState(4);
   const [thinkMode, setThinkMode] = useState(false);
   const autoCreateTriggeredRef = useRef(false);
@@ -180,6 +180,10 @@ function NewChatContent() {
         );
       }
 
+      if (thinkMode) {
+        setThinkMode(false);
+      }
+
       // 3. Instantly navigate to the active chat!
       router.push(`/c/${newChat.id}`);
     } catch (error: any) {
@@ -254,7 +258,11 @@ function NewChatContent() {
                     className="xl:hidden w-9 h-9 rounded-xl bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/50 dark:border-none text-neutral-700 dark:text-neutral-200 hover:text-foreground dark:hover:text-foreground flex items-center justify-center transition-colors cursor-pointer outline-none focus:outline-none"
                     aria-label="Open sidebar"
                   >
-                      <PanelRight className="w-4 h-4 text-foreground" />
+                    {isSidebarBtnHovered ? (
+                      <PanelRight className="w-4 h-4 text-foreground pointer-events-none" />
+                    ) : (
+                      <CloseAIIcon size={24} className="pointer-events-none" />
+                    )}
                   </button>
                 </TooltipTrigger>
                 <TooltipContent side="bottom" align="start" sideOffset={6} className="text-md">

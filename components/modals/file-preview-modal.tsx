@@ -6,7 +6,6 @@ import {
   ExternalLink,
   Download,
   FileText,
-  Eye,
   Loader,
 } from "lucide-react";
 import { BottomSheet } from "@/components/ui/bottom-sheet";
@@ -16,7 +15,6 @@ import {
   isTextOrCodeFile,
   getFileIconInfo,
   getFileUrl,
-  formatFileSize,
 } from "@/lib/file-utils";
 import { cn } from "@/lib/utils";
 
@@ -105,7 +103,6 @@ export function FilePreviewModal({
   if (!open || !file) return null;
 
   const fileName = file.name || file.filename || "Attachment";
-  const fileSize = formatFileSize(file.size);
   const { Icon, label, colorClass, badgeBg } = getFileIconInfo(file);
   const isImg = isImageFile(file);
   const isPdf = isPdfFile(file);
@@ -203,7 +200,6 @@ export function FilePreviewModal({
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full hover:bg-secondary text-foreground text-xs font-medium transition-colors"
               >
-                <Eye className="w-4 h-4" />
                 Open
               </a>
             </div>
@@ -225,34 +221,7 @@ export function FilePreviewModal({
         <div className="flex flex-col h-full -mx-6 -mt-2 -mb-6">
           {/* Mobile BottomSheet Header */}
           <div className="flex items-center justify-between px-4 py-3 border-b border-border/80 select-none bg-card shrink-0">
-            <div className="flex items-center gap-2.5 min-w-0 pr-2">
-              <div className={cn("w-8 h-8 rounded-xl flex items-center justify-center shrink-0", badgeBg)}>
-                <Icon className={cn("w-4 h-4", colorClass)} weight="fill" />
-              </div>
-              <div className="flex flex-col min-w-0">
-                <div className="flex items-center gap-1.5">
-                  <span className="font-semibold text-sm text-foreground truncate max-w-[170px]">
-                    {fileName}
-                  </span>
-                </div>
-                {fileSize && (
-                  <span className="text-[11px] text-muted-foreground">{fileSize}</span>
-                )}
-              </div>
-            </div>
-
-            <div className="flex items-center gap-1 shrink-0">
-              <button
-                type="button"
-                onClick={() => onOpenChange(false)}
-                className="p-1.5 rounded-sm hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
-                title="Close preview"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
           </div>
-
           {/* Content Viewer Area */}
           <div className="flex-1 w-full h-full overflow-hidden p-0 flex flex-col min-h-0">
             {previewContent}
@@ -267,40 +236,29 @@ export function FilePreviewModal({
       className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/85 backdrop-blur-sm"
       onClick={() => onOpenChange(false)}
     >
+      {/* Top-Right Toolbar matching Share & More buttons position */}
+      <header className="fixed top-0 left-0 right-0 z-50 h-14 pt-[env(safe-area-inset-top,0px)] px-3 sm:px-4 flex items-center justify-end select-none pointer-events-none bg-transparent">
+        <div
+          className="flex items-center gap-1.5 sm:gap-2 pointer-events-auto mt-3 pr-3 sm:pr-1 select-none"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <button
+            type="button"
+            onClick={() => onOpenChange(false)}
+            className="w-9 h-9 rounded-xl bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/80 dark:border-none text-muted-foreground hover:text-foreground flex items-center justify-center transition-colors cursor-pointer outline-none focus:outline-none"
+            title="Close preview"
+            aria-label="Close preview"
+          >
+            <X className="w-4 h-4" />
+            <span className="sr-only">Close</span>
+          </button>
+        </div>
+      </header>
+
       <div
         className="relative w-[85vw] max-w-[85vw] h-[85vh] max-h-[85vh] flex flex-col bg-background/95 dark:bg-[#1e1e1e]/95 rounded-2xl overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Desktop Header */}
-        <div className="flex items-center justify-between px-5 py-3 border-t border-border/80 select-none bg-card shrink-0">
-          <div className="flex items-center gap-3 min-w-0 pr-4">
-            <div className={cn("w-9 h-9 rounded-xl flex items-center justify-center shrink-0", badgeBg)}>
-              <Icon className={cn("w-5 h-5", colorClass)} weight="fill" />
-            </div>
-            <div className="flex flex-col min-w-0">
-              <div className="flex items-center gap-2">
-                <span className="font-semibold text-sm sm:text-base text-foreground truncate max-w-[220px] sm:max-w-[400px]">
-                  {fileName}
-                </span>
-              </div>
-              {fileSize && (
-                <span className="text-xs text-muted-foreground">{fileSize}</span>
-              )}
-            </div>
-          </div>
-
-          <div className="flex items-center gap-1.5 shrink-0">
-            <button
-              type="button"
-              onClick={() => onOpenChange(false)}
-              className="p-1.5 sm:p-2 rounded-sm hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
-              title="Close preview"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          </div>
-        </div>
-
         {/* Content Viewer Area */}
         <div className="flex-1 w-full h-full overflow-hidden p-0 flex flex-col min-h-0">
           {previewContent}

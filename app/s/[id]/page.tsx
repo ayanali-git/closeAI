@@ -5,7 +5,8 @@ import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { MessageList } from "@/components/chat/message-list";
-import TocNavigator from "@/components/chat/toc-navigator";
+import TocNavigator, { getTargetElement } from "@/components/chat/toc-navigator";
+import { ChatInput } from "@/components/chat/chat-input";
 import { chatService, Message } from "@/lib/chat-service";
 import { supabase } from "@/lib/supabase";
 import { CloseAIIcon } from "@/components/brand/logo";
@@ -14,25 +15,13 @@ import {
   Loader,
   Plus,
   Upload,
-  Brain,
-  Mic,
-  ArrowUp,
   ArrowDown,
-  Maximize2,
-  Minimize2,
-  MicOff,
 } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { PlusMenuContent } from "@/components/chat/plus-menu-content";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import toast from "@/lib/toast";
@@ -180,534 +169,6 @@ function SharedHeaderTitleMarquee({
   );
 }
 
-/**
- * Bottom Chat Input Pill for Shared Page
- * Identical design, colors, focus states, and pill shape as the main ChatInput component,
- * with "Continue chatting" placeholder text and disabled "Think" mode button with tooltip.
- */
-function SharedChatInputPill({
-  chatId,
-  showScrollBottom,
-  onScrollToBottom,
-}: {
-  chatId: string;
-  showScrollBottom?: boolean;
-  onScrollToBottom?: () => void;
-}) {
-  const [prompt, setPrompt] = useState("");
-  const [thinkMode, setThinkMode] = useState(false);
-  const [plusMenuOpen, setPlusMenuOpen] = useState(false);
-  const [isListening, setIsListening] = useState(false);
-  const [isMultiLine, setIsMultiLine] = useState(false);
-  const [isFullyExpanded, setIsFullyExpanded] = useState(false);
-  const [menuSideOffset, setMenuSideOffset] = useState(14);
-  const [menuAlignOffset, setMenuAlignOffset] = useState(0);
-  const [menuWidth, setMenuWidth] = useState<number | undefined>(undefined);
-  const recognitionRef = useRef<any>(null);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const pillRef = useRef<HTMLDivElement>(null);
-  const plusButtonRef = useRef<HTMLButtonElement>(null);
-  const cursorPositionRef = useRef<number | null>(null);
-
-  const lineCount = (prompt || "").split("\n").length;
-  const isBigContent =
-    lineCount >= 4 ||
-    (prompt && prompt.trim().length >= 180) ||
-    ((prompt || "").includes("\n") && (prompt || "").trim().length >= 80) ||
-    isFullyExpanded;
-
-  const isTextMultiLine = Boolean(
-    prompt &&
-      prompt.trim().length > 0 &&
-      ((prompt || "").includes("\n") || isMultiLine)
-  );
-
-  const isExpandedLayout = isBigContent || isTextMultiLine;
-
-  const adjustHeight = useCallback(() => {
-    const el = textareaRef.current;
-    if (!el) return;
-    if (prompt && prompt.trim().length > 0) {
-      el.style.height = "auto";
-      const scrollH = el.scrollHeight;
-      const maxHeight = isFullyExpanded ? 400 : 200;
-      const newHeight = Math.min(scrollH, maxHeight);
-      el.style.height = `${Math.max(newHeight, 26)}px`;
-      el.style.overflowY = scrollH > maxHeight ? "auto" : "hidden";
-      setIsMultiLine(scrollH > 36 || (prompt || "").includes("\n"));
-    } else {
-      el.style.height = "26px";
-      el.style.overflowY = "hidden";
-      setIsMultiLine(false);
-    }
-  }, [prompt, isFullyExpanded]);
-
-  useEffect(() => {
-    adjustHeight();
-  }, [adjustHeight]);
-
-  // Keep focus and restore exact cursor position when layout expands or collapses
-  useEffect(() => {
-    const focusAndRestoreCursor = () => {
-      if (textareaRef.current) {
-        textareaRef.current.focus();
-        const targetPos =
-          cursorPositionRef.current !== null
-            ? cursorPositionRef.current
-            : textareaRef.current.value.length;
-        try {
-          textareaRef.current.setSelectionRange(targetPos, targetPos);
-        } catch (e) {}
-      }
-    };
-
-    focusAndRestoreCursor();
-    const timer = setTimeout(focusAndRestoreCursor, 0);
-    return () => clearTimeout(timer);
-  }, [isExpandedLayout]);
-
-  const handlePaste = () => {
-    setTimeout(() => {
-      if (textareaRef.current) {
-        textareaRef.current.focus();
-        const len = textareaRef.current.value.length;
-        textareaRef.current.setSelectionRange(len, len);
-      }
-    }, 0);
-  };
-
-  const handleContinue = () => {
-    if (chatId) {
-      if (prompt.trim()) {
-        if (typeof window !== "undefined") {
-          sessionStorage.setItem(
-            `auto_send_${chatId}`,
-            JSON.stringify({ prompt: prompt.trim(), think: thinkMode })
-          );
-        }
-      }
-      window.open(`/c/${chatId}`, "_blank");
-    } else {
-      window.open("/c", "_blank");
-    }
-  };
-
-  const toggleDictation = async () => {
-    if (isListening) {
-      if (recognitionRef.current) {
-        try {
-          recognitionRef.current.stop();
-        } catch (e) {}
-      }
-      setIsListening(false);
-      return;
-    }
-
-    const SpeechRecognition =
-      (window as any).SpeechRecognition ||
-      (window as any).webkitSpeechRecognition;
-
-    if (!SpeechRecognition) {
-      toast.error(
-        "Speech recognition is not supported in this browser. Please use Chrome or Edge."
-      );
-      return;
-    }
-
-    try {
-      if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-        const stream = await navigator.mediaDevices.getUserMedia({
-          audio: true,
-        });
-        stream.getTracks().forEach((track) => track.stop());
-      }
-    } catch (err: any) {
-      toast.error(
-        "Microphone access denied. Please allow microphone permission in your browser."
-      );
-      return;
-    }
-
-    try {
-      const recognition = new SpeechRecognition();
-      recognition.continuous = true;
-      recognition.interimResults = true;
-      recognition.lang = navigator.language || "en-US";
-
-      const baseText = prompt.trim();
-
-      recognition.onresult = (event: any) => {
-        let transcript = "";
-        for (let i = 0; i < event.results.length; i++) {
-          transcript += event.results[i][0].transcript;
-        }
-        const updated = baseText ? `${baseText} ${transcript}` : transcript;
-        setPrompt(updated);
-      };
-
-      recognition.onerror = (event: any) => {
-        if (event.error !== "no-speech") {
-          setIsListening(false);
-          if (event.error === "not-allowed") {
-            toast.error("Microphone permission denied.");
-          }
-        }
-      };
-
-      recognition.onend = () => {
-        setIsListening(false);
-      };
-
-      recognitionRef.current = recognition;
-      recognition.start();
-      setIsListening(true);
-      toast.success("Listening... Speak now");
-    } catch (err: any) {
-      toast.error("Could not start speech recognition.");
-      setIsListening(false);
-    }
-  };
-
-  const updateMenuPosition = useCallback(() => {
-    if (plusButtonRef.current && pillRef.current) {
-      const buttonRect = plusButtonRef.current.getBoundingClientRect();
-      const pillRect = pillRef.current.getBoundingClientRect();
-      const isMobile = window.innerWidth < 1025;
-
-      const distToPillTop = Math.max(0, buttonRect.top - pillRect.top);
-      setMenuSideOffset(Math.round(distToPillTop + 10));
-
-      const distToPillLeft = Math.max(0, buttonRect.left - pillRect.left);
-      setMenuAlignOffset(-Math.round(distToPillLeft));
-
-      if (isMobile) {
-        setMenuWidth(Math.round(pillRect.width));
-      } else {
-        setMenuWidth(undefined);
-      }
-    }
-  }, []);
-
-  useEffect(() => {
-    updateMenuPosition();
-  }, [prompt, isExpandedLayout, plusMenuOpen, updateMenuPosition]);
-
-  useEffect(() => {
-    if (!pillRef.current) return;
-    const ro = new ResizeObserver(() => updateMenuPosition());
-    ro.observe(pillRef.current);
-    window.addEventListener("resize", updateMenuPosition);
-    return () => {
-      ro.disconnect();
-      window.removeEventListener("resize", updateMenuPosition);
-    };
-  }, [updateMenuPosition]);
-
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      handleContinue();
-    }
-  };
-
-  const renderPlusButton = () => (
-    <DropdownMenu
-      open={plusMenuOpen}
-      onOpenChange={(open) => {
-        if (open) updateMenuPosition();
-        setPlusMenuOpen(open);
-      }}
-    >
-      <Tooltip open={plusMenuOpen ? false : undefined}>
-        <TooltipTrigger asChild>
-          <DropdownMenuTrigger asChild>
-            <button
-              ref={plusButtonRef}
-              type="button"
-              className="w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary dark:hover:bg-[#2f2f2f] transition-colors shrink-0 cursor-pointer outline-none focus:outline-none"
-              aria-label="Attach and more"
-            >
-              <Plus className="w-5 h-5" />
-            </button>
-          </DropdownMenuTrigger>
-        </TooltipTrigger>
-        <TooltipContent className="text-md">Attach and more</TooltipContent>
-      </Tooltip>
-      <DropdownMenuContent
-        side="top"
-        align="start"
-        sideOffset={menuSideOffset}
-        alignOffset={menuAlignOffset}
-        avoidCollisions={true}
-        collisionPadding={12}
-        className={cn(
-          "rounded-2xl p-1.5 bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/80 dark:border-none select-none outline-none z-50",
-          menuWidth ? "" : "w-[244px] max-w-[calc(100vw-24px)]"
-        )}
-        style={{
-          width: menuWidth ? `${menuWidth}px` : undefined,
-        }}
-      >
-        <PlusMenuContent
-          onAddFiles={handleContinue}
-          isOpen={plusMenuOpen}
-          disableAttach={true}
-        />
-      </DropdownMenuContent>
-    </DropdownMenu>
-  );
-
-  const renderRightActions = () => (
-    <>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <button
-            type="button"
-            onClick={() => setThinkMode(!thinkMode)}
-            className={cn(
-              "h-9 sm:h-10 px-2.5 sm:px-5 group/think-btn rounded-full flex items-center justify-center gap-1.5 text-[13px] sm:text-[14px] font-medium select-none transition-all shrink-0 cursor-pointer",
-              thinkMode
-                ? "bg-bubble dark:bg-[#2F2F2F] text-foreground"
-                : "text-muted-foreground hover:text-foreground hover:bg-secondary"
-            )}
-            aria-label="Think mode"
-          >
-            <Brain
-              className={cn(
-                "w-5 h-5 transition-colors",
-                thinkMode
-                  ? "text-foreground"
-                  : "text-muted-foreground group-hover/think-btn:text-foreground"
-              )}
-            />
-            <span className="hidden sm:inline">Think</span>
-          </button>
-        </TooltipTrigger>
-        <TooltipContent className="text-md">
-          Think mode
-        </TooltipContent>
-      </Tooltip>
-
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <button
-            type="button"
-            onClick={toggleDictation}
-            className={cn(
-              "w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-all cursor-pointer shrink-0",
-              isListening
-                ? "bg-red-500/15 text-red-500 hover:bg-red-500/25 ring-red-500/30"
-                : "text-muted-foreground hover:text-foreground hover:bg-secondary"
-            )}
-            aria-label={isListening ? "Stop dictation" : "Start dictation"}
-          >
-            {isListening ? (
-              <MicOff className="w-5 h-5 text-red-500" />
-            ) : (
-              <Mic className="w-5 h-5" />
-            )}
-          </button>
-        </TooltipTrigger>
-        <TooltipContent className="text-md">
-          {isListening ? "Stop dictation" : "Start dictation"}
-        </TooltipContent>
-      </Tooltip>
-
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <button
-            type="button"
-            onClick={prompt.trim() ? handleContinue : undefined}
-            disabled={!prompt.trim()}
-            className={cn(
-              "w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-all shrink-0",
-              prompt.trim()
-                ? "bg-foreground text-background cursor-pointer hover:opacity-90 active:scale-95"
-                : "bg-neutral-300 dark:bg-[#383838] text-muted-foreground/50 cursor-not-allowed opacity-50"
-            )}
-            aria-label="Continue chatting"
-          >
-            <ArrowUp className="w-5 h-5 stroke-[3]" />
-          </button>
-        </TooltipTrigger>
-        <TooltipContent className="text-md">Continue chatting</TooltipContent>
-      </Tooltip>
-    </>
-  );
-
-  return (
-    <div className="relative w-full max-w-3xl mx-auto px-6 select-none shrink-0">
-      <AnimatePresence>
-        {showScrollBottom && (
-          <div className="absolute bottom-full mb-3 inset-x-0 flex justify-center pointer-events-none z-30">
-            <div className="pointer-events-auto">
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <button
-                    type="button"
-                    onClick={onScrollToBottom}
-                    className="group w-10 h-10 rounded-full bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/80 dark:border-none text-neutral-700 dark:text-neutral-200 hover:text-foreground dark:hover:text-foreground hover:border-border/80 dark:hover:border-neutral-700/80 flex items-center justify-center transition-all cursor-pointer"
-                    aria-label="Scroll to bottom"
-                  >
-                    <ArrowDown className="w-5 h-5 text-muted-foreground group-hover:text-foreground shrink-0" />
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent side="top" sideOffset={8} className="text-md">
-                  Scroll to bottom
-                </TooltipContent>
-              </Tooltip>
-            </div>
-          </div>
-        )}
-      </AnimatePresence>
-
-      <div
-        ref={pillRef}
-        className={cn(
-          "relative bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/80 dark:border-none transition-all duration-200",
-          "focus-within:text-foreground dark:focus-within:text-foreground",
-          "rounded-3xl",
-          isExpandedLayout
-            ? "p-3.5 sm:p-4"
-            : "px-2 sm:px-3 py-1.5 min-h-[48px] sm:min-h-[52px] flex items-center"
-        )}
-      >
-        {isExpandedLayout ? (
-          <div className="flex flex-col w-full">
-            <div className="w-full px-1.5 sm:px-2 pt-0.5 pb-1 relative">
-              <textarea
-                ref={textareaRef}
-                value={prompt}
-                onChange={(e) => {
-                  cursorPositionRef.current = e.target.selectionEnd;
-                  setPrompt(e.target.value);
-                  const el = e.target;
-                  el.style.height = "auto";
-                  const scrollH = el.scrollHeight;
-                  const maxH = isFullyExpanded ? 460 : 200;
-                  if (scrollH > maxH) {
-                    el.style.height = `${maxH}px`;
-                    el.style.overflowY = "auto";
-                  } else {
-                    el.style.height = `${Math.max(scrollH, 44)}px`;
-                    el.style.overflowY = "hidden";
-                  }
-                }}
-                onSelect={(e) => {
-                  cursorPositionRef.current = e.currentTarget.selectionEnd;
-                }}
-                onClick={(e) => {
-                  cursorPositionRef.current = e.currentTarget.selectionEnd;
-                }}
-                onKeyUp={(e) => {
-                  cursorPositionRef.current = e.currentTarget.selectionEnd;
-                }}
-                onKeyDown={handleKeyDown}
-                onPaste={handlePaste}
-                onBlur={() => {
-                  window.scrollTo({ top: 0, left: 0 });
-                  document.documentElement.scrollTop = 0;
-                  document.body.scrollTop = 0;
-                }}
-                placeholder="Continue chatting"
-                rows={1}
-                className={cn(
-                  "w-full min-w-0 bg-transparent border-0 p-0 text-[16px] sm:text-[16.5px] text-foreground placeholder:text-muted-foreground focus:placeholder:text-foreground transition-colors focus:outline-none focus:ring-0 resize-none leading-relaxed",
-                  isFullyExpanded ? "min-h-[280px]" : "min-h-[44px]",
-                  isBigContent && "pr-14 sm:pr-16"
-                )}
-              />
-
-              {isBigContent && (
-                <div className="absolute top-0.5 right-6 sm:right-8 z-10">
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <button
-                        type="button"
-                        onClick={() => setIsFullyExpanded((prev) => !prev)}
-                        className="w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary transition-all shrink-0 cursor-pointer"
-                        aria-label={isFullyExpanded ? "Collapse" : "Expand"}
-                      >
-                        {isFullyExpanded ? (
-                          <Minimize2 className="w-4 h-4 sm:w-5 sm:h-5" />
-                        ) : (
-                          <Maximize2 className="w-4 h-4 sm:w-5 sm:h-5" />
-                        )}
-                      </button>
-                    </TooltipTrigger>
-                    <TooltipContent className="text-md">
-                      {isFullyExpanded ? "Collapse" : "Expand"}
-                    </TooltipContent>
-                  </Tooltip>
-                </div>
-              )}
-            </div>
-
-            <div className="flex items-center justify-between w-full pt-1">
-              <div className="flex items-center pl-0.5">
-                {renderPlusButton()}
-              </div>
-
-              <div className="flex items-center gap-1 sm:gap-1.5 shrink-0 pr-0.5">
-                {renderRightActions()}
-              </div>
-            </div>
-          </div>
-        ) : (
-          <div className="flex items-center gap-1 sm:gap-2 w-full">
-            <div className="flex items-center shrink-0 pl-0.5 sm:pl-1">
-              {renderPlusButton()}
-            </div>
-
-            <div className="flex-1 min-w-0 flex items-center">
-              <textarea
-                ref={textareaRef}
-                value={prompt}
-                onChange={(e) => {
-                  cursorPositionRef.current = e.target.selectionEnd;
-                  setPrompt(e.target.value);
-                  const el = e.target;
-                  el.style.height = "auto";
-                  const scrollH = el.scrollHeight;
-                  if (scrollH > 38 || e.target.value.includes("\n")) {
-                    setIsMultiLine(true);
-                  }
-                }}
-                onSelect={(e) => {
-                  cursorPositionRef.current = e.currentTarget.selectionEnd;
-                }}
-                onClick={(e) => {
-                  cursorPositionRef.current = e.currentTarget.selectionEnd;
-                }}
-                onKeyUp={(e) => {
-                  cursorPositionRef.current = e.currentTarget.selectionEnd;
-                }}
-                onKeyDown={handleKeyDown}
-                onPaste={handlePaste}
-                onBlur={() => {
-                  window.scrollTo({ top: 0, left: 0 });
-                  document.documentElement.scrollTop = 0;
-                  document.body.scrollTop = 0;
-                }}
-                placeholder="Continue chatting"
-                rows={1}
-                className="w-full min-w-0 bg-transparent border-0 p-0 text-[16px] sm:text-[16.5px] text-foreground placeholder:text-muted-foreground focus:placeholder:text-foreground transition-colors focus:outline-none focus:ring-0 resize-none leading-normal h-[26px] overflow-hidden"
-              />
-            </div>
-
-            <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
-              {renderRightActions()}
-            </div>
-          </div>
-        )}
-      </div>
-      <p className="text-[13px] text-center sm:text-base text-muted-foreground font-normal tracking-tight leading-tight mt-2 select-none">
-        CloseAI can make mistakes. Verify important info.
-      </p>
-    </div>
-  );
-}
-
 export default function PublicSharedChatPage() {
   const params = useParams();
   const router = useRouter();
@@ -719,6 +180,13 @@ export default function PublicSharedChatPage() {
   const [isError, setIsError] = useState<boolean>(false);
   const [isSharing, setIsSharing] = useState<boolean>(false);
   const [showScrollBottom, setShowScrollBottom] = useState(false);
+
+  // ChatInput states
+  const [inputValue, setInputValue] = useState("");
+  const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
+  const [thinkMode, setThinkMode] = useState(false);
+  const [selectedModel, setSelectedModel] = useState("gemini-3.8 flash");
+  const [selectedModelTier, setSelectedModelTier] = useState(4);
 
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
@@ -743,7 +211,32 @@ export default function PublicSharedChatPage() {
     if (scrollContainerRef.current) {
       scrollContainerRef.current.scrollTo({
         top: scrollContainerRef.current.scrollHeight,
+        behavior: "smooth",
       });
+    }
+  };
+
+  const handleSend = () => {
+    const trimmed = inputValue.trim();
+    if (!trimmed && uploadedFiles.length === 0) return;
+
+    if (chatId) {
+      if (typeof window !== "undefined") {
+        sessionStorage.setItem(
+          `auto_send_${chatId}`,
+          JSON.stringify({
+            prompt: trimmed,
+            model: selectedModel,
+            think: thinkMode,
+          })
+        );
+      }
+      if (thinkMode) {
+        setThinkMode(false);
+      }
+      router.push(`/c/${chatId}`);
+    } else {
+      router.push("/c");
     }
   };
 
@@ -752,6 +245,47 @@ export default function PublicSharedChatPage() {
   // leave the reader stranded above the actual bottom.
   useEffect(() => {
     if (isLoading || isError || messages.length === 0) return;
+
+    const hash = typeof window !== "undefined" ? window.location.hash : "";
+    if (hash) {
+      const cleanId = decodeURIComponent(hash.replace(/^#/, "")).trim();
+      if (cleanId) {
+        const scrollToTarget = () => {
+          if (!scrollContainerRef.current) return false;
+          const elem = getTargetElement(cleanId);
+          if (elem) {
+            const container = scrollContainerRef.current;
+            const containerRect = container.getBoundingClientRect();
+            const elemRect = elem.getBoundingClientRect();
+            const targetScrollTop =
+              container.scrollTop + (elemRect.top - containerRect.top) - 96;
+            const maxScroll = Math.max(
+              0,
+              container.scrollHeight - container.clientHeight
+            );
+            const boundedTarget = Math.min(maxScroll, Math.max(0, targetScrollTop));
+
+            container.scrollTo({
+              top: boundedTarget,
+              behavior: "smooth",
+            });
+            return true;
+          }
+          return false;
+        };
+
+        scrollToTarget();
+        const timers = [
+          window.setTimeout(scrollToTarget, 80),
+          window.setTimeout(scrollToTarget, 250),
+          window.setTimeout(scrollToTarget, 600),
+        ];
+        return () => {
+          timers.forEach(clearTimeout);
+        };
+      }
+    }
+
     const scroll = () => scrollToBottom();
     scroll();
     const frames = [
@@ -847,26 +381,20 @@ export default function PublicSharedChatPage() {
     };
   }, [cleanTitle]);
 
-  // Keep viewport locked without iOS Safari window scrolling offset on keyboard dismiss
+  // Keep scroll smoothly pinned to bottom on mobile keyboard resize without window scroll jumping
   useEffect(() => {
     if (typeof window === "undefined" || !window.visualViewport) return;
     const onResize = () => {
-      window.scrollTo(0, 0);
-      document.documentElement.scrollTop = 0;
-      document.body.scrollTop = 0;
+      if (scrollContainerRef.current) {
+        scrollContainerRef.current.scrollTo({
+          top: scrollContainerRef.current.scrollHeight,
+          behavior: "smooth",
+        });
+      }
       handleScroll();
     };
     window.visualViewport.addEventListener("resize", onResize);
-    window.visualViewport.addEventListener("scroll", () => {
-      if (window.scrollY > 0) {
-        window.scrollTo(0, 0);
-        document.documentElement.scrollTop = 0;
-        document.body.scrollTop = 0;
-      }
-    });
-    return () => {
-      window.visualViewport?.removeEventListener("resize", onResize);
-    };
+    return () => window.visualViewport?.removeEventListener("resize", onResize);
   }, []);
 
   return (
@@ -948,11 +476,12 @@ export default function PublicSharedChatPage() {
       {/* Full-Height Scrollable Content Area */}
       <div
         ref={scrollContainerRef}
+        data-chat-scroll="true"
         onScroll={handleScroll}
         className="flex-1 w-full overflow-x-hidden relative flex flex-col pt-14 overflow-y-scroll overscroll-y-contain [scrollbar-gutter:stable]"
       >
         {/* Message Stream & Content */}
-        <div className="flex-1 flex flex-col min-h-full items-center">
+        <div className="flex-1 flex flex-col min-h-full">
           {isError ? (
             <div className="flex-1 w-full flex flex-col items-center justify-center p-6 text-center space-y-4">
               <div className="space-y-1">
@@ -975,7 +504,7 @@ export default function PublicSharedChatPage() {
                   <Loader className="w-6 h-6 animate-spin text-muted-foreground" />
                 </div>
               ) : (
-                <div className="w-full max-w-4xl flex-1 pb-4 sm:pb-6">
+                <div className="w-full max-w-4xl flex-1 pb-4 sm:pb-6 mx-auto">
                   <MessageList
                     messages={messages}
                     user={null}
@@ -986,17 +515,61 @@ export default function PublicSharedChatPage() {
                 </div>
               )}
 
-              {/* Floating Input Dock inside scroll container */}
+              {/* Floating Input Dock inside scroll container for 100% scrollbar-aware width alignment */}
               <div
                 ref={dockRef}
-                className="sticky bottom-0 left-0 right-4 sm:right-5 z-20 pointer-events-none pb-[max(env(safe-area-inset-bottom,0px),0.5rem)] bg-gradient-to-t from-background via-background to-transparent pt-4 mt-auto w-full"
+                className="sticky bottom-0 left-0 right-4 sm:right-5 z-20 pointer-events-none pb-[max(env(safe-area-inset-bottom,0px),0.5rem)] bg-gradient-to-t from-background via-background/80 to-transparent pt-4 mt-auto"
               >
                 <div className="pointer-events-auto">
-                  <SharedChatInputPill
-                    chatId={chatId}
-                    showScrollBottom={showScrollBottom}
-                    onScrollToBottom={scrollToBottom}
-                  />
+                  <ChatInput
+                    message={inputValue}
+                    onMessageChange={setInputValue}
+                    onSend={handleSend}
+                    uploadedFiles={uploadedFiles}
+                    onFilesChange={setUploadedFiles}
+                    isTyping={false}
+                    isUploading={false}
+                    showDisclaimer={true}
+                    placeholder="Continue chatting"
+                    disableAttach={true}
+                    selectedModel={selectedModel}
+                    onModelChange={setSelectedModel}
+                    selectedTier={selectedModelTier}
+                    onTierChange={setSelectedModelTier}
+                    thinkMode={thinkMode}
+                    onThinkModeChange={setThinkMode}
+                  >
+                    {/* Dynamic Floating Scroll-to-Bottom Button — stays right above input pill */}
+                    <AnimatePresence>
+                      {showScrollBottom && (
+                        <div className="absolute bottom-full mb-3 inset-x-0 flex justify-center pointer-events-none z-30">
+                          <div className="pointer-events-auto">
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    scrollToBottom();
+                                  }}
+                                  className="group w-10 h-10 rounded-full bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/80 dark:border-none text-neutral-700 dark:text-neutral-200 hover:text-foreground dark:hover:text-foreground flex items-center justify-center transition-all cursor-pointer"
+                                  aria-label="Scroll to bottom"
+                                >
+                                  <ArrowDown className="w-5 h-5 text-muted-foreground group-hover:text-foreground shrink-0" />
+                                </button>
+                              </TooltipTrigger>
+                              <TooltipContent
+                                side="top"
+                                sideOffset={8}
+                                className="text-md"
+                              >
+                                Scroll to bottom
+                              </TooltipContent>
+                            </Tooltip>
+                          </div>
+                        </div>
+                      )}
+                    </AnimatePresence>
+                  </ChatInput>
                 </div>
               </div>
             </>

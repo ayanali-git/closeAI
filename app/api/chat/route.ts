@@ -118,7 +118,7 @@ export async function POST(request: NextRequest) {
         const genStartTime = Date.now();
         let aiResponse;
         try {
-            aiResponse = await aiService.generateResponse(aiMessages, undefined, imageUrls, model || "GPT-5.4", !!think);
+            aiResponse = await aiService.generateResponse(aiMessages, undefined, imageUrls, model || "gemini-3.8 flash", !!think);
         } catch (aiError: any) {
             console.error('AI generation error:', aiError);
             aiResponse = {
@@ -130,7 +130,7 @@ export async function POST(request: NextRequest) {
         const actualGenSeconds = Math.max(1, Math.round((Date.now() - genStartTime) / 1000));
         const thinkTime = think ? actualGenSeconds : undefined;
         const assistantMetadata: Record<string, any> = {
-            model: model || "GPT-5.4",
+            model: model || "gemini-3.8 flash",
             think: !!think,
         };
         if (thinkTime) {
@@ -175,7 +175,7 @@ export async function POST(request: NextRequest) {
                 content: aiResponse.content,
                 createdAt: assistantMessage.created_at,
                 chatId: currentChatId,
-                model: model || "GPT-5.4",
+                model: model || "gemini-3.8 flash",
                 metadata: assistantMetadata,
             },
         });

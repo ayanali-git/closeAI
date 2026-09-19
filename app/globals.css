@@ -455,6 +455,20 @@ html:not(.dark) .token.important {
   color: hsl(var(--foreground)) !important;
 }
 
+.nav-dropdown-group:has(a:hover) a,
+.nav-dropdown-group:has(button:hover) a,
+.nav-dropdown-group:has(a:hover) button,
+.nav-dropdown-group:has(button:hover) button {
+  color: hsl(var(--muted-foreground)) !important;
+}
+
+.nav-dropdown-group:has(a:hover) a:hover,
+.nav-dropdown-group:has(button:hover) a:hover,
+.nav-dropdown-group:has(a:hover) button:hover,
+.nav-dropdown-group:has(button:hover) button:hover {
+  color: hsl(var(--foreground)) !important;
+}
+
 @keyframes chat-title-marquee {
   0% {
     transform: translateX(0);
@@ -466,3 +480,60 @@ html:not(.dark) .token.important {
     transform: translateX(0);
   }
 }
+
+/* Modal and Bottom Sheet Scroll Lock & Scrollbar Suppression on Mobile/Small Screens */
+body.modal-open-no-scroll {
+  overflow: hidden !important;
+}
+
+body.modal-open-no-scroll [data-chat-scroll="true"],
+body.modal-open-no-scroll .overflow-y-scroll {
+  overflow-y: hidden !important;
+  scrollbar-gutter: auto !important;
+}
+
+/* Utility classes to hide scrollbar */
+.no-scrollbar,
+.no-scrollbar * {
+  -ms-overflow-style: none !important;
+  scrollbar-width: none !important;
+}
+.no-scrollbar::-webkit-scrollbar,
+.no-scrollbar *::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+@media screen and (max-width: 1024px) {
+  /* Prevent scrollbars on background elements when modal/bottom-sheet is open */
+  body.modal-open-no-scroll::-webkit-scrollbar,
+  body.modal-open-no-scroll *::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+  }
+
+  /* Completely hide scrollbars on all bottom sheets and dialog contents on small screens */
+  [data-bottom-sheet],
+  [data-bottom-sheet] *,
+  .bottom-sheet-content,
+  .bottom-sheet-content *,
+  [role="dialog"],
+  [role="dialog"] * {
+    -ms-overflow-style: none !important;
+    scrollbar-width: none !important;
+  }
+
+  [data-bottom-sheet]::-webkit-scrollbar,
+  [data-bottom-sheet] *::-webkit-scrollbar,
+  .bottom-sheet-content::-webkit-scrollbar,
+  .bottom-sheet-content *::-webkit-scrollbar,
+  [role="dialog"]::-webkit-scrollbar,
+  [role="dialog"] *::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+  }
+}
+

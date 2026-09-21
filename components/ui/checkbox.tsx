@@ -12,7 +12,7 @@ const Checkbox = React.forwardRef<
   <AnimatedCheckbox
     ref={ref}
     size={18}
-    className={cn('h-4 w-4', className)}
+    className={cn('h-4 w-4 bg-card hover:bg-secondary border border-border/80', className)}
     {...props}
   />
 ));

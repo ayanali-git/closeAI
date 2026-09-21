@@ -76,7 +76,7 @@ export default function HelpPage() {
   const inputRef = useRef<HTMLInputElement>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [openIds, setOpenIds] = useState<number[]>([]);
+  const [openId, setOpenId] = useState<number | null>(null);
 
   // Filter FAQs based on active search or selected category
   const filteredFAQs = useMemo(() => {
@@ -93,13 +93,7 @@ export default function HelpPage() {
   }, [searchQuery, selectedCategory]);
 
   const toggleItem = (id: number) => {
-    setOpenIds((prev) =>
-      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
-    );
-  };
-
-  const toggleAll = () => {
-    setOpenIds(filteredFAQs.map((faq) => faq.id));
+    setOpenId((prev) => (prev === id ? null : id));
   };
 
   const handleCategoryClick = (cat: string) => {
@@ -224,7 +218,7 @@ export default function HelpPage() {
               Frequently Asked Questions
             </h2>
             {selectedCategory && (
-              <span className="text-xs px-2.5 py-0.5 rounded-full bg-secondary text-foreground font-medium">
+              <span className="text-sm px-3 py-1.5 rounded-full bg-secondary text-foreground font-medium">
                 {selectedCategory === 'getting-started'
                   ? 'Getting Started'
                   : selectedCategory === 'account-billing'
@@ -255,17 +249,17 @@ export default function HelpPage() {
             </button>
           </div>
         ) : (
-          <div className="space-y-3">
+          <div>
             {filteredFAQs.map((faq) => {
-              const isOpen = openIds.includes(faq.id);
+              const isOpen = openId === faq.id;
               return (
                 <div
                   key={faq.id}
                   className={cn(
                     "group rounded-2xl border-b transition-all duration-200 overflow-hidden",
                     isOpen
-                      ? "bg-card/90 border border-border/80 dark:border-none bg-secondary"
-                      : "bg-card border-b border-border/80 dark:border-none hover:bg-secondary"
+                      ? "bg-secondary"
+                      : "border-b border-border/80 hover:bg-secondary"
                   )}
                 >
                   <button
@@ -306,7 +300,7 @@ export default function HelpPage() {
                         }}
                         className="overflow-hidden"
                       >
-                        <div className="px-4 sm:px-5 pb-5 pt-0 text-sm sm:text-base text-muted-foreground leading-relaxed border-t border-border/30 mt-1 pt-3">
+                        <div className="px-4 sm:px-5 pb-5 pt-0 text-sm sm:text-base text-muted-foreground leading-relaxed mt-1 pt-3">
                           {faq.answer}
                         </div>
                       </motion.div>

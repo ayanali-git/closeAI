@@ -105,11 +105,11 @@ export default function LoginPage() {
       <div className="max-w-[520px] w-full bg-card text-card-foreground p-8 rounded-3xl border border-border">
         {/* Header */}
         <div className="text-center mb-6 flex flex-col items-center">
-          <div className="w-12 h-12 rounded-2xl bg-secondary flex items-center justify-center mb-4 border border-border/80 dark:border-none">
+          <div className="w-12 h-12 rounded-2xl bg-card flex items-center justify-center mb-4 border border-border/80">
             <CloseAIIcon size={26} />
           </div>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground mb-1">Welcome back</h1>
-          <p className="text-md text-muted-foreground">Sign in to continue to closeAI</p>
+          <h1 className="text-2xl font-bold tracking-tight text-foreground mb-1">Log In</h1>
+          <p className="text-md text-muted-foreground">To continue with CloseAI</p>
         </div>
 
         {/* OAuth Error Alert Banner */}
@@ -189,7 +189,7 @@ export default function LoginPage() {
         <form onSubmit={handleEmailLogin} className="space-y-4">
           <div className="space-y-1.5">
             <Label htmlFor="email" className="text-md font-semibold text-foreground">
-              Email address
+              Email Address
             </Label>
             <Input 
               id="email" 
@@ -198,7 +198,7 @@ export default function LoginPage() {
               onChange={(e) => setEmail(e.target.value)}
               placeholder="Enter your email"
               required 
-              className="h-11 rounded-xl border-border text-foreground placeholder:text-muted-foreground focus:placeholder:text-foreground transition-colors"
+              className="h-11 rounded-xl bg-card focus:bg-secondary border border-border/80 placeholder:text-muted-foreground focus:placeholder:text-foreground transition-colors"
             />
           </div>
           <div className="space-y-1.5">
@@ -215,7 +215,7 @@ export default function LoginPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Enter your password"
                 required 
-                className="h-11 rounded-xl border-border text-foreground placeholder:text-muted-foreground focus:placeholder:text-foreground transition-colors"
+                className="h-11 rounded-xl bg-card focus:bg-secondary border border-border/80 placeholder:text-muted-foreground focus:placeholder:text-foreground transition-colors"
               />
             </div>
           </div>
@@ -225,7 +225,7 @@ export default function LoginPage() {
             disabled={loading} 
             className="w-full h-11 bg-foreground text-background hover:bg-foreground/90 font-medium rounded-xl mt-3 transition-all cursor-pointer disabled:cursor-not-allowed disabled:opacity-50 disabled:pointer-events-none"
           >
-            {loading ? 'Signing in...' : 'Sign in'}
+            {loading ? 'Logging In...' : 'Log In'}
           </Button>
         </form>
 
@@ -233,7 +233,7 @@ export default function LoginPage() {
         <p className="text-center text-md text-muted-foreground mt-6">
           Don't have an account?{' '}
           <Link href="/auth/signup" className="font-semibold text-muted-foreground hover:text-foreground">
-            Sign up
+            Sign Up
           </Link>
         </p>
       </div>

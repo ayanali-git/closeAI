@@ -5,13 +5,20 @@ import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
 import * as CheckboxPrimitive from "@radix-ui/react-checkbox";
 import { cn } from "@/lib/utils";
 
-interface AnimatedArrowProps extends React.HTMLAttributes<HTMLSpanElement> {
+export interface AnimatedArrowProps
+  extends React.HTMLAttributes<HTMLSpanElement> {
+  open?: boolean;
+  isOpen?: boolean;
+  disableHover?: boolean;
   className?: string;
   size?: number;
   strokeWidth?: number;
 }
 
 export function AnimatedArrow({
+  open,
+  isOpen,
+  disableHover = false,
   className,
   size = 18,
   strokeWidth = 2,
@@ -20,8 +27,12 @@ export function AnimatedArrow({
 }: AnimatedArrowProps) {
   const ref = useRef<HTMLSpanElement>(null);
   const [hovered, setHovered] = useState(false);
+  const [clicked, setClicked] = useState(false);
+
+  const isControlled = open !== undefined || isOpen !== undefined;
 
   useEffect(() => {
+    if (isControlled) return;
     const el = ref.current;
     if (!el) return;
 
@@ -32,38 +43,58 @@ export function AnimatedArrow({
       el.closest('[role="button"]') ||
       el;
 
-    const onEnter = () => setHovered(true);
-    const onLeave = () => setHovered(false);
+    const onEnter = () => {
+      if (!disableHover) setHovered(true);
+    };
+    const onLeave = () => {
+      setHovered(false);
+      setClicked(false);
+    };
+    const onClick = () => {
+      setClicked((prev) => !prev);
+    };
 
     try {
-      if (typeof window !== "undefined" && parentGroup.matches(":hover")) {
+      if (
+        typeof window !== "undefined" &&
+        !disableHover &&
+        parentGroup.matches(":hover")
+      ) {
         setHovered(true);
       }
     } catch (e) {}
 
     parentGroup.addEventListener("mouseenter", onEnter);
     parentGroup.addEventListener("mouseleave", onLeave);
+    parentGroup.addEventListener("click", onClick);
     if (parentGroup !== el) {
       el.addEventListener("mouseenter", onEnter);
       el.addEventListener("mouseleave", onLeave);
+      el.addEventListener("click", onClick);
     }
 
     return () => {
       parentGroup.removeEventListener("mouseenter", onEnter);
       parentGroup.removeEventListener("mouseleave", onLeave);
+      parentGroup.removeEventListener("click", onClick);
       if (parentGroup !== el) {
         el.removeEventListener("mouseenter", onEnter);
         el.removeEventListener("mouseleave", onLeave);
+        el.removeEventListener("click", onClick);
       }
     };
-  }, []);
+  }, [disableHover, isControlled]);
 
-  const motionVal = useMotionValue(+!!hovered);
+  const isActive = isControlled
+    ? Boolean(open ?? isOpen)
+    : (disableHover ? clicked : Boolean(clicked || hovered));
+
+  const motionVal = useMotionValue(+!!isActive);
   const spring = useSpring(motionVal, { stiffness: 500, damping: 30 });
 
   useEffect(() => {
-    motionVal.set(+!!hovered);
-  }, [hovered, motionVal]);
+    motionVal.set(+!!isActive);
+  }, [isActive, motionVal]);
 
   // Stem line (y=12): emerges from x=15 backward to x=5, while right end follows vertex from 15 to 19
   const p = useTransform(spring, [0, 1], [15, 5]);
@@ -105,10 +136,161 @@ export function AnimatedArrow({
     </span>
   );
 }
+export interface AnimatedArrowUpRightProps
+  extends React.HTMLAttributes<HTMLSpanElement> {
+  open?: boolean;
+  isOpen?: boolean;
+  disableHover?: boolean;
+  className?: string;
+  size?: number;
+  strokeWidth?: number;
+}
+ 
+/** Arrow-up-right glyph, drawn once and reused by both copies */
+const ArrowGlyph = () => (
+  <>
+    <line x1="7" y1="17" x2="17" y2="7" />
+    <polyline points="7,7 17,7 17,17" />
+  </>
+);
+ 
+/** Diagonal travel distance — far enough that a copy fully leaves the 24x24 box */
+const D = 20;
+ 
+export function AnimatedArrowUpRight({
+  open,
+  isOpen,
+  disableHover = false,
+  className,
+  size = 18,
+  strokeWidth = 2,
+  style,
+  ...props
+}: AnimatedArrowUpRightProps) {
+  const ref = useRef<HTMLSpanElement>(null);
+  const [hovered, setHovered] = useState(false);
+  const [clicked, setClicked] = useState(false);
+ 
+  const isControlled = open !== undefined || isOpen !== undefined;
+ 
+  useEffect(() => {
+    if (isControlled) return;
+    const el = ref.current;
+    if (!el) return;
+ 
+    const parentGroup =
+      el.closest(".group") ||
+      el.closest("button") ||
+      el.closest("a") ||
+      el.closest('[role="button"]') ||
+      el;
+ 
+    const onEnter = () => {
+      if (!disableHover) setHovered(true);
+    };
+    const onLeave = () => {
+      setHovered(false);
+      setClicked(false);
+    };
+    const onClick = () => {
+      setClicked((prev) => !prev);
+    };
+ 
+    try {
+      if (
+        typeof window !== "undefined" &&
+        !disableHover &&
+        parentGroup.matches(":hover")
+      ) {
+        setHovered(true);
+      }
+    } catch (e) {}
+ 
+    parentGroup.addEventListener("mouseenter", onEnter);
+    parentGroup.addEventListener("mouseleave", onLeave);
+    parentGroup.addEventListener("click", onClick);
+    if (parentGroup !== el) {
+      el.addEventListener("mouseenter", onEnter);
+      el.addEventListener("mouseleave", onLeave);
+      el.addEventListener("click", onClick);
+    }
+ 
+    return () => {
+      parentGroup.removeEventListener("mouseenter", onEnter);
+      parentGroup.removeEventListener("mouseleave", onLeave);
+      parentGroup.removeEventListener("click", onClick);
+      if (parentGroup !== el) {
+        el.removeEventListener("mouseenter", onEnter);
+        el.removeEventListener("mouseleave", onLeave);
+        el.removeEventListener("click", onClick);
+      }
+    };
+  }, [disableHover, isControlled]);
+ 
+  const isActive = isControlled
+    ? Boolean(open ?? isOpen)
+    : disableHover
+      ? clicked
+      : Boolean(clicked || hovered);
+ 
+  const motionVal = useMotionValue(+!!isActive);
+  const spring = useSpring(motionVal, {
+    stiffness: 420,
+    damping: 32,
+    mass: 0.7,
+  });
+ 
+  useEffect(() => {
+    motionVal.set(+!!isActive);
+  }, [isActive, motionVal]);
+ 
+  // Outgoing copy: rests dead centre, then flies out through the top-right corner
+  const outX = useTransform(spring, [0, 1], [0, D]);
+  const outY = useTransform(spring, [0, 1], [0, -D]);
+  const outOpacity = useTransform(spring, [0, 0.85, 1], [1, 1, 0]);
+ 
+  // Incoming copy: waits off-screen bottom-left, lands exactly where the first one was
+  const inX = useTransform(spring, [0, 1], [-D, 0]);
+  const inY = useTransform(spring, [0, 1], [D, 0]);
+  const inOpacity = useTransform(spring, [0, 0.15, 1], [0, 1, 1]);
+ 
+  return (
+    <span
+      ref={ref}
+      aria-hidden="true"
+      className={cn(
+        "inline-flex items-center justify-center shrink-0 select-none pointer-events-none align-middle overflow-hidden",
+        className
+      )}
+      style={{ width: size, height: size, ...style }}
+      {...props}
+    >
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={strokeWidth}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        className="w-full h-full"
+      >
+        <motion.g style={{ x: outX, y: outY, opacity: outOpacity }}>
+          <ArrowGlyph />
+        </motion.g>
+        <motion.g style={{ x: inX, y: inY, opacity: inOpacity }}>
+          <ArrowGlyph />
+        </motion.g>
+      </svg>
+    </span>
+  );
+}
+ 
+export { AnimatedArrowUpRight as AnimatedExternalLink };
 
 export interface AnimatedChevronProps
   extends React.SVGAttributes<SVGSVGElement> {
   open?: boolean;
+  isOpen?: boolean;
   disableHover?: boolean;
   orientation?: "up-down" | "right-down";
   className?: string;
@@ -118,6 +300,7 @@ export interface AnimatedChevronProps
 
 export function AnimatedChevron({
   open,
+  isOpen,
   disableHover = false,
   orientation = "up-down",
   className,
@@ -128,25 +311,41 @@ export function AnimatedChevron({
 }: AnimatedChevronProps) {
   const ref = useRef<SVGSVGElement>(null);
   const [hovered, setHovered] = useState(false);
+  const [clicked, setClicked] = useState(false);
+
+  const isControlled = open !== undefined || isOpen !== undefined;
 
   useEffect(() => {
-    if (disableHover) return;
+    if (isControlled) return;
     const el = ref.current;
     if (!el) return;
     const parentGroup =
       el.closest(".group") || el.closest("button") || el.closest("a") || el;
-    const onEnter = () => setHovered(true);
-    const onLeave = () => setHovered(false);
+    const onEnter = () => {
+      if (!disableHover) setHovered(true);
+    };
+    const onLeave = () => {
+      setHovered(false);
+      setClicked(false);
+    };
+    const onClick = () => {
+      setClicked((prev) => !prev);
+    };
 
     parentGroup.addEventListener("mouseenter", onEnter);
     parentGroup.addEventListener("mouseleave", onLeave);
+    parentGroup.addEventListener("click", onClick);
     return () => {
       parentGroup.removeEventListener("mouseenter", onEnter);
       parentGroup.removeEventListener("mouseleave", onLeave);
+      parentGroup.removeEventListener("click", onClick);
     };
-  }, [disableHover]);
+  }, [disableHover, isControlled]);
 
-  const isActive = disableHover ? Boolean(open) : Boolean(open || hovered);
+  const isActive = isControlled
+    ? Boolean(open ?? isOpen)
+    : (disableHover ? clicked : Boolean(clicked || hovered));
+
   const motionVal = useMotionValue(+!!isActive);
   const spring = useSpring(motionVal, { stiffness: 400, damping: 30 });
 
@@ -221,26 +420,40 @@ export function AnimatedPlusMinus({
 }: AnimatedPlusMinusProps) {
   const ref = useRef<SVGSVGElement>(null);
   const [hovered, setHovered] = useState(false);
+  const [clicked, setClicked] = useState(false);
+
+  const isControlled = open !== undefined || isOpen !== undefined;
 
   useEffect(() => {
-    if (disableHover) return;
+    if (isControlled) return;
     const el = ref.current;
     if (!el) return;
     const parentGroup =
       el.closest(".group") || el.closest("button") || el.closest("a") || el;
-    const onEnter = () => setHovered(true);
-    const onLeave = () => setHovered(false);
+    const onEnter = () => {
+      if (!disableHover) setHovered(true);
+    };
+    const onLeave = () => {
+      setHovered(false);
+      setClicked(false);
+    };
+    const onClick = () => {
+      setClicked((prev) => !prev);
+    };
 
     parentGroup.addEventListener("mouseenter", onEnter);
     parentGroup.addEventListener("mouseleave", onLeave);
+    parentGroup.addEventListener("click", onClick);
     return () => {
       parentGroup.removeEventListener("mouseenter", onEnter);
       parentGroup.removeEventListener("mouseleave", onLeave);
+      parentGroup.removeEventListener("click", onClick);
     };
-  }, [disableHover]);
+  }, [disableHover, isControlled]);
 
-  const isControlled = open !== undefined || isOpen !== undefined;
-  const active = isControlled ? Boolean(open ?? isOpen) : hovered;
+  const active = isControlled
+    ? Boolean(open ?? isOpen)
+    : (disableHover ? clicked : Boolean(clicked || hovered));
 
   const motionVal = useMotionValue(+active);
   const spring = useSpring(motionVal, {
@@ -253,13 +466,10 @@ export function AnimatedPlusMinus({
     motionVal.set(+active);
   }, [active, motionVal]);
 
-  // Horizontal bar remains stable at y=8 from x=3.5 to x=12.5
-  // Vertical bar rotates 90deg into horizontal while its ends collapse to center (8, 8) and fade out,
-  // creating a fluid transition from a crisp plus (+) to a clean minus (-)
-  const vertY1 = useTransform(spring, [0, 0.75, 1], [3.5, 7.2, 8]);
-  const vertY2 = useTransform(spring, [0, 0.75, 1], [12.5, 8.8, 8]);
-  const vertOpacity = useTransform(spring, [0, 0.45, 0.85], [1, 0.7, 0]);
-  const vertRotate = useTransform(spring, [0, 1], [0, 90]);
+  // Vertical bar collapses straight to center — no rotation, just y1/y2 spring to 8
+  const vertY1 = useTransform(spring, [0, 1], [3.5, 8]);
+  const vertY2 = useTransform(spring, [0, 1], [12.5, 8]);
+  const vertOpacity = useTransform(spring, [0, 0.6, 1], [1, 0.4, 0]);
 
   return (
     <svg
@@ -278,15 +488,13 @@ export function AnimatedPlusMinus({
       {...props}
     >
       <line x1="3.5" y1="8" x2="12.5" y2="8" />
-      <motion.g style={{ originX: "8px", originY: "8px", rotate: vertRotate }}>
-        <motion.line
-          x1="8"
-          y1={vertY1}
-          x2="8"
-          y2={vertY2}
-          style={{ opacity: vertOpacity }}
-        />
-      </motion.g>
+      <motion.line
+        x1="8"
+        y1={vertY1}
+        x2="8"
+        y2={vertY2}
+        style={{ opacity: vertOpacity }}
+      />
     </svg>
   );
 }
@@ -301,6 +509,7 @@ export interface AnimatedSearchCloseProps
   extends React.HTMLAttributes<HTMLSpanElement> {
   open?: boolean;
   isOpen?: boolean;
+  disableHover?: boolean;
   className?: string;
   size?: number;
   strokeWidth?: number;
@@ -309,13 +518,30 @@ export interface AnimatedSearchCloseProps
 export function AnimatedSearchClose({
   open,
   isOpen,
+  disableHover = false,
   className,
   size = 18,
   strokeWidth = 1.25,
   style,
   ...props
 }: AnimatedSearchCloseProps) {
-  const active = Boolean(open ?? isOpen);
+  const ref = useRef<HTMLSpanElement>(null);
+  const [clicked, setClicked] = useState(false);
+
+  const isControlled = open !== undefined || isOpen !== undefined;
+
+  useEffect(() => {
+    if (isControlled) return;
+    const el = ref.current;
+    if (!el) return;
+    const parentGroup =
+      el.closest(".group") || el.closest("button") || el.closest("a") || el;
+    const onClick = () => setClicked((prev) => !prev);
+    parentGroup.addEventListener("click", onClick);
+    return () => parentGroup.removeEventListener("click", onClick);
+  }, [isControlled]);
+
+  const active = isControlled ? Boolean(open ?? isOpen) : clicked;
   const motionVal = useMotionValue(+active);
   const spring = useSpring(motionVal, {
     stiffness: 520,
@@ -347,6 +573,7 @@ export function AnimatedSearchClose({
 
   return (
     <span
+      ref={ref}
       aria-hidden="true"
       className={cn(
         "relative inline-flex items-center justify-center shrink-0 select-none pointer-events-none overflow-hidden",
@@ -389,6 +616,8 @@ export interface AnimatedPanelToggleProps
   extends React.HTMLAttributes<HTMLSpanElement> {
   /** true = "panel open" state (rail/filled column on the right), false = "panel closed" state (rail/filled column on the left) */
   open?: boolean;
+  isOpen?: boolean;
+  disableHover?: boolean;
   className?: string;
   size?: number;
   strokeWidth?: number;
@@ -396,13 +625,31 @@ export interface AnimatedPanelToggleProps
 
 export function AnimatedPanelToggle({
   open,
+  isOpen,
+  disableHover = false,
   className,
   size = 18,
   strokeWidth = 1.25,
   style,
   ...props
 }: AnimatedPanelToggleProps) {
-  const active = Boolean(open);
+  const ref = useRef<HTMLSpanElement>(null);
+  const [clicked, setClicked] = useState(false);
+
+  const isControlled = open !== undefined || isOpen !== undefined;
+
+  useEffect(() => {
+    if (isControlled) return;
+    const el = ref.current;
+    if (!el) return;
+    const parentGroup =
+      el.closest(".group") || el.closest("button") || el.closest("a") || el;
+    const onClick = () => setClicked((prev) => !prev);
+    parentGroup.addEventListener("click", onClick);
+    return () => parentGroup.removeEventListener("click", onClick);
+  }, [isControlled]);
+
+  const active = isControlled ? Boolean(open ?? isOpen) : clicked;
   const motionVal = useMotionValue(+active);
   const spring = useSpring(motionVal, {
     stiffness: 480,
@@ -420,6 +667,7 @@ export function AnimatedPanelToggle({
 
   return (
     <span
+      ref={ref}
       aria-hidden="true"
       className={cn(
         "relative inline-flex items-center justify-center shrink-0 select-none pointer-events-none",

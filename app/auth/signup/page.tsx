@@ -12,6 +12,7 @@ import { Eye, EyeOff } from "lucide-react";
 import { CloseAIIcon } from "@/components/brand/logo";
 import toast from "@/lib/toast";
 import { getAuthCallbackUrl } from "@/lib/url";
+import { AnimatedArrowUpRight } from "@/components/ui/animated";
 
 export default function SignupPage() {
   const router = useRouter();
@@ -105,14 +106,14 @@ export default function SignupPage() {
       <div className="max-w-[520px] w-full bg-card text-card-foreground p-8 rounded-3xl border border-border">
         {/* Header */}
         <div className="text-center mb-7 flex flex-col items-center">
-          <div className="w-12 h-12 rounded-2xl bg-secondary flex items-center justify-center mb-4 border border-border/80 dark:border-none">
+          <div className="w-12 h-12 rounded-2xl bg-card flex items-center justify-center mb-4 border border-border/80">
             <CloseAIIcon size={26} />
           </div>
           <h1 className="text-2xl font-bold tracking-tight text-foreground mb-1">
-            Create your account
+            Sign Up
           </h1>
           <p className="text-md text-muted-foreground">
-            Start using closeAI in seconds
+            To Start with CloseAI
           </p>
         </div>
 
@@ -191,7 +192,7 @@ export default function SignupPage() {
               onChange={(e) => setName(e.target.value)}
               placeholder="Enter your name"
               required
-              className="h-10 rounded-xl border-border text-foreground placeholder:text-muted-foreground focus:placeholder:text-foreground transition-colors"
+              className="h-10 rounded-xl bg-card focus:bg-secondary border border-border/80 placeholder:text-muted-foreground focus:placeholder:text-foreground transition-colors"
             />
           </div>
           <div className="space-y-1.5">
@@ -208,7 +209,7 @@ export default function SignupPage() {
               onChange={(e) => setEmail(e.target.value)}
               placeholder="Enter your email"
               required
-              className="h-10 rounded-xl border-border text-foreground placeholder:text-muted-foreground focus:placeholder:text-foreground transition-colors"
+              className="h-10 rounded-xl bg-card focus:bg-secondary border border-border/80 placeholder:text-muted-foreground focus:placeholder:text-foreground transition-colors"
             />
           </div>
           <div className="space-y-1.5">
@@ -226,7 +227,7 @@ export default function SignupPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Enter your password"
                 required
-                className="h-10 rounded-xl border-border text-foreground placeholder:text-muted-foreground focus:placeholder:text-foreground transition-colors"
+                className="h-10 rounded-xl bg-card focus:bg-secondary border border-border/80 placeholder:text-muted-foreground focus:placeholder:text-foreground transition-colors"
               />
             </div>
           </div>
@@ -244,7 +245,7 @@ export default function SignupPage() {
               onChange={(e) => setConfirmPassword(e.target.value)}
               placeholder="Enter your password again"
               required
-              className="h-10 rounded-xl border-border text-foreground placeholder:text-muted-foreground focus:placeholder:text-foreground transition-colors"
+              className="h-10 rounded-xl bg-card focus:bg-secondary border border-border/80 placeholder:text-muted-foreground focus:placeholder:text-foreground transition-colors"
             />
           </div>
 
@@ -257,21 +258,27 @@ export default function SignupPage() {
             />
             <label
               htmlFor="terms"
-              className="text-md text-muted-foreground leading-snug cursor-pointer select-none"
+              className="text-base text-foreground leading-snug cursor-pointer select-none"
             >
               I agree to the{" "}
               <Link
                 href="/support/terms"
-                className="text-muted-foreground hover:text-foreground font-medium"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-muted-foreground hover:text-foreground font-normal"
               >
-                Terms of uses
+                Terms of Use
+                <AnimatedArrowUpRight className="w-3 h-3 inline-block mr-1" />
               </Link>{" "}
               and{" "}
               <Link
                 href="/support/privacy"
-                className="text-muted-foreground hover:text-foreground font-medium"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-muted-foreground hover:text-foreground font-normal"
               >
-                Privacy policy
+                Privacy Policy
+                <AnimatedArrowUpRight className="w-3 h-3 inline-block" />
               </Link>
             </label>
           </div>
@@ -281,7 +288,7 @@ export default function SignupPage() {
             disabled={loading}
             className="w-full h-11 bg-foreground text-background hover:bg-foreground/90 font-medium rounded-xl mt-3 transition-all cursor-pointer"
           >
-            {loading ? "Creating account..." : "Create account"}
+            {loading ? "Signing Up..." : "Sign Up"}
           </Button>
         </form>
 
@@ -292,7 +299,7 @@ export default function SignupPage() {
             href="/auth/login"
             className="font-semibold text-muted-foreground hover:text-foreground"
           >
-            Log in
+            Log In
           </Link>
         </p>
       </div>

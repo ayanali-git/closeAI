@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { CloseAIIcon } from "@/components/brand/logo";
 import { Globe, ArrowUpRight, Copy, Copyright } from "lucide-react";
-import { AnimatedComingSoonText } from "@/components/ui/animated";
+import { AnimatedArrowUpRight, AnimatedComingSoonText } from "@/components/ui/animated";
 
 export function Footer() {
   return (
@@ -109,7 +109,7 @@ export function Footer() {
                     className="inline-flex items-center gap-1 text-foreground transition-colors"
                   >
                     <span>CloseAI Chat</span>
-                    <ArrowUpRight className="w-4 h-4 stroke-[2.5]" />
+                    <AnimatedArrowUpRight className="w-4 h-4 stroke-[2.5]" />
                   </Link>
                 </li>
                 <li>
@@ -136,7 +136,7 @@ export function Footer() {
                     className="inline-flex items-center gap-1 text-foreground transition-colors"
                   >
                     <span>CloseAI Enterprise</span>
-                    <ArrowUpRight className="w-4 h-4 stroke-[2.5]" />
+                    <AnimatedArrowUpRight className="w-4 h-4 stroke-[2.5]" />
                   </Link>
                 </li>
                 <li>
@@ -179,7 +179,7 @@ export function Footer() {
                     className="inline-flex items-center gap-1 text-foreground transition-colors"
                   >
                     <span>Docs</span>
-                    <ArrowUpRight className="w-4 h-4 stroke-[2.5]" />
+                    <AnimatedArrowUpRight className="w-4 h-4 stroke-[2.5]" />
                   </Link>
                 </li>
               </ul>
@@ -241,7 +241,7 @@ export function Footer() {
                     className="inline-flex items-center gap-1 text-foreground transition-colors"
                   >
                     <span>Contact Sales</span>
-                    <ArrowUpRight className="w-4 h-4 stroke-[2.5]" />
+                    <AnimatedArrowUpRight className="w-4 h-4 stroke-[2.5]" />
                   </Link>
                 </li>
               </ul>
@@ -260,7 +260,7 @@ export function Footer() {
                     className="inline-flex items-center gap-1 text-foreground transition-colors"
                   >
                     <span>Apps SDK</span>
-                    <ArrowUpRight className="w-4 h-4 stroke-[2.5]" />
+                    <AnimatedArrowUpRight className="w-4 h-4 stroke-[2.5]" />
                   </Link>
                 </li>
                 <li>
@@ -306,7 +306,7 @@ export function Footer() {
                     className="inline-flex items-center gap-1 text-foreground transition-colors"
                   >
                     <span>Careers</span>
-                    <ArrowUpRight className="w-4 h-4 stroke-[2.5]" />
+                    <AnimatedArrowUpRight className="w-4 h-4 stroke-[2.5]" />
                   </Link>
                 </li>
                 <li>
@@ -349,7 +349,7 @@ export function Footer() {
                     className="inline-flex items-center gap-1 text-foreground transition-colors"
                   >
                     Academy
-                    <ArrowUpRight className="w-4 h-4 stroke-[2.5]" />
+                    <AnimatedArrowUpRight className="w-4 h-4 stroke-[2.5]" />
                   </Link>
                 </li>
                 <li>
@@ -395,7 +395,7 @@ export function Footer() {
                     className="inline-flex items-center gap-1 text-foreground transition-colors"
                   >
                     <span>Deployment Safety</span>
-                    <ArrowUpRight className="w-4 h-4 stroke-[2.5]" />
+                    <AnimatedArrowUpRight className="w-4 h-4 stroke-[2.5]" />
                   </Link>
                 </li>
                 <li>
@@ -454,7 +454,7 @@ export function Footer() {
                     className="inline-flex items-center gap-1 text-foreground transition-colors"
                   >
                     <span>Help Center</span>
-                    <ArrowUpRight className="w-4 h-4 stroke-[2.5]" />
+                    <AnimatedArrowUpRight className="w-4 h-4 stroke-[2.5]" />
                   </Link>
                 </li>
               </ul>
@@ -501,7 +501,7 @@ export function Footer() {
               className="inline-flex items-center gap-1 text-foreground transition-colors whitespace-nowrap"
             >
               <span>X</span>
-              <ArrowUpRight className="w-4 h-4 stroke-[2.5]" />
+              <AnimatedArrowUpRight className="w-4 h-4 stroke-[2.5]" />
             </a>
             <a
               href="https://www.reddit.com/user/ayanali-redd1t"
@@ -510,7 +510,7 @@ export function Footer() {
               className="inline-flex items-center gap-1 text-foreground transition-colors whitespace-nowrap"
             >
               <span>Reddit</span>
-              <ArrowUpRight className="w-4 h-4 stroke-[2.5]" />
+              <AnimatedArrowUpRight className="w-4 h-4 stroke-[2.5]" />
             </a>
             <a
               href="https://github.com/ayanali-git"
@@ -519,7 +519,7 @@ export function Footer() {
               className="inline-flex items-center gap-1 text-foreground transition-colors whitespace-nowrap"
             >
               <span>GitHub</span>
-              <ArrowUpRight className="w-4 h-4 stroke-[2.5]" />
+              <AnimatedArrowUpRight className="w-4 h-4 stroke-[2.5]" />
             </a>
             <a
               href="https://www.linkedin.com/in/ayanali-in"
@@ -528,7 +528,7 @@ export function Footer() {
               className="inline-flex items-center gap-1 text-foreground transition-colors whitespace-nowrap"
             >
               <span>LinkedIn</span>
-              <ArrowUpRight className="w-4 h-4 stroke-[2.5]" />
+              <AnimatedArrowUpRight className="w-4 h-4 stroke-[2.5]" />
             </a>
           </div>
         </div>

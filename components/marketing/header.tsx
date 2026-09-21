@@ -11,6 +11,7 @@ import {
   AnimatedSearchClose,
   AnimatedPanelToggle,
   AnimatedComingSoonText,
+  AnimatedArrowUpRight,
 } from "@/components/ui/animated";
 import { useAuth } from "@/hooks/use-auth";
 import {
@@ -561,7 +562,7 @@ export function MarketingHeader() {
       {/* Backdrop blur overlay when mega menu is active */}
       <div
         className={cn(
-          "fixed inset-y-0 left-0 top-14 z-40 bg-background/98 backdrop-blur-2xl pointer-events-none",
+          "fixed inset-y-0 left-0 top-14 z-40 bg-background/0 backdrop-blur-sm pointer-events-none",
           activeMenu ? "opacity-100 pointer-events-auto" : "opacity-0"
         )}
         style={{
@@ -577,7 +578,7 @@ export function MarketingHeader() {
       {/* FULLSCREEN SEARCH OVERLAY (OpenAI Style) */}
       {isSearchOpen && (
         <div
-          className="fixed inset-y-0 left-0 top-14 z-40 bg-background/98 backdrop-blur-2xl overflow-y-auto overscroll-contain px-6 sm:px-8 py-12 sm:py-16 select-none"
+          className="fixed inset-y-0 left-0 top-14 z-40 bg-background overflow-y-auto overscroll-contain px-6 sm:px-8 py-12 sm:py-16 select-none"
           style={{
             right: scrollbarWidth > 0 ? `${scrollbarWidth}px` : 0,
             width:
@@ -721,7 +722,7 @@ export function MarketingHeader() {
                         className="flex items-center gap-1.5"
                       >
                         <span>Ask CloseAI</span>
-                        <ArrowUpRight className="w-4 h-4" />
+                        <AnimatedArrowUpRight className="w-4 h-4" />
                       </Link>
                     </Button>
 
@@ -731,7 +732,7 @@ export function MarketingHeader() {
                       className="inline-flex items-center gap-1.5 text-md font-medium text-muted-foreground hover:text-foreground transition-colors px-2 py-1"
                     >
                       <span>API Docs</span>
-                      <ArrowUpRight className="w-4 h-4" />
+                      <AnimatedArrowUpRight className="w-4 h-4" />
                     </Link>
                   </div>
                 </div>
@@ -1097,7 +1098,7 @@ export function MarketingHeader() {
                     className="flex items-center gap-1"
                   >
                     <span>Sign Up</span>
-                    <ArrowUpRight className="w-4 h-4" />
+                    <AnimatedArrowUpRight className="w-4 h-4" />
                   </Link>
                 </Button>
               </>
@@ -1276,7 +1277,7 @@ export function MarketingHeader() {
                           className="group inline-flex items-center text-2xl font-medium text-foreground transition-colors"
                         >
                           <span>CloseAI Chat</span>
-                          <ArrowUpRight className="w-4 h-4 ml-1.5 transition-colors" />
+                          <AnimatedArrowUpRight className="w-4 h-4 ml-1.5 transition-colors" />
                         </Link>
                       </li>
                       <li>
@@ -1488,7 +1489,7 @@ export function MarketingHeader() {
                           className="group inline-flex items-center text-2xl font-medium text-foreground transition-colors"
                         >
                           <span>Autonomous Agents</span>
-                          <ArrowUpRight className="w-4 h-4 ml-1.5 transition-colors" />
+                          <AnimatedArrowUpRight className="w-4 h-4 ml-1.5 transition-colors" />
                         </Link>
                       </li>
                       <li>
@@ -1509,7 +1510,7 @@ export function MarketingHeader() {
                           className="group inline-flex items-center text-2xl font-medium text-foreground transition-colors"
                         >
                           <span>Apps SDK</span>
-                          <ArrowUpRight className="w-4 h-4 ml-1.5 transition-colors" />
+                          <AnimatedArrowUpRight className="w-4 h-4 ml-1.5 transition-colors" />
                         </Link>
                       </li>
                     </ul>
@@ -1612,7 +1613,7 @@ export function MarketingHeader() {
                           className="group inline-flex items-center text-2xl font-medium text-foreground transition-colors"
                         >
                           <span>Careers</span>
-                          <ArrowUpRight className="w-4 h-4 ml-1.5 transition-colors" />
+                          <AnimatedArrowUpRight className="w-4 h-4 ml-1.5 transition-colors" />
                         </Link>
                       </li>
                       <li>
@@ -1775,7 +1776,7 @@ export function MarketingHeader() {
                         className="flex items-center gap-1.5 text-3xl sm:text-4xl font-medium tracking-tight text-foreground hover:opacity-80 transition-opacity py-1"
                       >
                         <span>Sign Up</span>
-                        <ArrowUpRight className="w-6 h-6 stroke-[2.5]" />
+                        <AnimatedArrowUpRight className="w-6 h-6 stroke-[2.5]" />
                       </Link>
                     </>
                   )}
@@ -1875,7 +1876,7 @@ export function MarketingHeader() {
                             className="group inline-flex items-center text-2xl sm:text-3xl font-medium tracking-tight text-foreground transition-colors py-1"
                           >
                             <span>CloseAI Chat</span>
-                            <ArrowUpRight className="w-4 h-4 ml-1.5 transition-colors" />
+                            <AnimatedArrowUpRight className="w-4 h-4 ml-1.5 transition-colors" />
                           </Link>
                           <Link
                             href="/product/features"
@@ -2031,7 +2032,7 @@ export function MarketingHeader() {
                             className="group inline-flex items-center text-2xl sm:text-3xl font-medium tracking-tight text-foreground transition-colors py-1"
                           >
                             <span>Autonomous Agents</span>
-                            <ArrowUpRight className="w-4 h-4 ml-1.5 transition-colors" />
+                            <AnimatedArrowUpRight className="w-4 h-4 ml-1.5 transition-colors" />
                           </Link>
                           <Link
                             href="/research/overview"
@@ -2048,7 +2049,7 @@ export function MarketingHeader() {
                             className="group inline-flex items-center text-2xl sm:text-3xl font-medium tracking-tight text-foreground transition-colors py-1"
                           >
                             <span>Apps SDK</span>
-                            <ArrowUpRight className="w-4 h-4 ml-1.5 transition-colors" />
+                            <AnimatedArrowUpRight className="w-4 h-4 ml-1.5 transition-colors" />
                           </Link>
                         </div>
                       </div>
@@ -2117,7 +2118,7 @@ export function MarketingHeader() {
                             className="group inline-flex items-center text-2xl sm:text-3xl font-medium tracking-tight text-foreground transition-colors py-1"
                           >
                             <span>Careers</span>
-                            <ArrowUpRight className="w-4 h-4 ml-1.5 transition-colors" />
+                            <AnimatedArrowUpRight className="w-4 h-4 ml-1.5 transition-colors" />
                           </Link>
                           <Link
                             href="/company/blog"

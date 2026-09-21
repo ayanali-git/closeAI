@@ -219,12 +219,29 @@ export function Sidebar({
   useEffect(() => {
     setIsLogoHovered(false);
     setIsCloseBtnHovered(false);
+    if (typeof document !== "undefined" && document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur();
+    }
   }, [isOpen]);
+
   const [collapsedSections, setCollapsedSections] = useState<
     Record<string, boolean>
   >({});
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [chatToDelete, setChatToDelete] = useState<Chat | null>(null);
+
+  // Close sidebar drawer on Escape key (matching FilesDrawer behavior)
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        if (showLogoutModal || chatToDelete) return;
+        onToggle();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen, showLogoutModal, chatToDelete, onToggle]);
 
   const toggleSection = (group: string) => {
     setCollapsedSections((prev) => ({
@@ -769,10 +786,10 @@ export function Sidebar({
         className={cn(
           "group relative flex items-center justify-between px-2 py-2 rounded-xl text-md cursor-pointer transition-all duration-150",
           isSelected
-            ? "bg-secondary text-muted-foreground hover:text-foreground"
+            ? "bg-secondary text-foreground"
             : cn(
-                "text-muted-foreground hover:bg-secondary active:bg-secondary hover:text-foreground",
-                isPressed && "bg-secondary text-foreground"
+                "text-muted-foreground hover:bg-secondary active:bg-secondary",
+                isPressed && "bg-secondary"
               )
         )}
       >
@@ -869,6 +886,24 @@ export function Sidebar({
     );
   };
 
+  const renderAvatarContent = () => (
+    <div className="w-8 h-8 rounded-full overflow-hidden shrink-0 bg-secondary flex items-center justify-center select-none">
+      {avatarUrl ? (
+        <img
+          src={avatarUrl}
+          alt={displayName}
+          className="w-full h-full object-cover select-none"
+          loading="eager"
+          decoding="sync"
+        />
+      ) : (
+        <span className="text-md font-semibold text-foreground select-none">
+          {displayName.charAt(0).toUpperCase()}
+        </span>
+      )}
+    </div>
+  );
+
   // ----------------------------------------------------
   // Both Sidebar variants (Collapsed Rail + Expanded) are rendered from this
   // single return so the Logout/Delete modals always mount, regardless of
@@ -879,213 +914,163 @@ export function Sidebar({
   // ----------------------------------------------------
   return (
     <>
-      {!isOpen ? (
-        // ----------------------------------------------------
-        // Collapsed Mini Sidebar (60px Rail on Desktop, Hidden on Mobile)
-        // ----------------------------------------------------
+      {/* Mobile overlay backdrop */}
+      {isOpen && (
         <div
-          onMouseLeave={() => setIsLogoHovered(false)}
-          className="hidden xl:flex w-[60px] h-[100dvh] bg-sidebar border-r border-border flex-col items-center justify-between shrink-0 select-none z-30 relative group/rail"
-        >
-          {/* Full-height border resize/toggle handle */}
+          className="fixed inset-0 z-40 bg-sidebar/50 xl:hidden"
+          onClick={onToggle}
+        />
+      )}
+
+      {/* Main Sidebar (Expands smoothly from 50px to 250px on Desktop, slides over on Mobile) */}
+      <aside
+        className={cn(
+          "h-[100dvh] max-h-[100dvh] bg-sidebar border-r border-border/80 flex flex-col shrink-0 select-none overflow-hidden relative group/sidebar",
+          "transition-[width] duration-300 ease-in-out will-change-[width]",
+          isOpen
+            ? "fixed xl:relative inset-y-0 left-0 z-50 xl:z-20 w-full sm:w-[250px] animate-in slide-in-from-left-full xl:animate-none"
+            : "hidden xl:flex xl:relative xl:w-[50px]"
+        )}
+      >
+        {/* Full-height border resize/toggle handle */}
+        <div
+          onClick={onToggle}
+          style={{ cursor: "ew-resize" }}
+          className="absolute -right-[3px] top-0 bottom-0 w-[6px] z-30 hover:bg-foreground/15 transition-colors cursor-ew-resize"
+        />
+
+        {/* Middle Navigation & Chats Area */}
+        <div className="flex-1 min-h-0 relative overflow-hidden">
+          {/* Collapsed Rail Body (50px) */}
           <div
-            onClick={() => {
-              setIsLogoHovered(false);
-              onToggle();
-            }}
-            style={{ cursor: "ew-resize" }}
-            className="absolute -right-[3px] top-0 bottom-0 w-[6px] z-10 hover:bg-foreground/15 transition-colors cursor-ew-resize"
-          />
-
-          <div className="flex flex-col items-center gap-2 pt-3.5 relative z-20">
-            {/* Brand Emblem / Expand (Open Sidebar Button) */}
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsLogoHovered(false);
-                    onToggle();
-                  }}
-                  onMouseEnter={() => setIsLogoHovered(true)}
-                  onMouseLeave={() => setIsLogoHovered(false)}
-                  onBlur={() => setIsLogoHovered(false)}
-                  style={{ cursor: "ew-resize" }}
-                  className="w-10 h-10 rounded-xl flex items-center justify-center text-foreground hover:bg-secondary transition-colors !cursor-ew-resize [&_*]:!cursor-ew-resize"
-                  aria-label="Open sidebar"
-                >
-                  {isLogoHovered ? (
-                    <PanelRight className="w-4 h-4 text-foreground pointer-events-none" />
-                  ) : (
-                    <CloseAIIcon size={26} className="pointer-events-none" />
-                  )}
-                </button>
-              </TooltipTrigger>
-              <TooltipContent side="right" sideOffset={8} className="text-md">
-                Open sidebar
-              </TooltipContent>
-            </Tooltip>
-
-            {/* Search */}
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <button
-                  onClick={() => {
-                    onToggle();
-                    setShowSearch(true);
-                  }}
-                  className="w-10 h-10 rounded-xl flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors cursor-pointer"
-                  aria-label="Search chats"
-                >
-                  <AnimatedSearchClose open={showSearch} size={18} />
-                </button>
-              </TooltipTrigger>
-              <TooltipContent side="right" className="text-md">
-                Search chats
-              </TooltipContent>
-            </Tooltip>
-
-            {/* New Chat */}
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <button
-                  onClick={() => {
-                    onNewChat();
-                    if (
-                      typeof window !== "undefined" &&
-                      window.innerWidth < 1025
-                    ) {
-                      onToggle();
-                    }
-                  }}
-                  className="w-10 h-10 rounded-xl flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors cursor-pointer"
-                  aria-label="New chat"
-                >
-                  <Plus className="w-4 h-4" />
-                </button>
-              </TooltipTrigger>
-              <TooltipContent side="right" className="text-md">
-                New chat
-              </TooltipContent>
-            </Tooltip>
-
-            {/* Pinned Shortcut */}
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <button
-                  onClick={onToggle}
-                  className="w-10 h-10 rounded-xl flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors cursor-pointer"
-                  aria-label="Pinned chats"
-                >
-                  <Pin className="w-4 h-4" />
-                </button>
-              </TooltipTrigger>
-              <TooltipContent side="right" className="text-md">
-                Pinned chats
-              </TooltipContent>
-            </Tooltip>
-
-            {/* Archived Shortcut */}
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <button
-                  onClick={onToggle}
-                  className="w-10 h-10 rounded-xl flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors cursor-pointer"
-                  aria-label="Archived chats"
-                >
-                  <Archive className="w-4 h-4" />
-                </button>
-              </TooltipTrigger>
-              <TooltipContent side="right" className="text-md">
-                Archived chats
-              </TooltipContent>
-            </Tooltip>
-          </div>
-
-          {/* Bottom User Profile Dock (Matching Open Sidebar Position) */}
-          <div className="w-full p-3 pb-[max(env(safe-area-inset-bottom),0.75rem)] mt-auto flex flex-col items-center justify-center gap-1.5 relative z-20">
-            {isLoading || !user ? (
-              <div className="w-full flex items-center justify-center p-2 rounded-xl select-none">
-                <div className="w-8 h-8 rounded-full bg-secondary/80 dark:bg-neutral-800/80 animate-pulse shrink-0" />
-              </div>
-            ) : (
-              <>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <button
-                      type="button"
-                      onClick={() => toast.info("CloseAI app coming soon")}
-                      className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 bg-transparent hover:bg-secondary dark:hover:bg-[#212121] text-muted-foreground hover:text-foreground transition-colors cursor-pointer select-none"
-                      aria-label="Download app"
-                    >
-                      <Store className="w-5 h-5 shrink-0" />
-                    </button>
-                  </TooltipTrigger>
-                  <TooltipContent side="right" sideOffset={8} className="text-md">
-                    Download app
-                  </TooltipContent>
-                </Tooltip>
-
-                <DropdownMenu
-                  onOpenChange={(open) => {
-                    if (!open) setAccountSubView("main");
-                  }}
-                >
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <DropdownMenuTrigger asChild>
-                        <button className="w-full flex items-center justify-center p-2 rounded-xl hover:bg-secondary transition-colors cursor-pointer select-none outline-none focus:outline-none focus-visible:outline-none focus:ring-0 focus-visible:ring-0 ring-0 border-0">
-                          <div className="w-8 h-8 rounded-full overflow-hidden shrink-0">
-                            <Avatar className="w-full h-full bg-secondary">
-                              <AvatarImage src={avatarUrl} />
-                              <AvatarFallback className="text-md font-semibold">
-                                {displayName.charAt(0).toUpperCase()}
-                              </AvatarFallback>
-                            </Avatar>
-                          </div>
-                        </button>
-                      </DropdownMenuTrigger>
-                    </TooltipTrigger>
-                    <TooltipContent side="right" className="text-md">
-                      {displayName}
-                    </TooltipContent>
-                  </Tooltip>
-
-                  <DropdownMenuContent
-                    side="top"
-                    align="start"
-                    alignOffset={-4}
-                    sideOffset={6}
-                    className="w-64 rounded-2xl p-1.5 bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/80 dark:border-none outline-none focus:outline-none ring-0"
-                  >
-                    {renderAccountMenuItems()}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </>
+            className={cn(
+              "w-[50px] h-full flex flex-col items-center shrink-0 absolute top-0 left-0 transition-opacity duration-200 z-10",
+              !isOpen
+                ? "opacity-100 pointer-events-auto"
+                : "opacity-0 pointer-events-none"
             )}
+            aria-hidden={isOpen}
+            onMouseLeave={() => setIsLogoHovered(false)}
+          >
+            <div className="flex flex-col items-center gap-2 pt-3.5 relative z-20">
+              {/* Brand Emblem / Expand (Open Sidebar Button) */}
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      (e.currentTarget as HTMLElement)?.blur();
+                      setIsLogoHovered(false);
+                      onToggle();
+                    }}
+                    onMouseEnter={() => setIsLogoHovered(true)}
+                    onMouseLeave={() => setIsLogoHovered(false)}
+                    onBlur={() => setIsLogoHovered(false)}
+                    style={{ cursor: "ew-resize" }}
+                    className="w-10 h-10 rounded-xl flex items-center justify-center text-foreground hover:bg-secondary transition-colors !cursor-ew-resize [&_*]:!cursor-ew-resize"
+                    aria-label="Open sidebar"
+                  >
+                    {isLogoHovered ? (
+                      <PanelRight className="w-4 h-4 text-foreground pointer-events-none" />
+                    ) : (
+                      <CloseAIIcon size={26} className="pointer-events-none" />
+                    )}
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent side="right" sideOffset={8} className="text-md">
+                  Open sidebar
+                </TooltipContent>
+              </Tooltip>
+
+              {/* Search */}
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    onClick={() => {
+                      onToggle();
+                      setShowSearch(true);
+                    }}
+                    className="w-10 h-10 rounded-xl flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors cursor-pointer"
+                    aria-label="Search chats"
+                  >
+                    <AnimatedSearchClose open={showSearch} size={18} />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent side="right" className="text-md">
+                  Search chats
+                </TooltipContent>
+              </Tooltip>
+
+              {/* New Chat */}
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    onClick={() => {
+                      onNewChat();
+                      if (
+                        typeof window !== "undefined" &&
+                        window.innerWidth < 1025
+                      ) {
+                        onToggle();
+                      }
+                    }}
+                    className="w-10 h-10 rounded-xl flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors cursor-pointer"
+                    aria-label="New chat"
+                  >
+                    <Plus className="w-4 h-4" />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent side="right" className="text-md">
+                  New chat
+                </TooltipContent>
+              </Tooltip>
+
+              {/* Pinned Shortcut */}
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    onClick={onToggle}
+                    className="w-10 h-10 rounded-xl flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors cursor-pointer"
+                    aria-label="Pinned chats"
+                  >
+                    <Pin className="w-4 h-4" />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent side="right" className="text-md">
+                  Pinned chats
+                </TooltipContent>
+              </Tooltip>
+
+              {/* Archived Shortcut */}
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    onClick={onToggle}
+                    className="w-10 h-10 rounded-xl flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors cursor-pointer"
+                    aria-label="Archived chats"
+                  >
+                    <Archive className="w-4 h-4" />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent side="right" className="text-md">
+                  Archived chats
+                </TooltipContent>
+              </Tooltip>
+            </div>
           </div>
-        </div>
-      ) : (
-        // ----------------------------------------------------
-        // Expanded Sidebar
-        // ----------------------------------------------------
-        <>
-          {/* Mobile overlay */}
+
+          {/* Expanded Sidebar View (250px) */}
           <div
-            className="fixed inset-0 z-40 bg-black/60 backdrop-blur-xs xl:hidden"
-            onClick={onToggle}
-          />
-
-          <aside className="fixed xl:static inset-y-0 left-0 z-50 w-[280px] sm:w-[260px] h-[100dvh] max-h-[100dvh] bg-sidebar border-r border-border/80 flex flex-col shrink-0 select-none group/sidebar animate-in slide-in-from-left-full xl:animate-none duration-200">
-            {/* Full-height border resize/toggle handle */}
-            <div
-              onClick={onToggle}
-              style={{ cursor: "col-resize" }}
-              className="absolute -right-[3px] top-0 bottom-0 w-[6px] z-10 hover:bg-foreground/15 transition-colors"
-            />
-
-            {/* Top Header */}
-            <div className="p-3 pb-2 pt-[max(env(safe-area-inset-top),0.75rem)] flex items-center justify-between relative z-20">
+            className={cn(
+              "w-full sm:w-[250px] h-full flex flex-col shrink-0 absolute top-0 left-0 transition-opacity duration-200 z-10",
+              isOpen
+                ? "opacity-100 pointer-events-auto"
+                : "opacity-0 pointer-events-none"
+            )}
+            aria-hidden={!isOpen}
+          >
+          {/* Top Header */}
+          <div className="p-3 pb-2 pt-[max(env(safe-area-inset-top),0.75rem)] flex items-center justify-between relative z-20">
               <Link
                 href="/"
                 className="flex items-center gap-2 px-1 hover:opacity-85 transition-opacity"
@@ -1123,7 +1108,8 @@ export function Sidebar({
                       size="icon"
                       style={{ cursor: "ew-resize" }}
                       className="h-8 w-8 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary !cursor-ew-resize [&_*]:!cursor-ew-resize"
-                      onClick={() => {
+                      onClick={(e) => {
+                        (e.currentTarget as HTMLElement)?.blur();
                         setIsCloseBtnHovered(false);
                         setIsLogoHovered(false);
                         onToggle();
@@ -1291,82 +1277,170 @@ export function Sidebar({
               )}
             </div>
 
-            {/* Bottom User Profile Dock */}
-            <div className="p-2 pb-[max(env(safe-area-inset-bottom),0.75rem)] border-t border-border/80 mt-auto relative z-20">
-              {isLoading || !user ? (
-                <div className="w-full flex items-center gap-2 py-1.5 pl-1.5 select-none">
-                  <div className="w-8 h-8 rounded-full bg-secondary/80 dark:bg-neutral-800/80 animate-pulse shrink-0" />
-                  <div className="flex-1 min-w-0 space-y-1.5">
-                    <div className="h-3.5 w-20 bg-secondary/80 dark:bg-neutral-800/80 rounded animate-pulse" />
-                    <div className="h-2.5 w-10 bg-secondary/60 dark:bg-neutral-800/60 rounded animate-pulse" />
-                  </div>
+          </div>
+        </div>
+
+        {/* Bottom User Profile Dock (Unified & Persistent — Zero Blinking & Stable Avatar) */}
+        <div
+          className={cn(
+            "w-full px-[5px] pb-[max(env(safe-area-inset-bottom),0.5rem)] pt-2 mt-auto relative z-20 transition-colors duration-200",
+            isOpen ? "border-t border-border/80" : "border-t border-transparent"
+          )}
+        >
+          {/* Collapsed View Download Button (Stacked above avatar in rail view) */}
+          <div
+            className={cn(
+              "w-full flex justify-center transition-all duration-200 overflow-hidden",
+              !isOpen
+                ? "h-10 opacity-100 mb-2 pointer-events-auto"
+                : "h-0 opacity-0 mb-0 pointer-events-none"
+            )}
+          >
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  type="button"
+                  onClick={() => toast.info("CloseAI app coming soon")}
+                  className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 bg-transparent hover:bg-secondary dark:hover:bg-[#212121] text-muted-foreground hover:text-foreground transition-colors cursor-pointer select-none"
+                  aria-label="Download app"
+                >
+                  <Store className="w-5 h-5 shrink-0" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="right" sideOffset={8} className="text-md">
+                Download app
+              </TooltipContent>
+            </Tooltip>
+          </div>
+
+          {/* Profile Row */}
+          <div className="w-full h-10 flex items-center justify-between relative">
+            {isLoading || !user ? (
+              <div className="w-full h-10 flex items-center gap-2 select-none">
+                <div className="w-8 h-8 rounded-full ml-1 bg-secondary/80 dark:bg-neutral-800/80 animate-pulse shrink-0" />
+                <div
+                  className={cn(
+                    "flex-1 min-w-0 space-y-1.5 transition-all duration-200 overflow-hidden",
+                    isOpen ? "opacity-100" : "w-0 opacity-0 pointer-events-none hidden"
+                  )}
+                >
+                  <div className="h-3.5 w-20 bg-secondary/80 dark:bg-neutral-800/80 rounded animate-pulse" />
+                  <div className="h-2.5 w-10 bg-secondary/60 dark:bg-neutral-800/60 rounded animate-pulse" />
                 </div>
-              ) : (
-                <div className="group/profile relative w-full flex items-center rounded-xl hover:bg-secondary transition-colors">
-                  <DropdownMenu
-                    onOpenChange={(open) => {
-                      if (!open) setAccountSubView("main");
-                    }}
+                <div
+                  className={cn(
+                    "shrink-0 transition-all duration-200 overflow-hidden pr-0.5",
+                    isOpen ? "w-8 opacity-100 pointer-events-auto" : "w-0 opacity-0 pointer-events-none hidden"
+                  )}
+                >
+                  <button
+                    type="button"
+                    onClick={() => toast.info("CloseAI app coming soon")}
+                    className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 text-muted-foreground hover:text-foreground bg-transparent hover:bg-black/10 dark:hover:bg-white/10 transition-colors cursor-pointer select-none"
+                    aria-label="Download app"
                   >
-                    <DropdownMenuTrigger asChild>
-                      <button className="flex-1 min-w-0 flex items-center justify-start p-2 pl-1.5 pr-1 gap-2 text-left cursor-pointer select-none outline-none focus:outline-none focus-visible:outline-none focus:ring-0 focus-visible:ring-0 ring-0 border-0">
-                        <div className="w-8 h-8 rounded-full overflow-hidden shrink-0">
-                          <Avatar className="w-full h-full bg-secondary">
-                            <AvatarImage src={avatarUrl} />
-                            <AvatarFallback className="text-md font-semibold">
-                              {displayName.charAt(0).toUpperCase()}
-                            </AvatarFallback>
-                          </Avatar>
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-md font-medium text-foreground truncate leading-snug">
-                            {displayName}
-                          </p>
-                          <p
-                            className="text-sm text-muted-foreground leading-none"
-                            suppressHydrationWarning
-                          >
-                            {planDisplay}
-                          </p>
-                        </div>
-                      </button>
-                    </DropdownMenuTrigger>
-
-                    <DropdownMenuContent
-                      side="top"
-                      align="start"
-                      alignOffset={0}
-                      sideOffset={6}
-                      className="w-[260px] max-w-[calc(100vw-24px)] max-h-[calc(100dvh-5rem)] overflow-y-auto rounded-2xl p-1.5 bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/80 dark:border-none outline-none focus:outline-none ring-0"
-                    >
-                      {renderAccountMenuItems()}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-
-                  {/* Download app button inside the profile row */}
-                  <div className="pr-1.5 flex items-center shrink-0">
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <button
-                          type="button"
-                          onClick={() => toast.info("CloseAI app coming soon")}
-                          className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 text-muted-foreground hover:text-foreground bg-transparent hover:bg-black/10 dark:hover:bg-white/10 transition-colors cursor-pointer select-none"
-                          aria-label="Download app"
-                        >
-                          <Store className="w-5 h-5 shrink-0" />
-                        </button>
-                      </TooltipTrigger>
-                      <TooltipContent side="top" sideOffset={8} className="text-md">
-                        Download app
-                      </TooltipContent>
-                    </Tooltip>
-                  </div>
+                    <Store className="w-5 h-5 shrink-0" />
+                  </button>
                 </div>
-              )}
-            </div>
-          </aside>
-        </>
-      )}
+              </div>
+            ) : (
+              <>
+                <DropdownMenu
+                  onOpenChange={(open) => {
+                    if (!open) setAccountSubView("main");
+                  }}
+                >
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <DropdownMenuTrigger asChild>
+                        <button
+                          className={cn(
+                            "h-10 flex items-center justify-start rounded-xl hover:bg-secondary transition-[width,background-color] duration-200 cursor-pointer select-none outline-none focus:outline-none focus-visible:outline-none focus:ring-0 focus-visible:ring-0 ring-0 border-0 pl-0",
+                            isOpen
+                              ? "flex-1 min-w-0 pr-1 gap-2 text-left"
+                              : "w-10 pr-0"
+                          )}
+                        >
+                          {/* Rock-solid, non-blinking avatar — perfectly stationary at 9px from sidebar left */}
+                          <div className="ml-1 shrink-0">
+                            {renderAvatarContent()}
+                          </div>
+
+                          {/* Expanded User Details */}
+                          <div
+                            className={cn(
+                              "flex-1 min-w-0 transition-all duration-200 overflow-hidden whitespace-nowrap",
+                              isOpen
+                                ? "opacity-100"
+                                : "w-0 opacity-0 pointer-events-none hidden"
+                            )}
+                          >
+                            <p className="text-md font-medium text-foreground truncate leading-snug">
+                              {displayName}
+                            </p>
+                            <p
+                              className="text-sm text-muted-foreground leading-none"
+                              suppressHydrationWarning
+                            >
+                              {planDisplay}
+                            </p>
+                          </div>
+                        </button>
+                      </DropdownMenuTrigger>
+                    </TooltipTrigger>
+                    {!isOpen && (
+                      <TooltipContent side="right" className="text-md">
+                        {displayName}
+                      </TooltipContent>
+                    )}
+                  </Tooltip>
+
+                  <DropdownMenuContent
+                    side="top"
+                    align="start"
+                    alignOffset={isOpen ? 0 : -4}
+                    sideOffset={6}
+                    className={cn(
+                      "rounded-2xl p-1.5 bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/80 dark:border-none outline-none focus:outline-none ring-0",
+                      isOpen
+                        ? "w-[calc(100vw-1rem)] sm:w-[234px] max-h-[calc(100dvh-5rem)] overflow-y-auto"
+                        : "w-64"
+                    )}
+                  >
+                    {renderAccountMenuItems()}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+
+                {/* Expanded Download App Button (on right side of profile row) */}
+                <div
+                  className={cn(
+                    "shrink-0 transition-all duration-200 overflow-hidden pr-0.5",
+                    isOpen
+                      ? "w-8 opacity-100 pointer-events-auto"
+                      : "w-0 opacity-0 pointer-events-none hidden"
+                  )}
+                >
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        type="button"
+                        onClick={() => toast.info("CloseAI app coming soon")}
+                        className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 text-muted-foreground hover:text-foreground bg-transparent hover:bg-black/10 dark:hover:bg-white/10 transition-colors cursor-pointer select-none"
+                        aria-label="Download app"
+                      >
+                        <Store className="w-5 h-5 shrink-0" />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent side="top" sideOffset={8} className="text-md">
+                      Download app
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      </aside>
 
       {/* Logout Confirmation Modal — mounted here, outside the isOpen branch,
           so it renders whether the sidebar is expanded or collapsed to the rail. */}

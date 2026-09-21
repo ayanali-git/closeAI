@@ -133,10 +133,9 @@ function TocItemRow({
       title={heading.text}
       className={cn(
         "hover-box relative mx-1 rounded-xl px-3 py-2 text-[15px] leading-snug cursor-pointer transition-colors duration-150 flex items-center min-w-0 overflow-hidden text-left",
-        "text-muted-foreground hover:text-foreground",
         isActive
-          ? "bg-secondary dark:bg-[#2f2f2f]"
-          : "hover:bg-secondary dark:hover:bg-[#2f2f2f] active:bg-secondary dark:active:bg-[#2f2f2f]"
+          ? "bg-secondary dark:bg-[#2f2f2f] text-foreground"
+          : "text-muted-foreground hover:bg-secondary dark:hover:bg-[#2f2f2f] active:bg-secondary dark:active:bg-[#2f2f2f]"
       )}
     >
       <TocTitleMarquee
@@ -464,6 +463,7 @@ export interface TocNavigatorProps {
   customHeadings?: Heading[];
   minHeadings?: number;
   minMessages?: number;
+  className?: string;
 }
 
 export function TocNavigator({
@@ -472,6 +472,7 @@ export function TocNavigator({
   customHeadings,
   minHeadings = 3,
   minMessages,
+  className,
 }: TocNavigatorProps) {
   const [headings, setHeadings] = useState<Heading[]>([]);
   const [scrollActiveSectionId, setScrollActiveSectionId] =
@@ -749,7 +750,7 @@ export function TocNavigator({
   }
 
   return (
-    <aside className="pointer-events-none fixed top-1/2 right-5 z-30 hidden h-[min(460px,70vh)] w-fit -translate-y-1/2 select-none xl:block">
+    <aside className={cn("pointer-events-none absolute top-1/2 right-4 sm:right-5 z-30 hidden h-[min(460px,70vh)] w-fit -translate-y-1/2 select-none xl:block", className)}>
         <PreviewRail
           headings={headings}
           scrollActiveSectionId={scrollActiveSectionId}

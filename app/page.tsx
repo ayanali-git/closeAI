@@ -209,7 +209,7 @@ export default function LandingPage() {
                 placeholder="Ask about anything"
                 rows={3}
                 disabled={isSubmitting}
-                className="w-full bg-transparent resize-none text-[17px] font-normal text-muted-foreground transition-colors outline-none border-none ring-0 leading-relaxed"
+                className="w-full bg-transparent resize-none text-[17px] font-normal text-foreground transition-colors outline-none border-none ring-0 leading-relaxed"
               />
               <div
                 className="flex items-center justify-end pt-3"
@@ -270,8 +270,8 @@ export default function LandingPage() {
                     pill.disabled
                       ? "cursor-not-allowed select-none bg-white/50 dark:bg-[#212121]/50 hover:bg-secondary dark:hover:bg-[#2f2f2f] text-muted-foreground"
                       : isSelected
-                      ? "cursor-pointer bg-secondary dark:bg-[#2f2f2f] text-foreground hover:bg-secondary dark:hover:bg-[#2f2f2f]"
-                      : "cursor-pointer bg-white/50 dark:bg-[#212121]/50 hover:bg-secondary dark:hover:bg-[#2f2f2f] text-muted-foreground hover:text-foreground"
+                      ? "cursor-pointer bg-secondary dark:bg-[#2f2f2f] text-muted-foreground hover:bg-secondary dark:hover:bg-[#2f2f2f]"
+                      : "cursor-pointer bg-white/50 dark:bg-[#212121]/50 hover:bg-secondary dark:hover:bg-[#2f2f2f] text-muted-foreground"
                   )}
                 >
                   {pill.disabled ? (

@@ -188,14 +188,21 @@ export default function PublicSharedChatPage() {
   const [selectedModel, setSelectedModel] = useState("gemini-3.8 flash");
   const [selectedModelTier, setSelectedModelTier] = useState(4);
 
+  const hasInitialHashRef = useRef(
+    typeof window !== "undefined" && Boolean(window.location.hash)
+  );
+  const isAutoScrollPinnedRef = useRef(!hasInitialHashRef.current);
+
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   const handleScroll = () => {
     if (!scrollContainerRef.current) return;
     const { scrollTop, scrollHeight, clientHeight } =
       scrollContainerRef.current;
-    const isScrolledUp = scrollHeight - scrollTop - clientHeight > 80;
-    setShowScrollBottom(isScrolledUp);
+    const distanceToBottom = scrollHeight - scrollTop - clientHeight;
+    const isAtBottom = distanceToBottom <= 25;
+    isAutoScrollPinnedRef.current = isAtBottom;
+    setShowScrollBottom((prev) => (prev !== !isAtBottom ? !isAtBottom : prev));
   };
 
   const dockRef = useRef<HTMLDivElement>(null);
@@ -207,13 +214,25 @@ export default function PublicSharedChatPage() {
     return () => ro.disconnect();
   }, []);
 
-  const scrollToBottom = () => {
+  const scrollToBottom = (behavior: ScrollBehavior = "smooth") => {
     if (scrollContainerRef.current) {
       scrollContainerRef.current.scrollTo({
         top: scrollContainerRef.current.scrollHeight,
-        behavior: "smooth",
+        behavior,
       });
+      if (behavior === "auto") {
+        setShowScrollBottom(false);
+        isAutoScrollPinnedRef.current = true;
+      }
     }
+  };
+
+  const forceScrollToBottom = () => {
+    if (!scrollContainerRef.current) return;
+    scrollContainerRef.current.scrollTop =
+      scrollContainerRef.current.scrollHeight;
+    setShowScrollBottom(false);
+    isAutoScrollPinnedRef.current = true;
   };
 
   const handleSend = () => {
@@ -279,6 +298,10 @@ export default function PublicSharedChatPage() {
           window.setTimeout(scrollToTarget, 80),
           window.setTimeout(scrollToTarget, 250),
           window.setTimeout(scrollToTarget, 600),
+          window.setTimeout(() => {
+            scrollToTarget();
+            hasInitialHashRef.current = false;
+          }, 900),
         ];
         return () => {
           timers.forEach(clearTimeout);
@@ -381,17 +404,13 @@ export default function PublicSharedChatPage() {
     };
   }, [cleanTitle]);
 
-  // Keep scroll smoothly pinned to bottom on mobile keyboard resize without window scroll jumping
+  // Keep scroll glued to bottom on iOS Safari virtual keyboard resize without jumping on zoom
   useEffect(() => {
     if (typeof window === "undefined" || !window.visualViewport) return;
     const onResize = () => {
-      if (scrollContainerRef.current) {
-        scrollContainerRef.current.scrollTo({
-          top: scrollContainerRef.current.scrollHeight,
-          behavior: "smooth",
-        });
+      if (isAutoScrollPinnedRef.current) {
+        forceScrollToBottom();
       }
-      handleScroll();
     };
     window.visualViewport.addEventListener("resize", onResize);
     return () => window.visualViewport?.removeEventListener("resize", onResize);

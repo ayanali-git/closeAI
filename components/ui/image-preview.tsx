@@ -49,9 +49,9 @@ export function ImagePreview({
   };
 
   return (
-    <>
+    <div className="flex leading-[0] self-end max-w-full">
       {children ? (
-        <div onClick={() => setIsOpen(true)} className="cursor-pointer">
+        <div onClick={() => setIsOpen(true)} className="flex leading-[0] cursor-pointer">
           {children}
         </div>
       ) : (
@@ -60,7 +60,8 @@ export function ImagePreview({
           alt={alt}
           width={width}
           height={height}
-          className={cn("cursor-pointer select-none", className)}
+          className={cn("block m-0 cursor-pointer select-none", className)}
+          draggable={false}
           onClick={() => setIsOpen(true)}
         />
       )}
@@ -70,7 +71,7 @@ export function ImagePreview({
           {/* Simple dark backdrop without animation */}
           <DialogPrimitive.Overlay
             onClick={() => setIsOpen(false)}
-            className="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm"
+            className="fixed inset-0 z-50 bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm"
           />
 
           {/* Simple content container covering full screen */}
@@ -119,7 +120,7 @@ export function ImagePreview({
           </DialogPrimitive.Content>
         </DialogPrimitive.Portal>
       </DialogPrimitive.Root>
-    </>
+    </div>
   );
 }
 

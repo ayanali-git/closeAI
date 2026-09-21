@@ -70,14 +70,22 @@ export function BottomSheet({
     if (!open) return;
     const prevBodyOverflow = document.body.style.overflow;
     const prevHtmlOverflow = document.documentElement.style.overflow;
-    document.body.style.overflow = "hidden";
-    document.documentElement.style.overflow = "hidden";
-    document.body.classList.add("modal-open-no-scroll");
+    const alreadyLocked = prevBodyOverflow === "hidden";
+
+    if (!alreadyLocked) {
+      document.body.style.overflow = "hidden";
+      document.documentElement.style.overflow = "hidden";
+      document.body.classList.add("modal-open-no-scroll");
+    }
 
     return () => {
-      document.body.style.overflow = prevBodyOverflow;
-      document.documentElement.style.overflow = prevHtmlOverflow;
-      document.body.classList.remove("modal-open-no-scroll");
+      if (!alreadyLocked) {
+        document.body.style.overflow =
+          prevBodyOverflow === "hidden" ? "" : prevBodyOverflow;
+        document.documentElement.style.overflow =
+          prevHtmlOverflow === "hidden" ? "" : prevHtmlOverflow;
+        document.body.classList.remove("modal-open-no-scroll");
+      }
     };
   }, [open]);
 
@@ -143,7 +151,7 @@ export function BottomSheet({
               transition={DRAWER}
               {...gate}
               onClick={() => onOpenChange(false)}
-              className="pointer-events-auto fixed inset-0 z-50 bg-foreground/50 dark:bg-background/50 backdrop-blur-sm"
+              className="pointer-events-auto fixed inset-0 z-50 bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm"
             />
           )}
         </PresenceGate>

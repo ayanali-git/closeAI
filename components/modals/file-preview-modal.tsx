@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import {
   X,
   ExternalLink,
@@ -29,12 +30,14 @@ export function FilePreviewModal({
   onOpenChange,
   file,
 }: FilePreviewModalProps) {
+  const [mounted, setMounted] = useState(false);
   const [fileUrl, setFileUrl] = useState<string>("");
   const [textContent, setTextContent] = useState<string | null>(null);
   const [isLoadingText, setIsLoadingText] = useState(false);
   const [isMobileScreen, setIsMobileScreen] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
     const checkMobile = () => setIsMobileScreen(window.innerWidth < 1025);
     checkMobile();
     window.addEventListener("resize", checkMobile);
@@ -231,9 +234,11 @@ export function FilePreviewModal({
     );
   }
 
-  return (
+  if (!mounted) return null;
+
+  return createPortal(
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/85 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm"
       onClick={() => onOpenChange(false)}
     >
       {/* Top-Right Toolbar matching Share & More buttons position */}
@@ -264,6 +269,7 @@ export function FilePreviewModal({
           {previewContent}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

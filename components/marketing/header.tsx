@@ -390,18 +390,8 @@ export function MarketingHeader() {
   }, [activeMenu]);
 
   const [logoutModalOpen, setLogoutModalOpen] = useState(false);
-  const [logoutModalRendered, setLogoutModalRendered] = useState(false);
 
-  const isLocked = isSearchOpen || mobileNavOpen || logoutModalRendered;
-
-  useEffect(() => {
-    if (logoutModalOpen) {
-      setLogoutModalRendered(true);
-    } else if (logoutModalRendered) {
-      const t = setTimeout(() => setLogoutModalRendered(false), 350); // matches DRAWER duration
-      return () => clearTimeout(t);
-    }
-  }, [logoutModalOpen, logoutModalRendered]);
+  const isLocked = isSearchOpen || mobileNavOpen || logoutModalOpen;
 
   const searchResults = React.useMemo(() => {
     const q = submittedQuery.trim().toLowerCase();
@@ -506,13 +496,15 @@ export function MarketingHeader() {
     }
 
     return () => {
-      document.documentElement.style.overflow = prevHtmlOverflow;
-      document.body.style.overflow = prevBodyOverflow;
+      document.documentElement.style.overflow =
+        prevHtmlOverflow === "hidden" ? "" : prevHtmlOverflow;
+      document.body.style.overflow =
+        prevBodyOverflow === "hidden" ? "" : prevBodyOverflow;
       document.body.style.paddingRight = prevBodyPaddingRight;
     };
-  }, [isLocked, isSearchOpen, logoutModalRendered]);
+  }, [isLocked, isSearchOpen, logoutModalOpen]);
 
-  // Handle escape key to close menu/search
+  // Handle escape key to close menu/search/logout modal
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
@@ -520,6 +512,7 @@ export function MarketingHeader() {
         setHoveredNav(null);
         setIsSearchOpen(false);
         setMobileNavOpen(false);
+        setLogoutModalOpen(false);
       }
     };
     window.addEventListener("keydown", handleKeyDown);

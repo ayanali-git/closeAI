@@ -12,7 +12,7 @@
     --popover-foreground: 0 0% 0%;
     --primary: 0 0% 0%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 0 0% 96%;
+    --secondary: 0 0% 90%;
     --secondary-foreground: 0 0% 0%;
     --muted: 0 0% 96%;
     --muted-foreground: 0 0% 40%;
@@ -38,7 +38,7 @@
     --popover-foreground: 0 0% 100%;
     --primary: 0 0% 100%;
     --primary-foreground: 0 0% 0%;
-    --secondary: 0 0% 10%;
+    --secondary: 0 0% 20%;
     --secondary-foreground: 0 0% 100%;
     --muted: 0 0% 10%;
     --muted-foreground: 0 0% 65%;
@@ -484,12 +484,6 @@ html:not(.dark) .token.important {
 /* Modal and Bottom Sheet Scroll Lock & Scrollbar Suppression on Mobile/Small Screens */
 body.modal-open-no-scroll {
   overflow: hidden !important;
-}
-
-body.modal-open-no-scroll [data-chat-scroll="true"],
-body.modal-open-no-scroll .overflow-y-scroll {
-  overflow-y: hidden !important;
-  scrollbar-gutter: auto !important;
 }
 
 /* Utility classes to hide scrollbar */

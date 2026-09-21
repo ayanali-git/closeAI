@@ -268,7 +268,7 @@ function CodeBlock({ language, code }: { language: string; code: string }) {
           sticky -top-3.5 z-10
           flex items-center justify-between
           px-4 py-2
-          bg-bubble/50 dark:bg-[#2F2F2F]/50 backdrop-blur-sm
+          bg-bubble dark:bg-[#2F2F2F]
           text-xs font-sans
         text-neutral-600 dark:text-neutral-300
           select-none
@@ -289,7 +289,7 @@ function CodeBlock({ language, code }: { language: string; code: string }) {
             group/copy-btn
             flex items-center gap-1.5
             px-2 py-2
-            rounded-xl
+            rounded-2xl sm:rounded-3xl
             text-base
             hover:bg-neutral-200/80
             dark:hover:bg-white/10
@@ -394,14 +394,14 @@ function MessageAttachmentItem({
     return (
       <ImagePreview src={imgSrc} alt={displayName}>
         <div
-          className="group relative block overflow-hidden rounded-xl bg-neutral-100 dark:bg-[#262626] border border-border/80 transition-all max-w-[100px] sm:max-w-[150px] cursor-pointer select-none hover:opacity-90"
+          className="relative flex leading-[0] overflow-clip rounded-2xl sm:rounded-3xl bg-bubble dark:bg-[#2F2F2F] border border-border/80 max-w-[100px] sm:max-w-[200px] cursor-pointer select-none hover:opacity-90 transition-opacity"
           title={`Preview ${displayName}`}
         >
           <img
             src={imgSrc}
             alt={displayName}
-            className="w-full max-h-[180px] sm:max-h-[220px] object-cover rounded-xl transition-transform"
-            loading="lazy"
+            className="block m-0 w-full max-h-[100px] sm:max-h-[200px] object-cover pointer-events-none"
+            draggable={false}
           />
         </div>
       </ImagePreview>
@@ -413,11 +413,11 @@ function MessageAttachmentItem({
     <button
       type="button"
       onClick={() => onPreview?.(file)}
-      className="flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-foreground text-xs sm:text-sm px-3 py-1.5 rounded-full border border-border/80 transition-colors cursor-pointer group select-none text-left"
+      className="flex self-end items-center gap-2.5 bg-bubble dark:bg-[#2F2F2F] hover:opacity-90 text-foreground text-xs sm:text-sm px-3 py-2.5 rounded-2xl sm:rounded-3xl border border-border/80 transition-colors cursor-pointer group select-none text-left"
       title={`Preview ${displayName}`}
     >
-      <Icon className="w-4 h-4 shrink-0 text-muted-foreground" weight="fill" />
-      <span className="truncate max-w-[140px] sm:max-w-[180px] font-medium">
+      <Icon className="w-5 h-5 shrink-0 text-muted-foreground" weight="fill" />
+      <span className="truncate max-w-[100px] sm:max-w-[200px] font-normal">
         {displayName}
       </span>
     </button>
@@ -584,9 +584,6 @@ export function MessageList({
   const [previewFile, setPreviewFile] = useState<any>(null);
   const [isMobileScreen, setIsMobileScreen] = useState(false);
   const [dropdownSubView, setDropdownSubView] = useState<"main" | "try-again">("main");
-  const [moreMenuOpenId, setMoreMenuOpenId] = useState<string | null>(null);
-  const [moreMenuJustClosedId, setMoreMenuJustClosedId] = useState<string | null>(null);
-  const moreMenuCloseTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     const checkMobile = () => {
@@ -806,7 +803,7 @@ export function MessageList({
                 key={msgId}
                 id={mId}
                 className={cn(
-                  "flex flex-col group transition-all",
+                  "flex flex-col group [transform:translateZ(0)]",
                   isEditing ? "w-full items-stretch" : "items-end"
                 )}
               >
@@ -1039,7 +1036,7 @@ export function MessageList({
                     components={{
                       table({ children }: any) {
                         return (
-                          <div className="my-4 w-full overflow-x-auto rounded-xl border border-border/80 bg-card/40">
+                          <div className="my-4 w-full overflow-x-auto rounded-xl border border-border/80 bg-card/40 [&_tr:hover_td]:!bg-transparent">
                             <table className="w-full text-left border-collapse text-sm !m-0">
                               {children}
                             </table>
@@ -1068,11 +1065,7 @@ export function MessageList({
                         );
                       },
                       tr({ children }: any) {
-                        return (
-                          <tr className="hover:bg-secondary/30 transition-colors">
-                            {children}
-                          </tr>
-                        );
+                        return <tr>{children}</tr>;
                       },
                       p({ children }: any) {
                         return (
@@ -1181,11 +1174,11 @@ export function MessageList({
                       img({ src, alt }: any) {
                         if (!src) return null;
                         return (
-                          <div className="my-4 max-w-lg">
+                          <div className="my-4 max-w-lg overflow-clip rounded-xl [transform:translateZ(0)] [backface-visibility:hidden]">
                             <ImagePreview
                               src={src}
                               alt={alt || "Image preview"}
-                              className="rounded-xl border border-border/60 max-h-[420px] object-contain cursor-pointer hover:opacity-90 transition-opacity"
+                              className="block rounded-xl border border-border/60 max-h-[420px] object-contain cursor-pointer hover:opacity-90 transition-opacity"
                             />
                           </div>
                         );
@@ -1330,31 +1323,13 @@ export function MessageList({
 
                     {/* More options Dropdown (Read aloud, Try again, Models, Sources) */}
                     <DropdownMenu
-                      open={moreMenuOpenId === msgId ? true : undefined}
                       onOpenChange={(open) => {
-                        if (open) {
-                          setMoreMenuOpenId(msgId);
-                          setMoreMenuJustClosedId(null);
-                        } else {
-                          setMoreMenuOpenId(null);
-                          setMoreMenuJustClosedId(msgId);
-                          if (moreMenuCloseTimerRef.current) {
-                            clearTimeout(moreMenuCloseTimerRef.current);
-                          }
-                          moreMenuCloseTimerRef.current = setTimeout(() => {
-                            setMoreMenuJustClosedId(null);
-                          }, 400);
+                        if (!open) {
                           setDropdownSubView("main");
                         }
                       }}
                     >
-                      <Tooltip
-                        open={
-                          moreMenuOpenId === msgId || moreMenuJustClosedId === msgId
-                            ? false
-                            : undefined
-                        }
-                      >
+                      <Tooltip>
                         <TooltipTrigger asChild>
                           <DropdownMenuTrigger asChild>
                             <button
@@ -1385,16 +1360,6 @@ export function MessageList({
                         sideOffset={4}
                         avoidCollisions={true}
                         collisionPadding={12}
-                        onCloseAutoFocus={(e) => {
-                          e.preventDefault();
-                          if (
-                            document.activeElement instanceof HTMLElement &&
-                            (document.activeElement.getAttribute("aria-label") === "More options" ||
-                              document.activeElement.closest('[role="menu"]'))
-                          ) {
-                            document.activeElement.blur();
-                          }
-                        }}
                         className="w-56 rounded-2xl p-1.5 bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/80 dark:border-none outline-none select-none z-50"
                       >
                         {isMobileScreen && dropdownSubView === "try-again" ? (
@@ -1646,7 +1611,7 @@ export function MessageList({
 
         {/* Optimistic Pending User Message */}
         {pendingMessage && (
-          <div className="flex flex-col items-end group transition-all">
+          <div className="flex flex-col items-end group [transform:translateZ(0)]">
             {pendingMessage.files.length > 0 && (
               <div className="flex flex-wrap gap-2.5 mb-2.5 justify-end items-end">
                 {pendingMessage.files.map((file, i) => (

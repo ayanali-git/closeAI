@@ -9,7 +9,10 @@ import { chatService, Chat, Message } from "@/lib/chat-service";
 import { Sidebar } from "@/components/chat/sidebar";
 import { MessageList } from "@/components/chat/message-list";
 import { ChatInput } from "@/components/chat/chat-input";
-import { TocNavigator, getTargetElement } from "@/components/chat/toc-navigator";
+import {
+  TocNavigator,
+  getTargetElement,
+} from "@/components/chat/toc-navigator";
 import { FilesDrawer, FilePreviewViewer } from "@/components/chat/file-drawer";
 import {
   ChevronDown,
@@ -100,7 +103,12 @@ export default function ActiveChatPage() {
     const addFile = (file: any) => {
       if (!file) return;
       const key =
-        file.id || file.url || file.publicUrl || file.name || file.filename || JSON.stringify(file);
+        file.id ||
+        file.url ||
+        file.publicUrl ||
+        file.name ||
+        file.filename ||
+        JSON.stringify(file);
       if (!seen.has(key)) {
         seen.add(key);
         list.push(file);
@@ -137,25 +145,39 @@ export default function ActiveChatPage() {
   };
 
   const prevSidebarOpenRef = useRef<boolean | null>(null);
+  const prevFilesDrawerOpenRef = useRef<boolean | null>(null);
 
-  const handleOpenPreview = (file: any) => {
+  const handleOpenPreview = (file: any, fromDrawer = false) => {
     prevSidebarOpenRef.current = sidebarOpen;
+    prevFilesDrawerOpenRef.current = fromDrawer || isFilesDrawerOpen;
     if (sidebarOpen) {
       setSidebarOpen(false);
+    }
+    if (isFilesDrawerOpen) {
+      setIsFilesDrawerOpen(false);
     }
     setActivePreviewFile(file);
   };
 
   const handleClosePreview = () => {
     setActivePreviewFile(null);
-    const shouldReopen =
+    const shouldReopenSidebar =
       prevSidebarOpenRef.current !== null
         ? prevSidebarOpenRef.current
         : typeof window !== "undefined" && window.innerWidth >= 1025;
-    if (shouldReopen) {
-      setSidebarOpen(true);
-    }
+    const shouldReopenDrawer = prevFilesDrawerOpenRef.current === true;
+
+    requestAnimationFrame(() => {
+      if (shouldReopenSidebar) {
+        setSidebarOpen(true);
+      }
+      if (shouldReopenDrawer) {
+        setIsFilesDrawerOpen(true);
+      }
+    });
+
     prevSidebarOpenRef.current = null;
+    prevFilesDrawerOpenRef.current = null;
   };
 
   useEffect(() => {
@@ -309,7 +331,11 @@ export default function ActiveChatPage() {
             setThinkMode(true);
           }
           if (autoData?.prompt) {
-            setPendingMessage({ content: autoData.prompt, files: [], isThinkMode: !!autoData?.think });
+            setPendingMessage({
+              content: autoData.prompt,
+              files: [],
+              isThinkMode: !!autoData?.think,
+            });
             setIsTyping(true);
           }
         } catch (e) {}
@@ -421,7 +447,11 @@ export default function ActiveChatPage() {
             if (autoData?.think) {
               setThinkMode(true);
             }
-            triggerAiGeneration(autoData.prompt, autoData?.model, !!autoData?.think);
+            triggerAiGeneration(
+              autoData.prompt,
+              autoData?.model,
+              !!autoData?.think
+            );
           }
         }
       }
@@ -458,7 +488,11 @@ export default function ActiveChatPage() {
       const filtered = list.filter(
         (m) =>
           m.id !== userMessage.id &&
-          !(m.role === "user" && m.content === userMessage.content && (m.id?.startsWith("msg-") || m.id?.startsWith("pending-")))
+          !(
+            m.role === "user" &&
+            m.content === userMessage.content &&
+            (m.id?.startsWith("msg-") || m.id?.startsWith("pending-"))
+          )
       );
       return [
         ...filtered,
@@ -569,7 +603,10 @@ export default function ActiveChatPage() {
       }
 
       const result = await response.json();
-      const actualElapsedSecs = Math.max(1, Math.round((Date.now() - reqStart) / 1000));
+      const actualElapsedSecs = Math.max(
+        1,
+        Math.round((Date.now() - reqStart) / 1000)
+      );
       if (result.assistantMessage) {
         if (isThink || result.assistantMessage.metadata?.think) {
           result.assistantMessage.metadata = {
@@ -622,7 +659,11 @@ export default function ActiveChatPage() {
     if (thinkMode) {
       setThinkMode(false);
     }
-    setPendingMessage({ content: newContent, files: [], isThinkMode: currentThinkMode });
+    setPendingMessage({
+      content: newContent,
+      files: [],
+      isThinkMode: currentThinkMode,
+    });
     setIsTyping(true);
     isAutoScrollPinnedRef.current = true;
     setShowScrollBottom(false);
@@ -664,7 +705,10 @@ export default function ActiveChatPage() {
       }
 
       const result = await response.json();
-      const actualElapsedSecs = Math.max(1, Math.round((Date.now() - reqStart) / 1000));
+      const actualElapsedSecs = Math.max(
+        1,
+        Math.round((Date.now() - reqStart) / 1000)
+      );
       if (result.assistantMessage) {
         if (currentThinkMode || result.assistantMessage.metadata?.think) {
           result.assistantMessage.metadata = {
@@ -737,17 +781,28 @@ export default function ActiveChatPage() {
     const currentFiles = isCustom ? [] : [...uploadedFiles];
     const previewFileSnapshot = activePreviewFile;
 
-    if (!textToSend && currentFiles.length === 0 && !previewFileSnapshot) return;
+    if (!textToSend && currentFiles.length === 0 && !previewFileSnapshot)
+      return;
     if (!user || isTyping) return;
 
     // If a file preview is open, snapshot it to send with this message and auto-close preview
     let previewFileData: any = null;
     if (previewFileSnapshot) {
       previewFileData = {
-        name: previewFileSnapshot.name || previewFileSnapshot.filename || "file",
-        filename: previewFileSnapshot.filename || previewFileSnapshot.name || "file",
-        url: getFileUrl(previewFileSnapshot) || previewFileSnapshot.url || previewFileSnapshot.publicUrl || "",
-        publicUrl: previewFileSnapshot.publicUrl || getFileUrl(previewFileSnapshot) || previewFileSnapshot.url || "",
+        name:
+          previewFileSnapshot.name || previewFileSnapshot.filename || "file",
+        filename:
+          previewFileSnapshot.filename || previewFileSnapshot.name || "file",
+        url:
+          getFileUrl(previewFileSnapshot) ||
+          previewFileSnapshot.url ||
+          previewFileSnapshot.publicUrl ||
+          "",
+        publicUrl:
+          previewFileSnapshot.publicUrl ||
+          getFileUrl(previewFileSnapshot) ||
+          previewFileSnapshot.url ||
+          "",
         type: previewFileSnapshot.type || "",
         size: previewFileSnapshot.size || 0,
       };
@@ -770,7 +825,11 @@ export default function ActiveChatPage() {
       allPendingFiles.push(previewFileData);
     }
 
-    setPendingMessage({ content: messageContent, files: allPendingFiles, isThinkMode: currentThinkMode });
+    setPendingMessage({
+      content: messageContent,
+      files: allPendingFiles,
+      isThinkMode: currentThinkMode,
+    });
     setIsTyping(true);
     isAutoScrollPinnedRef.current = true;
     setShowScrollBottom(false);
@@ -836,7 +895,10 @@ export default function ActiveChatPage() {
       }
 
       const result = await response.json();
-      const actualElapsedSecs = Math.max(1, Math.round((Date.now() - reqStart) / 1000));
+      const actualElapsedSecs = Math.max(
+        1,
+        Math.round((Date.now() - reqStart) / 1000)
+      );
       if (result.assistantMessage) {
         if (currentThinkMode || result.assistantMessage.metadata?.think) {
           result.assistantMessage.metadata = {
@@ -873,11 +935,18 @@ export default function ActiveChatPage() {
     }
   };
 
-  const handleDeleteMessage = async (messageId: string, messageIndex: number) => {
+  const handleDeleteMessage = async (
+    messageId: string,
+    messageIndex: number
+  ) => {
     if (!chatId || isTyping) return;
     try {
       let actualIndex = messages.findIndex((m) => m.id === messageId);
-      if (actualIndex === -1 && typeof messageIndex === "number" && messages[messageIndex]) {
+      if (
+        actualIndex === -1 &&
+        typeof messageIndex === "number" &&
+        messages[messageIndex]
+      ) {
         actualIndex = messageIndex;
       }
       const targetMsg = actualIndex !== -1 ? messages[actualIndex] : null;
@@ -908,7 +977,12 @@ export default function ActiveChatPage() {
         return;
       }
 
-      await chatService.deleteMessage(supabase, trueId, pairedAssistantId, chatId);
+      await chatService.deleteMessage(
+        supabase,
+        trueId,
+        pairedAssistantId,
+        chatId
+      );
       toast.success("Message deleted");
       await loadChats();
     } catch (error: any) {
@@ -992,7 +1066,9 @@ export default function ActiveChatPage() {
             <>
               <div className="flex items-center gap-2.5 pointer-events-auto mt-3 pl-3 sm:pl-0 min-w-0 pr-3">
                 <span className="text-foreground font-semibold text-[14.5px] sm:text-base truncate max-w-[260px] sm:max-w-md select-text">
-                  {activePreviewFile.name || activePreviewFile.filename || "File"}
+                  {activePreviewFile.name ||
+                    activePreviewFile.filename ||
+                    "File"}
                 </span>
               </div>
 
@@ -1036,14 +1112,10 @@ export default function ActiveChatPage() {
                         onMouseEnter={() => setIsSidebarBtnHovered(true)}
                         onMouseLeave={() => setIsSidebarBtnHovered(false)}
                         onBlur={() => setIsSidebarBtnHovered(false)}
-                        className="xl:hidden w-9 h-9 rounded-xl bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/80 dark:border-none dark:border-neutral-700/80 text-neutral-700 dark:text-neutral-200 hover:text-foreground dark:hover:text-foreground flex items-center justify-center transition-colors cursor-pointer outline-none focus:outline-none"
+                        className="xl:hidden w-9 h-9 rounded-xl bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/80 dark:border-none dark:border-neutral-700/80 text-muted-foreground hover:text-foreground flex items-center justify-center transition-colors cursor-pointer outline-none focus:outline-none"
                         aria-label="Open sidebar"
                       >
-                        {isSidebarBtnHovered ? (
-                          <PanelRight className="w-4 h-4 text-foreground pointer-events-none" />
-                        ) : (
-                          <CloseAIIcon size={24} className="pointer-events-none" />
-                        )}
+                        <PanelRight className="w-4 h-4" />
                       </button>
                     </TooltipTrigger>
                     <TooltipContent
@@ -1069,10 +1141,13 @@ export default function ActiveChatPage() {
                         try {
                           const shareUrl = `${window.location.origin}/s/${chatId}`;
                           await navigator.clipboard.writeText(shareUrl);
-                          toast.success("Public link copied to your clipboard", {
-                            description:
-                              "Anyone with this link can see this conversation",
-                          });
+                          toast.success(
+                            "Public link copied to your clipboard",
+                            {
+                              description:
+                                "Anyone with this link can see this conversation",
+                            }
+                          );
                         } catch (e) {
                           toast.error("Failed to copy link");
                         } finally {
@@ -1089,7 +1164,11 @@ export default function ActiveChatPage() {
                       <span className="inline hidden sm:block">Share</span>
                     </button>
                   </TooltipTrigger>
-                  <TooltipContent side="bottom" sideOffset={6} className="text-md">
+                  <TooltipContent
+                    side="bottom"
+                    sideOffset={6}
+                    className="text-md"
+                  >
                     Share conversation
                   </TooltipContent>
                 </Tooltip>
@@ -1147,7 +1226,9 @@ export default function ActiveChatPage() {
                           !isStarred
                         );
                         loadChats();
-                        toast.success(isStarred ? "Chat unpinned" : "Chat pinned");
+                        toast.success(
+                          isStarred ? "Chat unpinned" : "Chat pinned"
+                        );
                       }}
                       className="group flex items-center gap-2.5 px-3 py-2 rounded-xl text-[15px] font-normal cursor-pointer text-foreground hover:bg-secondary dark:hover:bg-[#2f2f2f] transition-colors"
                     >
@@ -1205,20 +1286,23 @@ export default function ActiveChatPage() {
           className="flex-1 w-full overflow-x-hidden relative flex flex-col pt-14 overflow-y-scroll overscroll-y-contain [scrollbar-gutter:stable]"
         >
           <div className="flex-1 flex flex-col min-h-full">
-            {/* Messages Container or Loader */}
-            {activePreviewFile ? (
+            {/* File Preview In-Page Viewer */}
+            {activePreviewFile && (
               <div className="flex-1 flex flex-col min-h-0 pb-4">
                 <FilePreviewViewer
                   file={activePreviewFile}
                   onClose={handleClosePreview}
                 />
               </div>
-            ) : isChatLoading && !pendingMessage && messages.length === 0 ? (
+            )}
+
+            {/* Messages Container or Loader */}
+            {isChatLoading && !pendingMessage && messages.length === 0 && !activePreviewFile ? (
               <div className="flex-1 w-full h-full flex flex-col items-center justify-center pb-16 text-muted-foreground">
                 <Loader className="w-6 h-6 animate-spin text-muted-foreground" />
               </div>
             ) : (
-              <div className="flex-1 pb-4 sm:pb-6">
+              <div className={cn("flex-1 pb-4 sm:pb-6", activePreviewFile && "hidden")}>
                 <MessageList
                   messages={messages}
                   user={user}
@@ -1230,13 +1314,6 @@ export default function ActiveChatPage() {
                   onDeleteMessage={handleDeleteMessage}
                 />
               </div>
-            )}
-            {/* Right-Edge TOC Navigator */}
-            {!isChatLoading && !activePreviewFile && (
-              <TocNavigator
-                messages={messages}
-                containerRef={scrollContainerRef}
-              />
             )}
 
             {/* Floating Input Dock inside scroll container for 100% scrollbar-aware width alignment */}
@@ -1254,7 +1331,11 @@ export default function ActiveChatPage() {
                   onFilesChange={setUploadedFiles}
                   isTyping={isTyping}
                   isUploading={isUploading}
-                  placeholder={activePreviewFile ? "Ask anything about this" : "Ask anything"}
+                  placeholder={
+                    activePreviewFile
+                      ? "Ask anything about this"
+                      : "Ask anything"
+                  }
                   showDisclaimer={true}
                   selectedModel={selectedModel}
                   onModelChange={setSelectedModel}
@@ -1299,13 +1380,22 @@ export default function ActiveChatPage() {
             </div>
           </div>
         </div>
+
+        {/* Right-Edge TOC Navigator — placed relative to Main Chat Area so it glides beside scrollbar when drawer opens */}
+        {!isChatLoading && !activePreviewFile && (
+          <TocNavigator messages={messages} containerRef={scrollContainerRef} />
+        )}
       </div>
 
       <DeleteModal
         open={showDeleteModal}
         onOpenChange={setShowDeleteModal}
         itemTitle={currentChatTitle || "Chat"}
-        promptText={messages.find((m) => m.role === "user")?.content || currentChatTitle || "Chat"}
+        promptText={
+          messages.find((m) => m.role === "user")?.content ||
+          currentChatTitle ||
+          "Chat"
+        }
         files={messages.find((m) => m.role === "user")?.files}
         onConfirm={() => {
           setShowDeleteModal(false);
@@ -1324,8 +1414,7 @@ export default function ActiveChatPage() {
         placement="right"
         backdrop="blur"
         onFileSelect={(file) => {
-          setIsFilesDrawerOpen(false);
-          handleOpenPreview(file);
+          handleOpenPreview(file, true);
         }}
       />
     </div>

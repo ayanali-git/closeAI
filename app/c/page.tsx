@@ -95,7 +95,11 @@ function NewChatContent() {
     if (!user) {
       // Don't redirect to login during sign-out — signOut handler redirects to home
       if (isSigningOut) return;
-      const pending = queryPrompt || (typeof window !== "undefined" ? sessionStorage.getItem("pending_prompt") : null);
+      const pending =
+        queryPrompt ||
+        (typeof window !== "undefined"
+          ? sessionStorage.getItem("pending_prompt")
+          : null);
       if (pending) {
         if (typeof window !== "undefined") {
           sessionStorage.setItem("pending_prompt", pending);
@@ -114,7 +118,11 @@ function NewChatContent() {
         ? sessionStorage.getItem("pending_prompt")
         : null);
 
-    if (promptToSend && promptToSend.trim() && !autoCreateTriggeredRef.current) {
+    if (
+      promptToSend &&
+      promptToSend.trim() &&
+      !autoCreateTriggeredRef.current
+    ) {
       autoCreateTriggeredRef.current = true;
       if (typeof window !== "undefined") {
         sessionStorage.removeItem("pending_prompt");
@@ -213,7 +221,7 @@ function NewChatContent() {
           setMessage("");
           setUploadedFiles([]);
           setNewChatKey((k) => k + 1);
-          if (typeof window !== 'undefined' && window.innerWidth < 1025) {
+          if (typeof window !== "undefined" && window.innerWidth < 1025) {
             setSidebarOpen(false);
           }
         }}
@@ -255,17 +263,18 @@ function NewChatContent() {
                     onMouseEnter={() => setIsSidebarBtnHovered(true)}
                     onMouseLeave={() => setIsSidebarBtnHovered(false)}
                     onBlur={() => setIsSidebarBtnHovered(false)}
-                    className="xl:hidden w-9 h-9 rounded-xl bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/50 dark:border-none text-neutral-700 dark:text-neutral-200 hover:text-foreground dark:hover:text-foreground flex items-center justify-center transition-colors cursor-pointer outline-none focus:outline-none"
+                    className="xl:hidden w-9 h-9 rounded-xl bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/50 dark:border-none text-muted-foreground hover:text-foreground flex items-center justify-center transition-colors cursor-pointer outline-none focus:outline-none"
                     aria-label="Open sidebar"
                   >
-                    {isSidebarBtnHovered ? (
-                      <PanelRight className="w-4 h-4 text-foreground pointer-events-none" />
-                    ) : (
-                      <CloseAIIcon size={24} className="pointer-events-none" />
-                    )}
+                    <PanelRight className="w-4 h-4" />
                   </button>
                 </TooltipTrigger>
-                <TooltipContent side="bottom" align="start" sideOffset={6} className="text-md">
+                <TooltipContent
+                  side="bottom"
+                  align="start"
+                  sideOffset={6}
+                  className="text-md"
+                >
                   Open sidebar
                 </TooltipContent>
               </Tooltip>
@@ -275,7 +284,8 @@ function NewChatContent() {
 
         {/* Content Stream (Welcome Zero State) */}
         <div className="flex-1 flex flex-col justify-center overflow-y-auto px-2 sm:px-4 pb-[env(safe-area-inset-bottom,0px)] no-overscroll">
-          {isAutoCreating || (queryPrompt && !autoCreateTriggeredRef.current) ? (
+          {isAutoCreating ||
+          (queryPrompt && !autoCreateTriggeredRef.current) ? (
             <div className="flex-1 w-full h-full flex flex-col items-center justify-center space-y-3 pb-12 text-muted-foreground">
               <Loader className="w-6 h-6 animate-spin text-muted-foreground" />
             </div>
@@ -311,33 +321,12 @@ function NewChatContent() {
 }
 
 function NewChatFallback() {
-  const { sidebarOpen } = useSidebarContext();
   return (
     <div className="flex h-full w-full bg-background text-foreground overflow-hidden">
-      {sidebarOpen ? (
-        <div className="hidden xl:flex w-[260px] h-full bg-sidebar border-r border-border/80 p-3 flex-col justify-between shrink-0">
-          <div className="space-y-4 py-2">
-            <div className="h-4 w-20 bg-muted-foreground/20 rounded animate-pulse ml-2" />
-            <div className="space-y-2">
-              <div className="h-8 w-full bg-secondary/80 dark:bg-neutral-800/60 rounded-xl animate-pulse" />
-              <div className="h-8 w-[85%] bg-secondary/70 dark:bg-neutral-800/50 rounded-xl animate-pulse" />
-              <div className="h-8 w-[92%] bg-secondary/70 dark:bg-neutral-800/50 rounded-xl animate-pulse" />
-            </div>
-          </div>
-          <div className="w-full flex items-center gap-2.5 py-2 pl-[2px] pr-2 border-t border-border/80">
-            <div className="w-9 h-9 rounded-full bg-secondary/80 dark:bg-neutral-800/80 animate-pulse shrink-0" />
-            <div className="flex-1 space-y-1.5">
-              <div className="h-3.5 w-24 bg-secondary/80 dark:bg-neutral-800/80 rounded animate-pulse" />
-              <div className="h-2.5 w-12 bg-secondary/60 dark:bg-neutral-800/60 rounded animate-pulse" />
-            </div>
-          </div>
-        </div>
-      ) : (
-        <div className="hidden xl:flex w-[56px] h-full bg-sidebar border-r border-border flex-col items-center justify-between p-2 shrink-0">
-          <div className="w-9 h-9 rounded-xl bg-secondary/80 dark:bg-neutral-800/60 animate-pulse mt-2" />
-          <div className="w-9 h-9 rounded-full bg-secondary/80 dark:bg-neutral-800/80 animate-pulse mb-2" />
-        </div>
-      )}
+      <div className="hidden xl:flex w-[60px] h-full bg-sidebar border-r border-border flex-col items-center justify-between p-2 shrink-0">
+        <div className="w-9 h-9 rounded-xl bg-secondary/80 dark:bg-neutral-800/60 animate-pulse mt-2" />
+        <div className="w-9 h-9 rounded-full bg-secondary/80 dark:bg-neutral-800/80 animate-pulse mb-2" />
+      </div>
       <div className="flex-1 flex flex-col items-center justify-center min-w-0">
         <Loader className="w-6 h-6 animate-spin text-muted-foreground" />
       </div>

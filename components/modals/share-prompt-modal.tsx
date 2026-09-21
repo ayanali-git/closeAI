@@ -183,7 +183,7 @@ export function SharePromptModal({
             <button
               type="button"
               onClick={() => onOpenChange(false)}
-              className="p-2.5 rounded-sm flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors cursor-pointer shrink-0"
+              className="p-2 rounded-sm flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors cursor-pointer shrink-0"
               aria-label="Close"
             >
               <XIcon className="w-5 h-5" weight="bold" />

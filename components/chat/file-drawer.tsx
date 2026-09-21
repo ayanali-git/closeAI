@@ -226,8 +226,8 @@ function DrawerBackdrop({
   if (!mounted) return null;
 
   const backdropVariants: Record<DrawerBackdropVariant, string> = {
-    opaque: "bg-background/50",
-    blur: "bg-background/50 backdrop-blur-xs",
+    opaque: "bg-sidebar/0",
+    blur: "bg-sidebar/0",
     transparent: "bg-transparent pointer-events-none [&>*]:pointer-events-auto",
   };
 
@@ -289,28 +289,28 @@ function DrawerContent({
   > = {
     right: {
       containerClasses:
-        "fixed inset-y-0 right-0 h-full w-full sm:w-[400px] max-w-full border-l border-border/80",
+        "fixed inset-y-0 right-0 h-full w-full sm:w-[400px] max-w-full",
       initial: { x: "100%" },
       animate: { x: 0 },
       exit: { x: "100%" },
     },
     left: {
       containerClasses:
-        "fixed inset-y-0 left-0 h-full w-full sm:w-[400px] max-w-full border-r border-border/80",
+        "fixed inset-y-0 left-0 h-full w-full sm:w-[400px] max-w-full",
       initial: { x: "-100%" },
       animate: { x: 0 },
       exit: { x: "-100%" },
     },
     top: {
       containerClasses:
-        "fixed inset-x-0 top-0 max-h-[85vh] w-full border-b border-border/80",
+        "fixed inset-x-0 top-0 max-h-[85vh] w-full",
       initial: { y: "-100%" },
       animate: { y: 0 },
       exit: { y: "-100%" },
     },
     bottom: {
       containerClasses:
-        "fixed inset-x-0 bottom-0 max-h-[85vh] w-full border-t border-border/80",
+        "fixed inset-x-0 bottom-0 max-h-[85vh] w-full",
       initial: { y: "100%" },
       animate: { y: 0 },
       exit: { y: "100%" },
@@ -354,7 +354,7 @@ const DrawerDialog = forwardRef<HTMLDivElement, DrawerDialogProps>(
         aria-modal="true"
         onClick={(e) => e.stopPropagation()}
         className={cn(
-          "drawer__dialog flex flex-col h-full w-full overflow-hidden select-none bg-background",
+          "drawer__dialog flex flex-col h-full w-full overflow-hidden select-none bg-sidebar",
           className
         )}
         {...props}
@@ -410,7 +410,7 @@ function DrawerCloseTrigger({
       }}
       aria-label="Close drawer"
       className={cn(
-        "drawer__close-trigger p-2.5 rounded-sm text-muted-foreground hover:text-foreground hover:bg-secondary dark:hover:bg-[#2f2f2f] transition-colors cursor-pointer outline-none focus:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+        "drawer__close-trigger p-2 rounded-sm text-muted-foreground hover:text-foreground hover:bg-secondary dark:hover:bg-[#2f2f2f] transition-colors cursor-pointer outline-none focus:outline-none focus-visible:ring-2 focus-visible:ring-ring",
         className
       )}
       {...props}
@@ -559,7 +559,7 @@ function FileItemRow({
       title={`Preview ${fileName}`}
     >
       {/* File Icon Squircle */}
-      <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 bg-secondary border border-border/80 dark:border-none overflow-hidden">
+      <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 border border-border/80 dark:border-none overflow-hidden">
         {isImg && fileUrl ? (
           <img
             src={fileUrl}
@@ -576,7 +576,7 @@ function FileItemRow({
         <span className="text-[14.5px] font-medium text-foreground truncate leading-snug group-hover:text-foreground">
           {fileName}
         </span>
-        <span className="text-[12.5px] text-muted-foreground truncate leading-tight">
+        <span className="text-[12.5px] text-muted-foreground truncate uppercase leading-tight">
           {ext}
         </span>
       </div>
@@ -739,8 +739,7 @@ export function FilePreviewViewer({
       <div className="flex-1 w-full overflow-y-auto relative flex flex-col items-center justify-center p-3 sm:p-6 min-h-[350px]">
         {isLoading ? (
           <div className="flex flex-col items-center justify-center gap-3 text-muted-foreground py-16">
-            <Loader className="w-8 h-8 animate-spin text-foreground/70" />
-            <span className="text-xs sm:text-sm font-medium">Loading file preview...</span>
+            <Loader className="w-6 h-6 animate-spin text-muted-foreground" />
           </div>
         ) : (
           <>
@@ -778,7 +777,7 @@ export function FilePreviewViewer({
                   ) : (
                     <div className="flex flex-col items-center justify-center py-10 gap-2 text-muted-foreground">
                       <FileText className="w-8 h-8 opacity-40" />
-                      <span>Preview not available for this text document.</span>
+                      <span>Preview not available for this document.</span>
                     </div>
                   )}
                 </div>
@@ -840,6 +839,17 @@ export function FilesDrawer({
   const isControlled = controlledIsOpen !== undefined;
   const isOpen = isControlled ? controlledIsOpen : internalIsOpen;
 
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkScreen = () => {
+      setIsMobile(window.innerWidth < 1025);
+    };
+    checkScreen();
+    window.addEventListener("resize", checkScreen);
+    return () => window.removeEventListener("resize", checkScreen);
+  }, []);
+
   const handleOpenChange = (open: boolean) => {
     if (!isControlled) {
       setInternalIsOpen(open);
@@ -854,67 +864,133 @@ export function FilesDrawer({
   };
 
   return (
-    <Drawer
-      isOpen={isOpen}
-      onOpenChange={handleOpenChange}
-      placement={placement}
-      backdrop={backdrop}
-      isDismissable={isDismissable}
-      isKeyboardDismissDisabled={isKeyboardDismissDisabled}
-    >
-      {trigger}
-
-      <Drawer.Backdrop
-        variant={backdrop}
-        isDismissable={isDismissable}
-        isKeyboardDismissDisabled={isKeyboardDismissDisabled}
-      >
-        <Drawer.Content placement={placement} className={className}>
-          <Drawer.Dialog>
-            {(placement === "bottom" || placement === "top") && (
-              <Drawer.Handle />
-            )}
-
-            {/* Header */}
-            <Drawer.Header>
-              <div className="flex items-center gap-2 min-w-0">
-                <Drawer.Heading>{title}</Drawer.Heading>
+    <>
+      {/* Desktop In-Flow Side Panel (>= 1025px) — Matches Image 3 with visible scrollbar, header buttons, and TOC! */}
+      {!isMobile && (
+        <AnimatePresence>
+          {isOpen && (
+            <motion.div
+              key="desktop-files-panel"
+              initial={{ width: 0 }}
+              animate={{ width: 400 }}
+              exit={{ width: 0, borderLeftColor: "transparent" }}
+              transition={{ duration: 0.25, ease: [0.2, 0, 0, 1] }}
+              className="h-full flex flex-col shrink-0 border-l border-border/80 bg-sidebar select-none overflow-hidden z-20"
+            >
+            <div className="w-[400px] h-full flex flex-col shrink-0">
+              {/* Header */}
+              <div className="px-4 py-2.5 border-b border-border/80 flex items-center justify-between shrink-0">
+                <h2 className="text-base font-semibold text-foreground tracking-tight">
+                  {title}
+                </h2>
+                <button
+                  type="button"
+                  onClick={() => handleOpenChange(false)}
+                  className="p-2 rounded-sm flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors cursor-pointer outline-none focus:outline-none"
+                  aria-label="Close"
+                >
+                  <X className="w-5 h-5" />
+                </button>
               </div>
 
-              <Drawer.CloseTrigger />
-            </Drawer.Header>
-
-            {/* Optional Description */}
-            {description && (
-              <div className="px-5 pt-2 text-xs text-muted-foreground">
-                {description}
-              </div>
-            )}
-
-            {/* Body: Vertically Scrollable List of Files */}
-            <Drawer.Body>
-              {files.length === 0 ? (
-                <div className="h-full min-h-[260px] flex flex-col items-center justify-center text-center p-6 select-none">
-                  <p className="text-sm sm:text-base text-muted-foreground">
-                    No files referenced yet
-                  </p>
-                </div>
-              ) : (
-                <div className="space-y-1">
-                  {files.map((file, idx) => (
-                    <FileItemRow
-                      key={file.id || file.url || `${file.name}-${idx}`}
-                      file={file}
-                      onSelect={() => handleFileClick(file)}
-                    />
-                  ))}
+              {/* Optional Description */}
+              {description && (
+                <div className="px-4 pt-2 text-xs text-muted-foreground">
+                  {description}
                 </div>
               )}
-            </Drawer.Body>
-          </Drawer.Dialog>
-        </Drawer.Content>
-      </Drawer.Backdrop>
-    </Drawer>
+
+              {/* Body: Vertically Scrollable List of Files */}
+              <div className="flex-1 overflow-y-auto p-2 sidebar-scroll">
+                {files.length === 0 ? (
+                  <div className="h-full min-h-[260px] flex flex-col items-center justify-center text-center p-6 select-none">
+                    <p className="text-sm sm:text-base text-muted-foreground">
+                      No files referenced
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-1">
+                    {files.map((file, idx) => (
+                      <FileItemRow
+                        key={file.id || file.url || `${file.name}-${idx}`}
+                        file={file}
+                        onSelect={() => handleFileClick(file)}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+      )}
+
+      {/* Mobile Portal Drawer (< 1025px) */}
+      {isMobile && (
+        <Drawer
+          isOpen={isOpen}
+          onOpenChange={handleOpenChange}
+          placement={placement}
+          backdrop={backdrop}
+          isDismissable={isDismissable}
+          isKeyboardDismissDisabled={isKeyboardDismissDisabled}
+        >
+          {trigger}
+
+          <Drawer.Backdrop
+            variant={backdrop}
+            isDismissable={isDismissable}
+            isKeyboardDismissDisabled={isKeyboardDismissDisabled}
+          >
+            <Drawer.Content placement={placement} className={className}>
+              <Drawer.Dialog>
+                {(placement === "bottom" || placement === "top") && (
+                  <Drawer.Handle />
+                )}
+
+                {/* Header */}
+                <Drawer.Header>
+                  <div className="flex items-center gap-2 min-w-0">
+                    <Drawer.Heading>{title}</Drawer.Heading>
+                  </div>
+
+                  <Drawer.CloseTrigger />
+                </Drawer.Header>
+
+                {/* Optional Description */}
+                {description && (
+                  <div className="px-5 pt-2 text-xs text-muted-foreground">
+                    {description}
+                  </div>
+                )}
+
+                {/* Body: Vertically Scrollable List of Files */}
+                <Drawer.Body>
+                  {files.length === 0 ? (
+                    <div className="h-full min-h-[260px] flex flex-col items-center justify-center text-center p-6 select-none">
+                      <p className="text-sm sm:text-base text-muted-foreground">
+                        No files referenced
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="space-y-1">
+                      {files.map((file, idx) => (
+                        <FileItemRow
+                          key={file.id || file.url || `${file.name}-${idx}`}
+                          file={file}
+                          onSelect={() => handleFileClick(file)}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </Drawer.Body>
+              </Drawer.Dialog>
+            </Drawer.Content>
+          </Drawer.Backdrop>
+        </Drawer>
+      )}
+    </>
   );
 }
 

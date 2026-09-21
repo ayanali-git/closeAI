@@ -52,7 +52,7 @@ export function DeleteModal({
 
           <div
             className={cn(
-              "relative z-0 max-h-[100px] sm:max-h-[200px] min-h-[100px] sm:min-h-[200px] flex flex-col items-end justify-start gap-2.5 px-5 sm:px-6 pt-5 sm:pt-6 pb-12 sm:pb-14 overflow-hidden select-text",
+              "relative z-0 max-h-[380px] sm:max-h-[420px] min-h-[300px] sm:min-h-[330px] flex flex-col items-end justify-start gap-2.5 px-5 sm:px-6 pt-5 sm:pt-6 pb-12 sm:pb-14 overflow-hidden select-text",
             )}
           >
             {/* Files Preview */}

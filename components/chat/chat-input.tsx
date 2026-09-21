@@ -59,6 +59,7 @@ interface ChatInputProps {
   onThinkModeChange?: (enabled: boolean) => void;
   placeholder?: string;
   disableAttach?: boolean;
+  autoFocus?: boolean;
 }
 
 /** preview card with thumbnail or code icon */
@@ -97,7 +98,7 @@ function FilePreviewCard({
         title={`Preview ${file.name}`}
       >
         <ImagePreview src={imageUrl || ""} alt={file.name}>
-          <div className="w-14 h-14 rounded-2xl overflow-hidden bg-neutral-100 dark:bg-[#262626] flex items-center justify-center shrink-0 hover:opacity-90 transition-all cursor-pointer">
+          <div className="w-14 h-14 rounded-xl overflow-hidden bg-neutral-100 dark:bg-[#262626] flex items-center justify-center shrink-0 hover:opacity-90 transition-all cursor-pointer">
             {imageUrl ? (
               <img
                 src={imageUrl}
@@ -105,7 +106,7 @@ function FilePreviewCard({
                 className="w-full h-full object-cover"
               />
             ) : (
-              <Icon className="w-5 h-5 text-neutral-700 dark:text-neutral-300" />
+              <Icon className="w-5 h-5 text-muted-foreground hover:text-foreground" />
             )}
           </div>
         </ImagePreview>
@@ -116,7 +117,7 @@ function FilePreviewCard({
             e.stopPropagation();
             onRemove();
           }}
-          className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-white/90 dark:bg-neutral-800/90 backdrop-blur-sm border border-neutral-300/90 dark:border-white/20 text-neutral-600 dark:text-neutral-300 hover:text-neutral-900 dark:hover:text-white hover:bg-white dark:hover:bg-neutral-700 flex items-center justify-center cursor-pointer transition-transform z-10"
+          className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-neutral-300/90 dark:border-white/20 text-neutral-600 dark:text-neutral-300 hover:text-neutral-900 dark:hover:text-white hover:bg-white dark:hover:bg-neutral-700 flex items-center justify-center cursor-pointer transition-transform z-10"
           aria-label="Remove image"
         >
           <X className="w-2.5 h-2.5 stroke-[2.5]" />
@@ -129,17 +130,17 @@ function FilePreviewCard({
   return (
     <div
       onClick={onPreview}
-      className="relative group flex items-center gap-2.5 bg-neutral-100 dark:bg-[#262626] hover:bg-neutral-200/80 dark:hover:bg-[#303030] border border-neutral-200/90 dark:border-white/10 rounded-2xl p-2 pr-4 text-foreground min-w-0 cursor-pointer select-none transition-colors"
+      className="relative group flex items-center gap-2.5 bg-white/50 dark:bg-[#212121]/50 hover:bg-white dark:hover:bg-neutral-700 border border-border/80 dark:border-none rounded-2xl p-2.5 text-foreground min-w-0 cursor-pointer select-none transition-colors"
       title={`Preview ${file.name}`}
     >
       {/* File type icon */}
-      <div className="w-10 h-10 rounded-xl overflow-hidden bg-white dark:bg-neutral-800 border border-neutral-200/80 dark:border-white/5 flex items-center justify-center shrink-0">
-        <Icon className="w-5 h-5 text-neutral-700 dark:text-neutral-300" weight="fill" />
+      <div className="w-10 h-10 rounded-xl overflow-hidden border border-border/80 dark:border-none flex items-center justify-center shrink-0">
+        <Icon className="w-5 h-5 text-muted-foreground group-hover:text-foreground transition-colors" weight="fill" />
       </div>
 
       {/* File info */}
       <div className="flex flex-col min-w-0 pr-0.5 justify-center">
-        <span className="text-[14.5px] font-semibold text-neutral-900 dark:text-neutral-100 truncate max-w-[140px] sm:max-w-[180px] leading-tight">
+        <span className="text-[14.5px] font-normal text-foreground truncate max-w-[140px] sm:max-w-[180px] leading-tight">
           {file.name}
         </span>
       </div>
@@ -151,7 +152,7 @@ function FilePreviewCard({
           e.stopPropagation();
           onRemove();
         }}
-        className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-white/90 dark:bg-neutral-800/90 backdrop-blur-sm border border-neutral-300/90 dark:border-white/20 text-neutral-600 dark:text-neutral-300 hover:text-neutral-900 dark:hover:text-white hover:bg-white dark:hover:bg-neutral-700 flex items-center justify-center cursor-pointer transition-transform z-10"
+        className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/80 dark:border-none text-muted-foreground hover:text-foreground hover:bg-neutral-200/80 dark:hover:bg-[#303030] flex items-center justify-center cursor-pointer transition-transform z-10"
         aria-label="Remove file"
       >
         <X className="w-2.5 h-2.5 stroke-[2.5]" />
@@ -181,6 +182,7 @@ export const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(function Cha
     onThinkModeChange,
     placeholder = "Ask anything",
     disableAttach = false,
+    autoFocus = true,
   },
   ref
 ) {
@@ -195,6 +197,7 @@ export const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(function Cha
   const [menuSideOffset, setMenuSideOffset] = useState(14);
   const [menuAlignOffset, setMenuAlignOffset] = useState(0);
   const [menuWidth, setMenuWidth] = useState<number | undefined>(undefined);
+  const [tooltipSideOffset, setTooltipSideOffset] = useState(8);
   const recognitionRef = useRef<any>(null);
   const cursorPositionRef = useRef<number | null>(null);
   const [currentModel, setCurrentModel] = useState(selectedModel);
@@ -287,15 +290,28 @@ export const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(function Cha
 
   // Auto-focus textarea on mount / page reload (matching s/[id] behavior)
   useEffect(() => {
-    const timer = setTimeout(() => {
+    if (!autoFocus) return;
+    const focusTextarea = () => {
       if (textareaRef.current) {
         textareaRef.current.focus();
         const len = textareaRef.current.value.length;
-        textareaRef.current.setSelectionRange(len, len);
+        try {
+          textareaRef.current.setSelectionRange(len, len);
+        } catch (e) {}
       }
-    }, 50);
-    return () => clearTimeout(timer);
-  }, []);
+    };
+
+    focusTextarea();
+    const rafId = requestAnimationFrame(focusTextarea);
+    const timer = setTimeout(focusTextarea, 50);
+    const fallbackTimer = setTimeout(focusTextarea, 150);
+
+    return () => {
+      cancelAnimationFrame(rafId);
+      clearTimeout(timer);
+      clearTimeout(fallbackTimer);
+    };
+  }, [autoFocus]);
 
   // Keep focus and restore exact cursor position when layout expands or collapses
   useEffect(() => {
@@ -317,21 +333,30 @@ export const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(function Cha
     return () => clearTimeout(timer);
   }, [isExpandedLayout]);
 
-  // Calculate dynamic menu sideOffset & alignOffset so it is ALWAYS positioned above the chat input pill
+  // Calculate dynamic menu & tooltip sideOffsets so they are ALWAYS positioned above the chat input pill
   const updateMenuPosition = useCallback(() => {
-    if (plusButtonRef.current && pillRef.current) {
-      const buttonRect = plusButtonRef.current.getBoundingClientRect();
+    if (pillRef.current) {
       const pillRect = pillRef.current.getBoundingClientRect();
       const isMobile = window.innerWidth < 1025;
 
-      // Distance from top of the + button to the top of the chat input pill:
-      const distToPillTop = Math.max(0, buttonRect.top - pillRect.top);
-      // Place the dropdown 10px above the top border of the chat input pill:
-      setMenuSideOffset(Math.round(distToPillTop + 10));
+      const refButton = plusButtonRef.current;
+      if (refButton) {
+        const buttonRect = refButton.getBoundingClientRect();
+        // Distance from top of the button to the top of the chat input pill:
+        const distToPillTop = Math.max(0, buttonRect.top - pillRect.top);
+        // Place the dropdown 10px above the top border of the chat input pill:
+        setMenuSideOffset(Math.round(distToPillTop + 10));
+        // Place button tooltips 8px above the top border of the chat input pill:
+        setTooltipSideOffset(Math.round(distToPillTop + 8));
 
-      // Always align cleanly with the left edge of the chat input pill:
-      const distToPillLeft = Math.max(0, buttonRect.left - pillRect.left);
-      setMenuAlignOffset(-Math.round(distToPillLeft));
+        // Always align cleanly with the left edge of the chat input pill:
+        const distToPillLeft = Math.max(0, buttonRect.left - pillRect.left);
+        setMenuAlignOffset(-Math.round(distToPillLeft));
+      } else {
+        const estimatedDist = Math.max(0, pillRect.height - 44);
+        setMenuSideOffset(Math.round(estimatedDist + 10));
+        setTooltipSideOffset(Math.round(estimatedDist + 8));
+      }
 
       if (isMobile) {
         // On small screen devices, match the exact width of the input pill so left & right edges align
@@ -545,6 +570,7 @@ export const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(function Cha
               ref={plusButtonRef}
               type="button"
               disabled={isTyping || isUploading}
+              onMouseEnter={updateMenuPosition}
               onKeyDown={handlePillButtonKeyDown}
               className="w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary dark:hover:bg-[#2f2f2f] transition-colors shrink-0 cursor-pointer outline-none focus:outline-none focus-visible:ring-2 focus-visible:ring-foreground/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
               aria-label="Add files and more"
@@ -553,7 +579,7 @@ export const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(function Cha
             </button>
           </DropdownMenuTrigger>
         </TooltipTrigger>
-        <TooltipContent className="text-md">
+        <TooltipContent side="top" sideOffset={tooltipSideOffset} className="text-md">
           Attach and more
         </TooltipContent>
       </Tooltip>
@@ -604,6 +630,7 @@ export const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(function Cha
               (e.currentTarget as HTMLElement)?.blur();
               onThinkModeChange?.(!thinkMode);
             }}
+            onMouseEnter={updateMenuPosition}
             onKeyDown={handlePillButtonKeyDown}
             className={cn(
               "h-9 sm:h-10 px-2.5 sm:px-5 group/think-btn rounded-full flex items-center justify-center gap-1.5 text-[13px] sm:text-[14px] font-medium select-none transition-all shrink-0 cursor-pointer outline-none focus:outline-none focus-visible:ring-2 focus-visible:ring-foreground/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
@@ -624,7 +651,7 @@ export const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(function Cha
             <span className="hidden sm:inline">Think</span>
           </button>
         </TooltipTrigger>
-        <TooltipContent className="text-md">
+        <TooltipContent side="top" sideOffset={tooltipSideOffset} className="text-md">
           Think mode
         </TooltipContent>
       </Tooltip>
@@ -638,6 +665,7 @@ export const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(function Cha
               (e.currentTarget as HTMLElement)?.blur();
               toggleDictation();
             }}
+            onMouseEnter={updateMenuPosition}
             onKeyDown={handlePillButtonKeyDown}
             className={cn(
               "w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-all cursor-pointer shrink-0 outline-none focus:outline-none focus-visible:ring-2 focus-visible:ring-foreground/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
@@ -654,7 +682,7 @@ export const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(function Cha
             )}
           </button>
         </TooltipTrigger>
-        <TooltipContent className="text-md">
+        <TooltipContent side="top" sideOffset={tooltipSideOffset} className="text-md">
           {isListening ? "Stop dictation" : "Start dictation"}
         </TooltipContent>
       </Tooltip>
@@ -673,6 +701,7 @@ export const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(function Cha
                 onSend();
               }
             }}
+            onMouseEnter={updateMenuPosition}
             onKeyDown={handlePillButtonKeyDown}
             disabled={(!hasContent && !isTyping) || isUploading}
             className={cn(
@@ -696,7 +725,7 @@ export const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(function Cha
             )}
           </button>
         </TooltipTrigger>
-        <TooltipContent className="text-md">
+        <TooltipContent side="top" sideOffset={tooltipSideOffset} className="text-md">
           {isTyping ? "Stop generating" : isUploading ? "Uploading files..." : "Send message"}
         </TooltipContent>
       </Tooltip>
@@ -713,7 +742,19 @@ export const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(function Cha
     >
       {children}
       <div
-        {...getRootProps()}
+        {...getRootProps({
+          onClick: (e: React.MouseEvent) => {
+            const target = e.target as HTMLElement;
+            if (
+              !target.closest("button") &&
+              !target.closest("a") &&
+              !target.closest("[role='menu']") &&
+              !target.closest("[data-radix-popper-content-wrapper]")
+            ) {
+              textareaRef.current?.focus();
+            }
+          },
+        })}
         ref={pillRef}
         className={cn(
           "relative bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/80 dark:border-none transition-all duration-200",
@@ -762,6 +803,7 @@ export const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(function Cha
             <div className="w-full px-1.5 sm:px-2 pt-0.5 pb-1 relative">
               <textarea
                 ref={textareaRef}
+                autoFocus={autoFocus}
                 value={message}
                 onChange={(e) => {
                   cursorPositionRef.current = e.target.selectionEnd;
@@ -793,7 +835,7 @@ export const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(function Cha
                 rows={1}
                 disabled={isTyping || isUploading}
                 className={cn(
-                  "w-full min-w-0 bg-transparent border-0 p-0 text-[16px] sm:text-[16.5px] placeholder:text-muted-foreground transition-colors focus:outline-none focus:ring-0 resize-none leading-relaxed",
+                  "w-full min-w-0 bg-transparent border-0 p-0 text-[16px] sm:text-[16.5px] placeholder:text-muted-foreground transition-colors focus:outline-none focus:ring-0 resize-none leading-relaxed select-text",
                   isFullyExpanded ? "min-h-[280px]" : "min-h-[44px]",
                   isBigContent && "pr-14 sm:pr-16"
                 )}
@@ -847,9 +889,13 @@ export const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(function Cha
               {renderPlusButton()}
             </div>
 
-            <div className="flex-1 min-w-0 flex items-center">
+            <div
+              className="flex-1 min-w-0 flex items-center cursor-text"
+              onClick={() => textareaRef.current?.focus()}
+            >
               <textarea
                 ref={textareaRef}
+                autoFocus={autoFocus}
                 value={message}
                 onChange={(e) => {
                   cursorPositionRef.current = e.target.selectionEnd;
@@ -875,7 +921,7 @@ export const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(function Cha
                 placeholder={placeholder}
                 rows={1}
                 disabled={isTyping || isUploading}
-                className="w-full min-w-0 bg-transparent border-0 px-0.5 sm:px-1 py-0 text-[16px] sm:text-[16.5px] placeholder:text-muted-foreground transition-colors focus:outline-none focus:ring-0 resize-none h-[26px] leading-[26px] overflow-hidden scrollbar-none"
+                className="w-full min-w-0 bg-transparent border-0 px-0.5 sm:px-1 py-0 text-[16px] sm:text-[16.5px] placeholder:text-muted-foreground transition-colors focus:outline-none focus:ring-0 resize-none h-[26px] leading-[26px] overflow-hidden scrollbar-none select-text"
               />
             </div>
 

@@ -7,6 +7,14 @@ import { cn } from '@/lib/utils';
 
 const TooltipProvider = TooltipPrimitive.Provider;
 
+let lastWindowFocusTime = 0;
+
+if (typeof window !== 'undefined') {
+  window.addEventListener('focus', () => {
+    lastWindowFocusTime = Date.now();
+  });
+}
+
 interface TooltipContextValue {
   isFocusedRef: React.MutableRefObject<boolean>;
   focusTimestampRef: React.MutableRefObject<number>;
@@ -31,8 +39,27 @@ const Tooltip = ({
   const isControlled = controlledOpen !== undefined;
   const isOpen = isControlled ? controlledOpen : internalOpen;
 
+  // Immediately close tooltip when user switches tabs or window loses focus
+  React.useEffect(() => {
+    const handleWindowBlur = () => {
+      if (!isControlled) {
+        setInternalOpen(false);
+      }
+      onOpenChange?.(false);
+    };
+    window.addEventListener('blur', handleWindowBlur);
+    return () => window.removeEventListener('blur', handleWindowBlur);
+  }, [isControlled, onOpenChange]);
+
   const handleOpenChange = React.useCallback(
     (nextOpen: boolean) => {
+      if (nextOpen) {
+        // Prevent tooltip from automatically triggering when switching tabs or refocusing the window
+        if (Date.now() - lastWindowFocusTime < 800) {
+          return;
+        }
+      }
+
       if (!nextOpen) {
         // When tabbing to an element that causes a container scroll (e.g., auto scroll-into-view),
         // Radix's internal handleScroll listener automatically calls onClose().
@@ -103,6 +130,11 @@ const TooltipTrigger = React.forwardRef<
         }
       }}
       onFocus={(e) => {
+        // If focus occurred right after window/tab switch, prevent opening tooltip
+        if (Date.now() - lastWindowFocusTime < 800) {
+          e.preventDefault();
+          return;
+        }
         if (ctx) {
           ctx.isFocusedRef.current = true;
           ctx.focusTimestampRef.current = Date.now();

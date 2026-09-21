@@ -16,6 +16,7 @@ import {
   Plus,
   Upload,
   ArrowDown,
+  SquarePen,
 } from "lucide-react";
 import {
   Tooltip,
@@ -477,7 +478,7 @@ export default function PublicSharedChatPage() {
                 className="group w-9 h-9 rounded-xl bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/80 dark:border-none text-neutral-700 dark:text-neutral-200 hover:text-foreground dark:hover:text-foreground flex items-center justify-center transition-colors cursor-pointer outline-none focus:outline-none"
                 aria-label="New chat"
               >
-                <Plus className="w-4 h-4 text-muted-foreground group-hover:text-foreground" />
+                <SquarePen className="w-4 h-4 text-muted-foreground group-hover:text-foreground" />
               </button>
             </TooltipTrigger>
             <TooltipContent

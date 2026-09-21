@@ -633,7 +633,7 @@ export const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(function Cha
             onMouseEnter={updateMenuPosition}
             onKeyDown={handlePillButtonKeyDown}
             className={cn(
-              "h-9 sm:h-10 px-2.5 sm:px-5 group/think-btn rounded-full flex items-center justify-center gap-1.5 text-[13px] sm:text-[14px] font-medium select-none transition-all shrink-0 cursor-pointer outline-none focus:outline-none focus-visible:ring-2 focus-visible:ring-foreground/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+              "h-9 sm:h-10 px-2 sm:px-5 group/think-btn rounded-full flex items-center justify-center gap-1.5 text-[13px] sm:text-[14px] font-medium select-none transition-all shrink-0 cursor-pointer outline-none focus:outline-none focus-visible:ring-2 focus-visible:ring-foreground/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
               thinkMode
                 ? "bg-bubble dark:bg-[#2F2F2F] text-foreground"
                 : "text-muted-foreground hover:text-foreground hover:bg-secondary"

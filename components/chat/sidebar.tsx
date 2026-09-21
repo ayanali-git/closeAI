@@ -38,6 +38,7 @@ import {
   Download,
   ArrowUpRight,
   Store,
+  SquarePen,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -1157,10 +1158,10 @@ export function Sidebar({
                     onToggle();
                   }
                 }}
-                className="w-full flex items-center justify-between h-10 px-2 rounded-xl hover:bg-secondary text-muted-foreground hover:text-foreground text-md group cursor-pointer transition-all duration-150"
+                className="w-full flex items-center justify-between h-10 px-2 rounded-xl hover:bg-secondary text-foreground text-md group cursor-pointer transition-all duration-150"
               >
                 <div className="flex items-center gap-2.5">
-                  <Plus className="w-4 h-4 text-muted-foreground group-hover:text-foreground" />
+                  <SquarePen className="w-4 h-4 text-muted-foreground group-hover:text-foreground" />
                   <span>New chat</span>
                 </div>
               </button>
@@ -1202,7 +1203,7 @@ export function Sidebar({
                     <button
                       type="button"
                       onClick={() => toggleSection("Pinned")}
-                      className="w-full flex items-center justify-between px-2 py-1 text-[15px] font-semibold tracking-wider text-muted-foreground hover:text-foreground select-none cursor-pointer transition-colors group/section text-left"
+                      className="w-full flex items-center justify-between px-2 py-1 text-[15px] font-semibold tracking-wider text-foreground select-none cursor-pointer transition-colors group/section text-left"
                     >
                       <span>Pinned</span>
                       <AnimatedChevron
@@ -1210,7 +1211,7 @@ export function Sidebar({
                         disableHover
                         orientation="right-down"
                         size={18}
-                        className="text-muted-foreground group-hover/section:text-foreground shrink-0 xl:opacity-0 xl:group-hover/section:opacity-100 transition-opacity duration-150"
+                        className="text-foreground shrink-0 xl:opacity-0 xl:group-hover/section:opacity-100 transition-opacity duration-150"
                       />
                     </button>
                     {!collapsedSections["Pinned"] && (
@@ -1233,7 +1234,7 @@ export function Sidebar({
                     <button
                       type="button"
                       onClick={() => toggleSection("Archived")}
-                      className="w-full flex items-center justify-between px-2 py-1 text-[15px] font-semibold tracking-wider text-muted-foreground hover:text-foreground select-none cursor-pointer transition-colors group/section text-left"
+                      className="w-full flex items-center justify-between px-2 py-1 text-[15px] font-semibold tracking-wider text-foreground select-none cursor-pointer transition-colors group/section text-left"
                     >
                       <span>Archived</span>
                       <AnimatedChevron
@@ -1241,7 +1242,7 @@ export function Sidebar({
                         disableHover
                         orientation="right-down"
                         size={18}
-                        className="text-muted-foreground group-hover/section:text-foreground shrink-0 xl:opacity-0 xl:group-hover/section:opacity-100 transition-opacity duration-150"
+                        className="text-foreground shrink-0 xl:opacity-0 xl:group-hover/section:opacity-100 transition-opacity duration-150"
                       />
                     </button>
                     {!collapsedSections["Archived"] && (

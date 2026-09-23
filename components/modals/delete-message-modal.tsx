@@ -49,12 +49,12 @@ export function DeleteMessageModal({
 
         {/* Message Preview Card — same to same as Share Prompt card, without scrollable and without CloseAI text */}
         <div className="relative w-full rounded-2xl sm:rounded-3xl overflow-hidden dark:bg-neutral-800 border border-border/80 dark:border-none">
-          {/* Bottom gradient overlay */}
-          <div className="absolute bottom-0 left-0 right-0 h-[30%] min-h-[95px] sm:min-h-[105px] z-10 pointer-events-none bg-gradient-to-t from-background via-background/90 to-transparent dark:from-neutral-800 dark:via-neutral-800/95 to-transparent" />
+          {/* Bottom gradient overlay — stops before scrollbar */}
+          <div className="absolute bottom-0 left-0 right-3 sm:right-4 h-[30%] min-h-[95px] sm:min-h-[105px] z-10 pointer-events-none bg-gradient-to-t from-background via-background/90 to-transparent dark:from-neutral-800 dark:via-neutral-800/95 to-transparent" />
 
           <div
             className={cn(
-              "relative z-0 max-h-[380px] sm:max-h-[420px] min-h-[300px] sm:min-h-[330px] flex flex-col items-end justify-start gap-2.5 px-5 sm:px-6 pt-5 sm:pt-6 pb-12 sm:pb-14 overflow-hidden select-text",
+              "relative z-0 max-h-[200px] sm:max-h-[400px] min-h-[150px] sm:min-h-[300px] flex flex-col items-end justify-start gap-2.5 px-5 sm:px-6 pt-5 sm:pt-6 pb-12 sm:pb-14 overflow-y-auto select-text",
             )}
           >
             {/* Files Preview */}

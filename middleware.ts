@@ -43,6 +43,17 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/c', request.url));
   }
 
+  // If root page receives an OAuth `code` param, forward to /auth/callback so
+  // the exchange happens properly and the raw code isn't exposed in the URL.
+  if (request.nextUrl.pathname === '/' && request.nextUrl.searchParams.has('code')) {
+    const callbackUrl = new URL('/auth/callback', request.url);
+    // Carry over all query params (code, next, etc.)
+    request.nextUrl.searchParams.forEach((value, key) => {
+      callbackUrl.searchParams.set(key, value);
+    });
+    return NextResponse.redirect(callbackUrl);
+  }
+
   // Purge any corrupted or bloated base64 data:image cookies
   const allCookies = request.cookies.getAll();
   allCookies.forEach(c => {
@@ -51,12 +62,35 @@ export async function middleware(request: NextRequest) {
     }
   });
 
-  // If already logged in, redirect away from auth pages to /c (unless error param is present)
+  // If already logged in, redirect away from auth paths to /c (unless error param is present)
   const authPaths = ['/auth/login', '/auth/signup'];
   const isAuthPath = authPaths.some(path => request.nextUrl.pathname === path);
   const hasAuthError = request.nextUrl.searchParams.has('error') || request.nextUrl.searchParams.has('error_code');
   if (isAuthPath && user && !hasAuthError) {
     const redirectRes = NextResponse.redirect(new URL('/c', request.url));
+    response.cookies.getAll().forEach(c => redirectRes.cookies.set(c.name, c.value));
+    return redirectRes;
+  }
+
+  // Eliminate standalone auth pages: redirect /auth/login and /auth/signup to root with modal triggers
+  if (request.nextUrl.pathname === '/auth/login') {
+    const targetUrl = new URL('/', request.url);
+    targetUrl.searchParams.set('auth', 'login');
+    request.nextUrl.searchParams.forEach((val, key) => {
+      if (key !== 'auth') targetUrl.searchParams.set(key, val);
+    });
+    const redirectRes = NextResponse.redirect(targetUrl);
+    response.cookies.getAll().forEach(c => redirectRes.cookies.set(c.name, c.value));
+    return redirectRes;
+  }
+
+  if (request.nextUrl.pathname === '/auth/signup') {
+    const targetUrl = new URL('/', request.url);
+    targetUrl.searchParams.set('auth', 'signup');
+    request.nextUrl.searchParams.forEach((val, key) => {
+      if (key !== 'auth') targetUrl.searchParams.set(key, val);
+    });
+    const redirectRes = NextResponse.redirect(targetUrl);
     response.cookies.getAll().forEach(c => redirectRes.cookies.set(c.name, c.value));
     return redirectRes;
   }
@@ -68,7 +102,7 @@ export async function middleware(request: NextRequest) {
   );
 
   if (isProtected && !user) {
-    const redirectRes = NextResponse.redirect(new URL('/auth/login', request.url));
+    const redirectRes = NextResponse.redirect(new URL('/?auth=login', request.url));
     return redirectRes;
   }
 
@@ -76,6 +110,6 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/c', '/c/:path*', '/chat', '/settings', '/settings/:path*', '/upgrade', '/upgrade/:path*', '/auth/login', '/auth/signup'],
+  matcher: ['/', '/c', '/c/:path*', '/chat', '/settings', '/settings/:path*', '/upgrade', '/upgrade/:path*', '/auth/login', '/auth/signup'],
 };
 

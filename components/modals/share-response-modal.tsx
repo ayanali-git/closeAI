@@ -342,16 +342,14 @@ export function ShareResponseModal({
           <h2 className="text-2xl font-bold tracking-tight text-foreground">
             Share response
           </h2>
-          {!isMobileScreen && (
-            <button
-              type="button"
-              onClick={() => onOpenChange(false)}
-              className="p-2 rounded-sm flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors cursor-pointer shrink-0"
-              aria-label="Close"
-            >
-              <XIcon className="w-5 h-5" weight="bold" />
-            </button>
-          )}
+          <button
+            type="button"
+            onClick={() => onOpenChange(false)}
+            className="p-2 rounded-sm flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors cursor-pointer shrink-0"
+            aria-label="Close"
+          >
+            <XIcon className="w-5 h-5" weight="bold" />
+          </button>
         </div>
 
         {/* Preview Card — renders the assistant response in full share preview */}
@@ -359,12 +357,8 @@ export function ShareResponseModal({
           {/* Scrollable / Max Response Viewport */}
           <div
             className={cn(
-              "relative z-0 max-h-[380px] sm:max-h-[420px] overflow-y-auto px-6 py-5 sm:px-7 sm:py-6 pb-24 sm:pb-28 text-foreground select-text code-scroll",
-              "[scrollbar-color:hsl(var(--muted-foreground)/0.4)_transparent] [&::-webkit-scrollbar-track]:!bg-transparent [&::-webkit-scrollbar-corner]:!bg-transparent [&::-webkit-scrollbar-button]:!hidden"
+              "relative z-0 max-h-[200px] sm:max-h-[400px] min-h-[150px] sm:min-h-[300px] overflow-y-auto px-5 py-4 sm:px-7 sm:py-6 pb-16 sm:pb-28 text-foreground select-text"
             )}
-            style={{
-              scrollbarColor: "hsl(var(--muted-foreground) / 0.4) transparent",
-            }}
           >
             <div
               ref={contentRef}

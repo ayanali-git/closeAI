@@ -21,7 +21,7 @@ export default function PricingPage() {
         "Web search grounding",
       ],
       cta: "Get started",
-      href: "/auth/signup",
+      href: "/?auth=signup",
       popular: false,
     },
     {
@@ -39,7 +39,7 @@ export default function PricingPage() {
         "Custom instruction profiles",
       ],
       cta: "Start Pro",
-      href: "/auth/signup?plan=pro",
+      href: "/?auth=signup&plan=pro",
       popular: true,
     },
     {
@@ -57,7 +57,7 @@ export default function PricingPage() {
         "24/7 dedicated support",
       ],
       cta: "Choose Ultra Pro",
-      href: "/auth/signup?plan=ultra",
+      href: "/?auth=signup&plan=ultra",
       popular: false,
     },
   ];

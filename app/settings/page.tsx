@@ -141,7 +141,7 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="chat-selection-theme selection:bg-secondary selection:text-foreground min-h-screen bg-background">
       <div className="border-b border-border sticky top-0 z-10 bg-background">
         <div className="max-w-2xl mx-auto px-6 py-4">
           <Button
@@ -168,28 +168,28 @@ export default function SettingsPage() {
             </h2>
             <div className="border border-border rounded-2xl p-6 space-y-6">
               <div className="flex items-center gap-6">
-                <div className="relative">
+                <div className="group relative">
                   <Avatar 
                     className="w-20 h-20 border border-border cursor-pointer transition-opacity"
                     onClick={() => setIsImageModalOpen(true)}
                   >
                     <AvatarImage src={avatarUrl || undefined} />
                     <AvatarFallback className="bg-secondary text-foreground text-xl font-medium">
-                      {profile.name?.[0] || profile.email?.[0] || 'U'}
+                      {profile.name}
                     </AvatarFallback>
                   </Avatar>
                   <button
                     type="button"
                     onClick={() => setIsImageModalOpen(true)}
-                    className="absolute bottom-1 right-0 w-5 h-5 rounded-full bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/80 dark:border-none flex items-center justify-center text-foreground transition-colors cursor-pointer"
+                    className="absolute bottom-1 right-0 w-5 h-5 rounded-full bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/80 dark:border-none flex items-center justify-center transition-colors cursor-pointer"
                     aria-label="Update profile picture"
                   >
-                    <Pencil className="w-3 h-3 text-muted-foreground hover:text-foreground" />
+                    <Pencil className="w-3 h-3 text-muted-foreground group-hover:text-foreground" />
                   </button>
                 </div>
                 <div>
-                  <p className="text-md font-medium text-foreground">Profile picture</p>
-                  <p className="text-md text-muted-foreground">Click avatar to update</p>
+                  <p className="text-base font-medium text-foreground">Update profile picture</p>
+                  <p className="text-sm text-muted-foreground">Click avatar to update</p>
                 </div>
               </div>
 
@@ -208,7 +208,7 @@ export default function SettingsPage() {
                 <div className="space-y-2">
                   <Label htmlFor="email">Email</Label>
                   <Input id="email" value={profile.email} disabled className="text-muted-foreground" />
-                  <p className="text-md text-muted-foreground">Email cannot be changed</p>
+                  <p className="text-sm text-muted-foreground">Email cannot be changed</p>
                 </div>
                 <Button
                   type="submit"
@@ -231,10 +231,10 @@ export default function SettingsPage() {
             <div className="border border-border rounded-2xl p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-md font-medium text-foreground">
+                  <p className="text-base font-medium text-foreground">
                     Current plan: {planLabels[userPlan] || 'Free'}
                   </p>
-                  <p className="text-md text-muted-foreground mt-1">
+                  <p className="text-sm text-muted-foreground mt-1">
                     {userPlan === 'free'
                       ? 'Upgrade to unlock more features'
                       : 'You have access to premium features'}
@@ -300,16 +300,16 @@ export default function SettingsPage() {
             <div className="border border-border rounded-2xl p-6 space-y-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-md font-medium text-foreground">Email notifications</p>
-                  <p className="text-md text-muted-foreground">Receive updates about your conversations</p>
+                  <p className="text-base font-medium text-foreground">Email notifications</p>
+                  <p className="text-sm text-muted-foreground">Receive updates about your conversations</p>
                 </div>
                 <Switch checked={emailNotifications} onCheckedChange={setEmailNotifications} />
               </div>
               <Separator />
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-md font-medium text-foreground">Marketing emails</p>
-                  <p className="text-md text-muted-foreground">Receive news and promotional content</p>
+                  <p className="text-base font-medium text-foreground">Marketing emails</p>
+                  <p className="text-sm text-muted-foreground">Receive news and promotional content</p>
                 </div>
                 <Switch checked={marketingEmails} onCheckedChange={setMarketingEmails} />
               </div>

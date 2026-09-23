@@ -70,15 +70,14 @@ export function ImagePreview({
         <DialogPrimitive.Portal>
           {/* Simple dark backdrop without animation */}
           <DialogPrimitive.Overlay
-            onClick={() => setIsOpen(false)}
-            className="fixed inset-0 z-50 bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm"
+            className="fixed inset-0 z-50 bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm cursor-default"
           />
 
           {/* Simple content container covering full screen */}
           <DialogPrimitive.Content
-            className="fixed inset-0 z-50 w-screen h-screen p-0 bg-transparent border-0 outline-none focus:outline-none flex items-center justify-center pointer-events-auto"
-            onClick={() => setIsOpen(false)}
-            onPointerDownOutside={() => setIsOpen(false)}
+            className="fixed inset-0 z-50 w-screen h-screen p-0 bg-transparent border-0 outline-none focus:outline-none flex items-center justify-center pointer-events-auto cursor-default"
+            onPointerDownOutside={(e) => e.preventDefault()}
+            onInteractOutside={(e) => e.preventDefault()}
           >
             <DialogPrimitive.Title className="sr-only">
               {alt || "Image preview"}

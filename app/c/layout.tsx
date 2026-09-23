@@ -9,7 +9,7 @@ export default function ChatLayout({ children }: { children: React.ReactNode }) 
 
   return (
     <SidebarProvider defaultOpen={defaultOpen}>
-      <div className="fixed inset-0 h-[100dvh] w-full overflow-hidden flex flex-col no-overscroll">
+      <div data-chat-page="true" className="chat-selection-theme selection:bg-secondary selection:text-foreground fixed inset-0 h-[100dvh] w-full overflow-hidden flex flex-col no-overscroll">
         {children}
       </div>
     </SidebarProvider>

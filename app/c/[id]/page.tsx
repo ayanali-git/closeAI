@@ -146,8 +146,40 @@ export default function ActiveChatPage() {
 
   const prevSidebarOpenRef = useRef<boolean | null>(null);
   const prevFilesDrawerOpenRef = useRef<boolean | null>(null);
+  const savedChatScrollTopRef = useRef<number | null>(null);
+  const wasAutoScrollPinnedRef = useRef<boolean>(false);
+  const savedAnchorElementRef = useRef<{
+    id: string;
+    topOffset: number;
+  } | null>(null);
+  const prevActivePreviewFileRef = useRef<any>(null);
+  const isRestoringScrollRef = useRef<boolean>(false);
 
   const handleOpenPreview = (file: any, fromDrawer = false) => {
+    if (!activePreviewFile && scrollContainerRef.current) {
+      const container = scrollContainerRef.current;
+      savedChatScrollTopRef.current = container.scrollTop;
+      wasAutoScrollPinnedRef.current = isAutoScrollPinnedRef.current;
+
+      const containerRect = container.getBoundingClientRect();
+      const messageElements = container.querySelectorAll("[id^='m-']");
+      let anchor: { id: string; topOffset: number } | null = null;
+      for (let i = 0; i < messageElements.length; i++) {
+        const el = messageElements[i] as HTMLElement;
+        const rect = el.getBoundingClientRect();
+        if (rect.bottom > containerRect.top + 60) {
+          if (el.id) {
+            anchor = {
+              id: el.id,
+              topOffset: rect.top - containerRect.top,
+            };
+            break;
+          }
+        }
+      }
+      savedAnchorElementRef.current = anchor;
+    }
+
     prevSidebarOpenRef.current = sidebarOpen;
     prevFilesDrawerOpenRef.current = fromDrawer || isFilesDrawerOpen;
     if (sidebarOpen) {
@@ -201,6 +233,7 @@ export default function ActiveChatPage() {
   // Handle scroll events to show/hide scroll-to-bottom button
   const handleScroll = () => {
     if (!scrollContainerRef.current) return;
+    if (activePreviewFile || isRestoringScrollRef.current) return;
     const { scrollTop, scrollHeight, clientHeight } =
       scrollContainerRef.current;
     const distanceToBottom = scrollHeight - scrollTop - clientHeight;
@@ -208,15 +241,6 @@ export default function ActiveChatPage() {
     isAutoScrollPinnedRef.current = isAtBottom;
     setShowScrollBottom((prev) => (prev !== !isAtBottom ? !isAtBottom : prev));
   };
-
-  const dockRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!dockRef.current) return;
-    const ro = new ResizeObserver(() => handleScroll());
-    ro.observe(dockRef.current);
-    return () => ro.disconnect();
-  }, []);
 
   const scrollToBottom = (behavior: ScrollBehavior = "smooth") => {
     if (scrollContainerRef.current) {
@@ -238,6 +262,97 @@ export default function ActiveChatPage() {
     setShowScrollBottom(false);
     isAutoScrollPinnedRef.current = true;
   };
+
+  // Restore exact scroll position when file preview closes
+  useEffect(() => {
+    if (prevActivePreviewFileRef.current && !activePreviewFile) {
+      const targetScroll = savedChatScrollTopRef.current;
+      const wasPinned = wasAutoScrollPinnedRef.current;
+      const savedAnchor = savedAnchorElementRef.current;
+
+      if ((targetScroll !== null || savedAnchor) && scrollContainerRef.current) {
+        isRestoringScrollRef.current = true;
+
+        const restoreScroll = () => {
+          const container = scrollContainerRef.current;
+          if (!container) return;
+
+          if (wasPinned) {
+            container.scrollTop = container.scrollHeight;
+            isAutoScrollPinnedRef.current = true;
+            setShowScrollBottom(false);
+            return;
+          }
+
+          let restored = false;
+          if (savedAnchor?.id) {
+            const anchorEl = getTargetElement(savedAnchor.id);
+            if (anchorEl) {
+              const containerRect = container.getBoundingClientRect();
+              const elemRect = anchorEl.getBoundingClientRect();
+              const currentDiff = elemRect.top - containerRect.top;
+              const delta = currentDiff - savedAnchor.topOffset;
+              container.scrollTop += delta;
+              restored = true;
+            }
+          }
+
+          if (!restored && targetScroll !== null) {
+            container.scrollTop = targetScroll;
+          }
+
+          isAutoScrollPinnedRef.current = false;
+          const { scrollTop, scrollHeight, clientHeight } = container;
+          const distanceToBottom = scrollHeight - scrollTop - clientHeight;
+          setShowScrollBottom(distanceToBottom > 25);
+        };
+
+        // Immediate restore
+        restoreScroll();
+
+        // Multi-stage frame restore to account for drawer resize animation and layout settles
+        requestAnimationFrame(() => {
+          restoreScroll();
+        });
+
+        const t1 = setTimeout(restoreScroll, 40);
+        const t2 = setTimeout(restoreScroll, 100);
+        const t3 = setTimeout(restoreScroll, 200);
+        const t4 = setTimeout(() => {
+          restoreScroll();
+          isRestoringScrollRef.current = false;
+          handleScroll();
+        }, 350);
+
+        return () => {
+          clearTimeout(t1);
+          clearTimeout(t2);
+          clearTimeout(t3);
+          clearTimeout(t4);
+          isRestoringScrollRef.current = false;
+        };
+      }
+      savedChatScrollTopRef.current = null;
+      savedAnchorElementRef.current = null;
+    }
+    prevActivePreviewFileRef.current = activePreviewFile;
+  }, [activePreviewFile]);
+
+  const dockRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!scrollContainerRef.current) return;
+    const ro = new ResizeObserver(() => {
+      if (activePreviewFile || isRestoringScrollRef.current) return;
+      if (isAutoScrollPinnedRef.current) {
+        forceScrollToBottom();
+      } else {
+        handleScroll();
+      }
+    });
+    ro.observe(scrollContainerRef.current);
+    return () => ro.disconnect();
+  }, [activePreviewFile]);
 
   // Auto-scroll pinning effect when messages, typing, or pending prompt update
   useEffect(() => {
@@ -349,11 +464,13 @@ export default function ActiveChatPage() {
     setCurrentChatTitle("");
     setActivePreviewFile(null);
     setIsFilesDrawerOpen(false);
+    savedChatScrollTopRef.current = null;
+    savedAnchorElementRef.current = null;
   }, [chatId]);
 
   useEffect(() => {
     if (!loading && !user && !isSigningOut) {
-      router.push("/auth/login");
+      router.push("/?auth=login");
     } else if (user && chatId) {
       loadChat();
       loadChats();
@@ -368,7 +485,7 @@ export default function ActiveChatPage() {
           "textarea"
         ) as HTMLTextAreaElement | null;
         if (textarea) {
-          textarea.focus();
+          textarea.focus({ preventScroll: true });
           const len = textarea.value.length;
           textarea.setSelectionRange(len, len);
         }
@@ -384,7 +501,7 @@ export default function ActiveChatPage() {
         const textarea = document.querySelector(
           "textarea"
         ) as HTMLTextAreaElement | null;
-        textarea?.focus();
+        textarea?.focus({ preventScroll: true });
       }, 50);
       return () => clearTimeout(timer);
     }
@@ -1056,7 +1173,7 @@ export default function ActiveChatPage() {
       />
 
       {/* Main Chat Area */}
-      <div className="flex-1 flex flex-col min-w-0 h-full relative overflow-hidden">
+      <div className="flex-1 flex flex-col min-w-0 h-full relative overflow-hidden selection:bg-secondary selection:text-foreground">
         {/* Transparent Floating Header - Buttons float cleanly on top, no background bar/patti */}
         <header className="absolute top-0 left-0 right-0 z-30 h-14 pt-[env(safe-area-inset-top,0px)] px-3 sm:px-4 flex items-center justify-between select-none pointer-events-none bg-transparent">
           {/* Top gradient overlay — fades scrolled text behind header buttons */}
@@ -1065,7 +1182,7 @@ export default function ActiveChatPage() {
             /* PREVIEW HEADER: Filename on left, Download + Close on right */
             <>
               <div className="flex items-center gap-2.5 pointer-events-auto mt-3 pl-3 sm:pl-0 min-w-0 pr-3">
-                <span className="text-foreground font-semibold text-[14.5px] sm:text-base truncate max-w-[260px] sm:max-w-md select-text">
+                <span className="text-foreground font-semibold text-[14.5px] sm:text-base truncate max-w-[260px] sm:max-w-md select-none">
                   {activePreviewFile.name ||
                     activePreviewFile.filename ||
                     "File"}

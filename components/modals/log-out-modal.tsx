@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, X } from "lucide-react";
 import { BottomSheet } from "@/components/ui/bottom-sheet";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
@@ -15,6 +15,10 @@ export interface LogoutModalProps {
   userEmail?: string;
   userName?: string;
   userAvatar?: string;
+  /** When true, always render as centered modal (not bottom sheet on mobile) */
+  forceModal?: boolean;
+  /** "default" keeps the original /c pages design; "auth" matches login/signup modals for the header */
+  variant?: "default" | "auth";
 }
 
 export function LogoutModal({
@@ -26,84 +30,161 @@ export function LogoutModal({
   userEmail,
   userName,
   userAvatar,
+  forceModal,
+  variant = "default",
 }: LogoutModalProps) {
+  const isAuthVariant = variant === "auth";
+
   return (
     <BottomSheet
       open={open}
       onOpenChange={onOpenChange}
       snapPoints={["auto"]}
-      className="max-w-[600px]"
+      className={isAuthVariant ? "max-w-[440px]" : "max-w-[600px]"}
+      forceModal={forceModal}
     >
-      <div className="flex flex-col space-y-4 pt-1 pb-2">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <h2 className="text-2xl font-bold tracking-tight text-foreground">
-            {title || "Log out?"}
-          </h2>
-        </div>
-
-        <div className="relative w-full overflow-hidden">
-          <div className="absolute bottom-0 left-0 right-0 h-[30%] min-h-[95px] sm:min-h-[105px] z-10 pointer-events-none" />
-
-          <div
-            className={cn(
-              "relative z-0 max-h-[100px] sm:max-h-[200px] min-h-[100px] sm:min-h-[200px] flex items-center justify-center p-5 sm:p-6 overflow-hidden select-text"
-            )}
-          >
-            {(userName || userEmail) && (
-              <div className="flex items-center gap-3.5 select-none">
-                <Avatar className="w-20 h-20 rounded-full border border-border/80 shrink-0">
-                  <AvatarImage src={userAvatar} />
-                  <AvatarFallback className="text-sm font-semibold bg-secondary text-foreground">
-                    {userName}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="min-w-0 text-left">
-                  {userName && (
-                    <p className="text-[20px] font-semibold text-foreground truncate leading-snug">
-                      {userName}
-                    </p>
-                  )}
-                  {userEmail && (
-                    <p className="text-base text-muted-foreground truncate leading-tight mt-0.5">
-                      {userEmail}
-                    </p>
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Warning / Info Box */}
-        <div className="w-full flex items-start gap-2.5 p-3 rounded-2xl bg-secondary/50 text-left text-xs text-muted-foreground">
-          <AlertTriangle className="w-4 h-4 shrink-0 text-muted-foreground mt-0.5" />
-          <span className="leading-normal">
-            {description || "This will log you out across all CloseAI platforms."}
-          </span>
-        </div>
-
-        {/* Action Buttons — Stacked Full-Width Pills */}
-        <div className="w-full space-y-2 pt-1">
-          <button
-            type="button"
-            onClick={() => {
-              onOpenChange(false);
-              onConfirm();
-            }}
-            className="w-full h-11 rounded-full bg-foreground text-background font-semibold text-sm hover:opacity-90 active:scale-[0.99] transition-all cursor-pointer select-none"
-          >
-            Log out
-          </button>
+      {isAuthVariant ? (
+        /* Header / Marketing Auth Variant — Matches Login & Signup Modals */
+        <div className="flex flex-col space-y-5 pt-1 pb-2 relative">
+          {/* Top-Right Close Button */}
           <button
             type="button"
             onClick={() => onOpenChange(false)}
-            className="w-full h-11 rounded-full border border-border/80 bg-transparent text-foreground font-normal text-sm hover:bg-secondary/60 transition-all cursor-pointer select-none"
+            className="absolute -top-1.5 -right-2 p-3 rounded-full text-muted-foreground hover:text-foreground hover:bg-secondary focus:outline-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 transition-colors cursor-pointer"
+            aria-label="Close"
           >
-            Cancel
+            <X className="w-5 h-5" />
           </button>
+
+          {/* Header */}
+          <div className="text-center">
+            <h2 className="text-2xl font-normal tracking-tight text-foreground">
+              {title || "Log Out"}
+            </h2>
+            <p className="text-base text-muted-foreground mt-0.5">
+              To end your CloseAI
+            </p>
+          </div>
+
+          {/* User Card */}
+          {(userName || userEmail) && (
+            <div className="flex items-center gap-3.5 p-3 rounded-full bg-secondary/40 border border-border/70 select-none">
+              <Avatar className="w-11 h-11 rounded-full border border-border/80 shrink-0">
+                <AvatarImage src={userAvatar} />
+                <AvatarFallback className="text-base font-semibold bg-secondary text-foreground">
+                  {userName}
+                </AvatarFallback>
+              </Avatar>
+              <div className="min-w-0 text-left">
+                {userName && (
+                  <p className="text-base font-semibold text-foreground truncate leading-snug">
+                    {userName}
+                  </p>
+                )}
+                {userEmail && (
+                  <p className="text-sm text-muted-foreground truncate leading-tight mt-0.5">
+                    {userEmail}
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Warning / Info Box */}
+          <div className="w-full flex items-start gap-2.5 p-3 rounded-full bg-secondary/30 text-left text-xs text-muted-foreground border border-border/40">
+            <AlertTriangle className="w-4 h-4 shrink-0 text-muted-foreground mt-0.5" />
+            <span className="leading-relaxed">
+              {description || "This will log you out across all CloseAI platforms."}
+            </span>
+          </div>
+
+          {/* Action Button — Single Full-Width Pill matching Login/Signup */}
+          <div className="pt-1">
+            <button
+              type="button"
+              onClick={() => {
+                onOpenChange(false);
+                onConfirm();
+              }}
+              className="w-full h-11 rounded-full bg-foreground text-background font-medium text-base flex items-center justify-center hover:opacity-90 active:scale-[0.99] border border-transparent focus:outline-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-card transition-all cursor-pointer select-none"
+            >
+              Log out
+            </button>
+          </div>
         </div>
-      </div>
+      ) : (
+        /* Original /c Chat Pages Variant — Untouched Design */
+        <div className="flex flex-col space-y-4 pt-1 pb-2">
+          {/* Header */}
+          <div className="flex items-center justify-between">
+            <h2 className="text-2xl font-bold tracking-tight text-foreground">
+              {title || "Log out?"}
+            </h2>
+          </div>
+
+          <div className="relative w-full overflow-hidden">
+            <div className="absolute bottom-0 left-0 right-0 h-[30%] min-h-[95px] sm:min-h-[105px] z-10 pointer-events-none" />
+
+            <div
+              className={cn(
+                "relative z-0 max-h-[100px] sm:max-h-[200px] min-h-[100px] sm:min-h-[200px] flex items-center justify-center p-5 sm:p-6 overflow-hidden select-text"
+              )}
+            >
+              {(userName || userEmail) && (
+                <div className="flex items-center gap-3.5 select-none">
+                  <Avatar className="w-20 h-20 rounded-full border border-border/80 shrink-0">
+                    <AvatarImage src={userAvatar} />
+                    <AvatarFallback className="text-sm font-semibold bg-secondary text-foreground">
+                      {userName}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="min-w-0 text-left">
+                    {userName && (
+                      <p className="text-[20px] font-semibold text-foreground truncate leading-snug">
+                        {userName}
+                      </p>
+                    )}
+                    {userEmail && (
+                      <p className="text-base text-muted-foreground truncate leading-tight mt-0.5">
+                        {userEmail}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Warning / Info Box */}
+          <div className="w-full flex items-start gap-2.5 p-3 rounded-2xl bg-secondary/50 text-left text-xs text-muted-foreground">
+            <AlertTriangle className="w-4 h-4 shrink-0 text-muted-foreground mt-0.5" />
+            <span className="leading-normal">
+              {description || "This will log you out across all CloseAI platforms."}
+            </span>
+          </div>
+
+          {/* Action Buttons — Stacked Full-Width Pills */}
+          <div className="w-full space-y-2 pt-1">
+            <button
+              type="button"
+              onClick={() => {
+                onOpenChange(false);
+                onConfirm();
+              }}
+              className="w-full h-11 rounded-full bg-foreground text-background font-semibold text-sm hover:opacity-90 active:scale-[0.99] transition-all cursor-pointer select-none"
+            >
+              Log out
+            </button>
+            <button
+              type="button"
+              onClick={() => onOpenChange(false)}
+              className="w-full h-11 rounded-full border border-border/80 bg-transparent text-foreground font-normal text-sm hover:bg-secondary/60 transition-all cursor-pointer select-none"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
     </BottomSheet>
   );
 }

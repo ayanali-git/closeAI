@@ -23,6 +23,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { LogoutModal } from "@/components/modals/log-out-modal";
+import { LoginModal } from "@/components/modals/log-in-modal";
+import { SignupModal } from "@/components/modals/sign-up-modal";
 import { cn } from "@/lib/utils";
 
 type MegaMenuCategory =
@@ -31,7 +33,6 @@ type MegaMenuCategory =
   | "business"
   | "developers"
   | "company"
-  | "login"
   | "account"
   | null;
 
@@ -353,14 +354,12 @@ export function MarketingHeader() {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [mobileSubMenu, setMobileSubMenu] = useState<MegaMenuCategory>(null);
   const [accountMenuOpen, setAccountMenuOpen] = useState(false);
-  const [loginMenuOpen, setLoginMenuOpen] = useState(false);
   const [tryMenuOpen, setTryMenuOpen] = useState(false);
   const [hoveredNav, setHoveredNav] = useState<string | null>(null);
   const [scrollbarWidth, setScrollbarWidth] = useState(0);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const accountTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const loginTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const tryTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const headerRef = useRef<HTMLElement>(null);
   const logoRef = useRef<HTMLAnchorElement>(null);
@@ -391,8 +390,44 @@ export function MarketingHeader() {
   }, [activeMenu]);
 
   const [logoutModalOpen, setLogoutModalOpen] = useState(false);
+  const [loginModalOpen, setLoginModalOpen] = useState(false);
+  const [signupModalOpen, setSignupModalOpen] = useState(false);
+  const [authModalError, setAuthModalError] = useState<string | null>(null);
 
-  const isLocked = isSearchOpen || mobileNavOpen || logoutModalOpen;
+  // Auto-open login/signup modal from URL query params or OAuth callback errors
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const auth = params.get("auth");
+      const error = params.get("error");
+      const errorCode = params.get("error_code");
+      const errorDesc = params.get("error_description");
+
+      if (auth === "signup") {
+        setSignupModalOpen(true);
+      } else if (auth === "login" || error || errorCode || errorDesc) {
+        setLoginModalOpen(true);
+        if (error || errorCode || errorDesc) {
+          let message = "Unable to complete sign in. Please try again.";
+          if (errorCode === "bad_oauth_state" || errorDesc?.toLowerCase().includes("state")) {
+            message = "Your sign-in session expired or was interrupted. Please try signing in again.";
+          } else if (errorCode === "access_denied" || error === "access_denied") {
+            message = "Sign-in was cancelled. Please try again when ready.";
+          } else if (errorDesc) {
+            message = decodeURIComponent(errorDesc.replace(/\+/g, " "));
+          }
+          setAuthModalError(message);
+        }
+      }
+
+      // Clean the address bar if auth or error params were present
+      if (auth || error || errorCode || errorDesc) {
+        window.history.replaceState({}, "", window.location.pathname);
+      }
+    }
+  }, []);
+
+  const isLocked = isSearchOpen || mobileNavOpen;
 
   const searchResults = React.useMemo(() => {
     const q = submittedQuery.trim().toLowerCase();
@@ -429,21 +464,6 @@ export function MarketingHeader() {
     if (accountTimeoutRef.current) clearTimeout(accountTimeoutRef.current);
     accountTimeoutRef.current = setTimeout(() => {
       setAccountMenuOpen(false);
-    }, 200);
-  };
-
-  const handleLoginEnter = () => {
-    if (loginTimeoutRef.current) clearTimeout(loginTimeoutRef.current);
-    if (timeoutRef.current) clearTimeout(timeoutRef.current);
-    setActiveMenu(null);
-    setHoveredNav(null);
-    setLoginMenuOpen(true);
-  };
-
-  const handleLoginLeave = () => {
-    if (loginTimeoutRef.current) clearTimeout(loginTimeoutRef.current);
-    loginTimeoutRef.current = setTimeout(() => {
-      setLoginMenuOpen(false);
     }, 200);
   };
 
@@ -503,7 +523,7 @@ export function MarketingHeader() {
         prevBodyOverflow === "hidden" ? "" : prevBodyOverflow;
       document.body.style.paddingRight = prevBodyPaddingRight;
     };
-  }, [isLocked, isSearchOpen, logoutModalOpen]);
+  }, [isLocked, isSearchOpen]);
 
   // Handle escape key to close menu/search/logout modal
   useEffect(() => {
@@ -562,7 +582,7 @@ export function MarketingHeader() {
       {/* Backdrop blur overlay when mega menu is active */}
       <div
         className={cn(
-          "fixed inset-y-0 left-0 top-14 z-40 bg-background/0 backdrop-blur-sm pointer-events-none",
+          "fixed inset-y-0 left-0 top-14 z-40 bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm pointer-events-none",
           activeMenu ? "opacity-100 pointer-events-auto" : "opacity-0"
         )}
         style={{
@@ -575,7 +595,7 @@ export function MarketingHeader() {
         onClick={() => setActiveMenu(null)}
       />
 
-      {/* FULLSCREEN SEARCH OVERLAY (OpenAI Style) */}
+      {/* FULLSCREEN SEARCH OVERLAY */}
       {isSearchOpen && (
         <div
           className="fixed inset-y-0 left-0 top-14 z-40 bg-background overflow-y-auto overscroll-contain px-6 sm:px-8 py-12 sm:py-16 select-none"
@@ -714,7 +734,7 @@ export function MarketingHeader() {
                   <div className="flex flex-wrap items-center gap-4 pt-2">
                     <Button
                       asChild
-                      className="group rounded-full px-5 h-10 text-[15px] font-medium bg-white/50 dark:bg-[#212121]/50 hover:bg-secondary dark:hover:bg-[#2f2f2f] border border-border/80 dark:border-none text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                      className="group rounded-full px-5 h-10 text-[15px] font-normal bg-white/50 dark:bg-[#212121]/50 hover:bg-secondary dark:hover:bg-[#2f2f2f] border border-border/80 dark:border-none text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
                     >
                       <Link
                         href="/c"
@@ -729,7 +749,7 @@ export function MarketingHeader() {
                     <Link
                       href="/product/api-docs"
                       onClick={() => setIsSearchOpen(false)}
-                      className="inline-flex items-center gap-1.5 text-md font-medium text-muted-foreground hover:text-foreground transition-colors px-2 py-1"
+                      className="inline-flex items-center gap-1.5 text-md font-normal text-muted-foreground hover:text-foreground transition-colors px-2 py-1"
                     >
                       <span>API Docs</span>
                       <AnimatedArrowUpRight className="w-4 h-4" />
@@ -746,11 +766,11 @@ export function MarketingHeader() {
         ref={headerRef}
         className="fixed top-0 left-0 z-50 w-full bg-background select-none transition-colors duration-200"
         style={{
-          right: isLocked && scrollbarWidth > 0 ? `${scrollbarWidth}px` : 0,
+          right: `max(${isLocked && scrollbarWidth > 0 ? `${scrollbarWidth}px` : "0px"}, var(--scrollbar-compensation, 0px))`,
           width:
             isLocked && scrollbarWidth > 0
               ? `calc(100% - ${scrollbarWidth}px)`
-              : "100%",
+              : `calc(100% - var(--scrollbar-compensation, 0px))`,
         }}
         onMouseLeave={handleMouseLeave}
       >
@@ -778,7 +798,7 @@ export function MarketingHeader() {
 
             {/* Desktop Navigation */}
             <nav
-              className="hidden lg:flex items-center gap-6"
+              className="hidden xl:flex items-center gap-6"
               onMouseLeave={() => setHoveredNav(null)}
             >
               {/* Research */}
@@ -957,7 +977,7 @@ export function MarketingHeader() {
 
           {/* Right CTA Actions */}
           <div
-            className="hidden lg:flex items-center gap-3"
+            className="hidden xl:flex items-center gap-3"
             onMouseEnter={() => {
               setActiveMenu(null);
               setHoveredNav(null);
@@ -970,143 +990,47 @@ export function MarketingHeader() {
               </>
             ) : user ? (
               <>
-                <div className="relative">
-                  <button
-                    type="button"
-                    onMouseEnter={handleAccountEnter}
-                    onMouseLeave={handleAccountLeave}
-                    onClick={() => setAccountMenuOpen(!accountMenuOpen)}
-                    className="group flex rounded-full bg-white/50 dark:bg-[#212121]/50 hover:bg-secondary dark:hover:bg-[#2f2f2f] border border-border/80 dark:border-none items-center gap-1.5 text-[15px] text-foreground transition-colors px-4 py-2 cursor-pointer outline-none select-none"
-                  >
-                    <span>Account</span>
-                    <AnimatedChevron
-                      open={accountMenuOpen}
-                      size={18}
-                      className="text-foreground transition-colors"
-                    />
-                  </button>
-
-                  {/* Zero-flicker Hover Dropdown Bridge */}
-                  {accountMenuOpen && (
-                    <div
-                      onMouseEnter={handleAccountEnter}
-                      onMouseLeave={handleAccountLeave}
-                      className="absolute right-0 top-full pt-2 z-50"
-                    >
-                      <div className="w-40 rounded-2xl p-1.5 bg-white/50 dark:bg-[#212121]/50 border border-border/80 dark:border-none backdrop-blur-sm">
-                        <Link
-                          href="/c"
-                          onClick={() => setAccountMenuOpen(false)}
-                          className="flex items-center gap-2 px-4 py-2 text-[15px] rounded-xl text-foreground hover:bg-secondary dark:hover:bg-[#2f2f2f] transition-colors"
-                        >
-                          Open Chat
-                        </Link>
-                        <Link
-                          href="/settings"
-                          onClick={() => setAccountMenuOpen(false)}
-                          className="flex items-center gap-2 px-4 py-2 text-[15px] rounded-xl text-foreground hover:bg-secondary dark:hover:bg-[#2f2f2f] transition-colors"
-                        >
-                          Settings
-                        </Link>
-                        <div className="h-[1px] bg-neutral-200 dark:bg-[#383838] my-1 -mx-1.5" />
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setAccountMenuOpen(false);
-                            setLogoutModalOpen(true);
-                          }}
-                          className="w-full flex items-center gap-2 px-4 py-2 text-[15px] rounded-xl text-foreground hover:bg-secondary dark:hover:bg-[#2f2f2f] transition-colors text-left cursor-pointer"
-                        >
-                          Log Out
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </div>
+                <button
+                  type="button"
+                  onClick={() => setLogoutModalOpen(true)}
+                  className="group flex rounded-full bg-white/50 dark:bg-[#212121]/50 hover:bg-secondary dark:hover:bg-[#2f2f2f] border border-border/80 dark:border-none items-center gap-1.5 text-[15px] text-foreground transition-colors px-4 py-2 cursor-pointer outline-none select-none"
+                >
+                  <span>Log Out</span>
+                </button>
 
                 <Button
                   asChild
-                  className="group rounded-full px-4 h-9 text-[15px] bg-foreground text-background hover:opacity-90 transition-opacity cursor-pointer"
+                  className="group rounded-full px-4 h-9 text-[15px] font-normal bg-foreground text-background hover:opacity-90 transition-opacity cursor-pointer"
                 >
-                  <Link href="/c" className="flex items-center gap-1">
-                    <span>Chat Now</span>
-                    <AnimatedArrow size={18} />
+                  <Link href="/c" className="flex items-center">
+                    <span>Open Chat</span>
+                    {/* <AnimatedArrow size={18} /> */}
                   </Link>
                 </Button>
               </>
             ) : (
               <>
-                <div className="relative">
-                  <button
-                    type="button"
-                    onMouseEnter={handleLoginEnter}
-                    onMouseLeave={handleLoginLeave}
-                    onClick={() => setLoginMenuOpen(!loginMenuOpen)}
-                    className="group flex rounded-full bg-white/50 dark:bg-[#212121]/50 hover:bg-secondary dark:hover:bg-[#2f2f2f] border border-border/80 dark:border-none items-center gap-1.5 text-[15px] text-foreground transition-colors px-4 py-2 cursor-pointer outline-none select-none"
-                  >
-                    <span>Log In</span>
-                    <AnimatedChevron
-                      open={loginMenuOpen}
-                      size={18}
-                      className="text-foreground transition-colors"
-                    />
-                  </button>
-
-                  {/* Zero-flicker Hover Dropdown Bridge */}
-                  {loginMenuOpen && (
-                    <div
-                      onMouseEnter={handleLoginEnter}
-                      onMouseLeave={handleLoginLeave}
-                      className="absolute right-0 top-full pt-2 z-50"
-                    >
-                      <div className="w-48 rounded-2xl p-1.5 bg-white/50 dark:bg-[#212121]/50 border border-border/80 dark:border-none backdrop-blur-sm">
-                        <Link
-                          href="/auth/login"
-                          onClick={() => setLoginMenuOpen(false)}
-                          className="flex items-center gap-2 px-4 py-2 text-[15px] rounded-xl text-foreground hover:bg-secondary dark:hover:bg-[#2f2f2f] transition-colors"
-                        >
-                          CloseAI Chat
-                        </Link>
-                        <div
-                          role="button"
-                          aria-disabled="true"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                          }}
-                          className="flex items-center gap-2 px-4 py-2 text-[15px] rounded-xl text-muted-foreground hover:text-foreground hover:bg-secondary dark:hover:bg-[#2f2f2f] transition-colors cursor-not-allowed select-none"
-                        >
-                          <AnimatedComingSoonText
-                            label="API Platform"
-                            comingSoonText="Coming soon"
-                            align="start"
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
+                <button
+                  type="button"
+                  onClick={() => setLoginModalOpen(true)}
+                  className="group flex rounded-full bg-white/50 dark:bg-[#212121]/50 hover:bg-secondary dark:hover:bg-[#2f2f2f] border border-border/80 dark:border-none items-center gap-1.5 text-[15px] text-foreground transition-colors px-4 py-2 cursor-pointer outline-none select-none"
+                >
+                  <span>Log In</span>
+                </button>
 
                 <Button
-                  asChild
-                  className="group rounded-full px-4 h-9 text-[15px] bg-foreground text-background hover:opacity-90 transition-opacity cursor-pointer hidden sm:inline-flex"
+                  className="group rounded-full px-4 h-9 text-[15px] font-normal bg-foreground text-background hover:opacity-90 transition-opacity cursor-pointer hidden sm:inline-flex items-center gap-0.5"
+                  onClick={() => setSignupModalOpen(true)}
                 >
-                  <Link
-                    href="/auth/signup"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-1"
-                  >
-                    <span>Sign Up</span>
-                    <AnimatedArrowUpRight className="w-4 h-4" />
-                  </Link>
+                  <span>Sign Up</span>
+                  {/* <AnimatedArrowUpRight size={18} /> */}
                 </Button>
               </>
             )}
           </div>
 
           {/* Mobile Menu Toggle (Panel icon + Search) */}
-          <div className="flex items-center gap-2 lg:hidden">
+          <div className="flex items-center gap-2 xl:hidden">
             <button
               onClick={() => {
                 setIsSearchOpen(!isSearchOpen);
@@ -1137,7 +1061,7 @@ export function MarketingHeader() {
         {/* ---------------------------------------------------------------- */}
         {activeMenu && (
           <div
-            className="hidden lg:block absolute top-14 left-0 w-full bg-background z-50"
+            className="hidden xl:block absolute top-14 left-0 w-full bg-background z-50"
             onMouseEnter={() => {
               if (timeoutRef.current) clearTimeout(timeoutRef.current);
             }}
@@ -1690,7 +1614,7 @@ export function MarketingHeader() {
         {/* ---------------------------------------------------------------- */}
         {mobileNavOpen && (
           <div
-            className="lg:hidden fixed inset-y-0 left-0 top-14 bg-background border-b border-border p-6 flex flex-col justify-between overflow-y-auto overscroll-contain scrollbar-none z-50 select-none"
+            className="xl:hidden fixed inset-y-0 left-0 top-14 bg-background border-b border-border p-6 flex flex-col justify-between overflow-y-auto overscroll-contain scrollbar-none z-50 select-none"
             style={{
               right: scrollbarWidth > 0 ? `${scrollbarWidth}px` : 0,
               width:
@@ -1746,38 +1670,44 @@ export function MarketingHeader() {
                   {user ? (
                     <>
                       <button
-                        onClick={() => setMobileSubMenu("account")}
-                        className="block text-3xl sm:text-4xl font-medium text-foreground hover:opacity-80 transition-opacity py-1 text-left w-full cursor-pointer"
+                        onClick={() => {
+                          setMobileNavOpen(false);
+                          setLogoutModalOpen(true);
+                        }}
+                        className="block text-3xl sm:text-4xl font-medium text-foreground hover:text-muted-foreground transition-colors py-1 text-left w-full cursor-pointer"
                       >
-                        Account
+                        Log Out
                       </button>
                       <Link
                         href="/c"
                         onClick={() => setMobileNavOpen(false)}
-                        className="flex items-center gap-1.5 text-3xl sm:text-4xl font-medium tracking-tight text-foreground hover:opacity-80 transition-opacity py-1"
+                        className="block text-3xl sm:text-4xl font-medium text-foreground hover:text-muted-foreground transition-colors py-1 text-left w-full cursor-pointer"
                       >
-                        <span>Chat Now</span>
-                        <AnimatedArrow size={26} />
+                        <span>Open Chat</span>
+                        {/* <AnimatedArrow size={26} /> */}
                       </Link>
                     </>
                   ) : (
                     <>
                       <button
-                        onClick={() => setMobileSubMenu("login")}
+                        onClick={() => {
+                          setMobileNavOpen(false);
+                          setLoginModalOpen(true);
+                        }}
                         className="block text-3xl sm:text-4xl font-medium text-foreground hover:text-muted-foreground transition-colors py-1 text-left w-full cursor-pointer"
                       >
                         Log In
                       </button>
-                      <Link
-                        href="/auth/signup"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        onClick={() => setMobileNavOpen(false)}
-                        className="flex items-center gap-1.5 text-3xl sm:text-4xl font-medium tracking-tight text-foreground hover:opacity-80 transition-opacity py-1"
+                      <button
+                        onClick={() => {
+                          setMobileNavOpen(false);
+                          setSignupModalOpen(true);
+                        }}
+                        className="block text-3xl sm:text-4xl font-medium text-foreground hover:text-muted-foreground transition-colors py-1 text-left w-full cursor-pointer"
                       >
                         <span>Sign Up</span>
-                        <AnimatedArrowUpRight className="w-6 h-6 stroke-[2.5]" />
-                      </Link>
+                        {/* <AnimatedArrowUpRight size={26} /> */}
+                      </button>
                     </>
                   )}
                 </div>
@@ -2174,40 +2104,6 @@ export function MarketingHeader() {
                     </div>
                   )}
 
-                  {mobileSubMenu === "login" && (
-                    <div className="space-y-6">
-                      <div>
-                        <div className="text-md uppercase tracking-wider text-muted-foreground font-semibold mb-3">
-                          Log In
-                        </div>
-                        <div className="space-y-3 nav-dropdown-group">
-                          <Link
-                            href="/auth/login"
-                            onClick={() => setMobileNavOpen(false)}
-                            className="block text-2xl sm:text-3xl font-medium tracking-tight text-foreground transition-colors py-1"
-                          >
-                            CloseAI Chat
-                          </Link>
-                          <div
-                            role="button"
-                            aria-disabled="true"
-                            onClick={(e) => {
-                              e.preventDefault();
-                              e.stopPropagation();
-                            }}
-                            className="block text-2xl sm:text-3xl font-medium tracking-tight text-muted-foreground py-1 cursor-not-allowed select-none"
-                          >
-                            <AnimatedComingSoonText
-                              label="API Platform"
-                              comingSoonText="Coming soon"
-                              align="start"
-                            />
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
                   {mobileSubMenu === "account" && (
                     <div className="space-y-6">
                       <div>
@@ -2269,6 +2165,25 @@ export function MarketingHeader() {
         }
         userEmail={user?.email}
         userAvatar={user?.user_metadata?.avatar_url}
+        variant="auth"
+      />
+
+      {/* Login Modal */}
+      <LoginModal
+        open={loginModalOpen}
+        onOpenChange={(isOpen) => {
+          setLoginModalOpen(isOpen);
+          if (!isOpen) setAuthModalError(null);
+        }}
+        onSwitchToSignup={() => setSignupModalOpen(true)}
+        initialError={authModalError}
+      />
+
+      {/* Sign Up Modal */}
+      <SignupModal
+        open={signupModalOpen}
+        onOpenChange={setSignupModalOpen}
+        onSwitchToLogin={() => setLoginModalOpen(true)}
       />
 
       {/* Spacer to preserve 56px (h-14) in document flow for fixed header */}

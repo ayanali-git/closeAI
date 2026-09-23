@@ -19,10 +19,11 @@ export async function GET(request: Request) {
 
   if (errorParam || errorCode || errorDesc) {
     const errorQuery = new URLSearchParams();
+    errorQuery.set('auth', 'login');
     if (errorParam) errorQuery.set('error', errorParam);
     if (errorCode) errorQuery.set('error_code', errorCode);
     if (errorDesc) errorQuery.set('error_description', errorDesc);
-    return NextResponse.redirect(`${baseUrl}/auth/login?${errorQuery.toString()}`);
+    return NextResponse.redirect(`${baseUrl}/?${errorQuery.toString()}`);
   }
 
   if (code) {
@@ -88,6 +89,6 @@ export async function GET(request: Request) {
     console.error('Auth callback exchange error:', error);
   }
 
-  // If code exchange failed or no code present, redirect to login with error
-  return NextResponse.redirect(`${baseUrl}/auth/login?error=Authentication%20failed`);
+  // If code exchange failed or no code present, redirect to root with login modal and error
+  return NextResponse.redirect(`${baseUrl}/?auth=login&error=Authentication%20failed`);
 }

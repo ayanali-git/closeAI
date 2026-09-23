@@ -105,7 +105,7 @@ function NewChatContent() {
           sessionStorage.setItem("pending_prompt", pending);
         }
       }
-      router.push("/auth/login");
+      router.push("/?auth=login");
       return;
     }
 
@@ -149,7 +149,7 @@ function NewChatContent() {
     if (!message.trim() && uploadedFiles.length === 0) return;
     if (!user) {
       toast.error("Please log in to chat");
-      router.push("/auth/login");
+      router.push("/?auth=login");
       return;
     }
 
@@ -247,7 +247,7 @@ function NewChatContent() {
       />
 
       {/* Main Chat Workspace */}
-      <div className="flex-1 flex flex-col min-w-0 h-full relative overflow-hidden">
+      <div className="flex-1 flex flex-col min-w-0 h-full relative overflow-hidden selection:bg-secondary selection:text-foreground">
         {/* Transparent Top Floating Header */}
         <header className="shrink-0 z-30 h-14 pt-[env(safe-area-inset-top,0px)] px-3 sm:px-4 flex items-center justify-between select-none">
           <div className="flex items-center gap-2 pointer-events-auto mt-3 pl-3 sm:pl-0">

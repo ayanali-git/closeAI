@@ -17,8 +17,6 @@ import {
   ArrowUp,
   Search,
   Loader,
-  AlertCircle,
-  X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -31,32 +29,6 @@ export default function LandingPage() {
 
   // "More" pill state: when clicked, converts to "Search with CloseAI" (like API platform type)
   const [isMoreExpanded, setIsMoreExpanded] = useState(false);
-  const [oauthError, setOauthError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      const params = new URLSearchParams(window.location.search);
-      const error = params.get("error");
-      const errorCode = params.get("error_code");
-      const errorDesc = params.get("error_description");
-
-      if (error || errorCode || errorDesc) {
-        let message = "Your sign-in session was interrupted. Please try again.";
-        if (errorCode === "bad_oauth_state" || errorDesc?.toLowerCase().includes("state")) {
-          message = "Your sign-in session expired or was interrupted. Please try signing in again.";
-        } else if (errorCode === "access_denied" || error === "access_denied") {
-          message = "Sign-in was cancelled. Please try again when ready.";
-        } else if (errorDesc) {
-          message = decodeURIComponent(errorDesc.replace(/\+/g, " "));
-        }
-
-        setOauthError(message);
-
-        // Big-tech style: Clean the URL address bar immediately to strip raw technical parameters
-        window.history.replaceState({}, "", window.location.pathname);
-      }
-    }
-  }, []);
 
   // Hover-dims-siblings state, one per grid section
   const [hoveredSpotlight, setHoveredSpotlight] = useState<number | null>(null);
@@ -148,33 +120,6 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col select-none antialiased">
       <MarketingHeader />
-
-      {oauthError && (
-        <div className="w-full bg-destructive/10 border-b border-destructive/20 px-6 py-3 text-destructive animate-in fade-in duration-200 sticky top-14 z-30 backdrop-blur-md">
-          <div className="max-w-4xl mx-auto flex items-center justify-between gap-4">
-            <div className="flex items-center gap-2.5 text-xs sm:text-sm font-medium">
-              <AlertCircle className="w-4 h-4 shrink-0 text-destructive" />
-              <span>{oauthError}</span>
-            </div>
-            <div className="flex items-center gap-2 shrink-0">
-              <Link
-                href="/auth/login"
-                className="px-3 py-1 rounded-full bg-foreground text-background text-xs font-semibold hover:opacity-90 transition-opacity"
-              >
-                Sign in
-              </Link>
-              <button
-                type="button"
-                onClick={() => setOauthError(null)}
-                className="p-1 hover:bg-destructive/20 rounded-full transition-colors cursor-pointer"
-                aria-label="Dismiss"
-              >
-                <X className="w-3.5 h-3.5" />
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       <main className="flex-1">
         {/* ---------------------------------------------------------------- */}

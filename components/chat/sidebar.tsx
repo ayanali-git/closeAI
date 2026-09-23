@@ -64,6 +64,7 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 import {
   AnimatedChevron,
+  AnimatedComingSoonText,
   AnimatedSearchClose,
 } from "@/components/ui/animated";
 import { LogoutModal } from "@/components/modals/log-out-modal";
@@ -105,7 +106,8 @@ function ChatTitleMarquee({
   useEffect(() => {
     const measure = () => {
       if (textRef.current && containerRef.current) {
-        const isMobile = typeof window !== "undefined" && window.innerWidth < 1025;
+        const isMobile =
+          typeof window !== "undefined" && window.innerWidth < 1025;
         const actionSpace = isMobile ? 0 : 70;
 
         const diff =
@@ -128,7 +130,7 @@ function ChatTitleMarquee({
 
   const isScrolling = overflowWidth > 0 && isHovered;
 
-  const duration = Math.max(3.2, (overflowWidth / 35) + 1.8);
+  const duration = Math.max(3.2, overflowWidth / 35 + 1.8);
 
   return (
     <div
@@ -153,14 +155,16 @@ function ChatTitleMarquee({
       {/* Chat title */}
       <span
         ref={textRef}
-        style={{
-          '--marquee-dist': `${overflowWidth + 10}px`,
-          animation: isScrolling
-            ? `chat-title-marquee ${duration}s ease-in-out infinite`
-            : "none",
-          transform: isScrolling ? undefined : "translateX(0px)",
-          transition: isScrolling ? "none" : "transform 0.25s ease-out",
-        } as React.CSSProperties}
+        style={
+          {
+            "--marquee-dist": `${overflowWidth + 10}px`,
+            animation: isScrolling
+              ? `chat-title-marquee ${duration}s ease-in-out infinite`
+              : "none",
+            transform: isScrolling ? undefined : "translateX(0px)",
+            transition: isScrolling ? "none" : "transform 0.25s ease-out",
+          } as React.CSSProperties
+        }
         className="inline-block whitespace-nowrap text-[15px] leading-snug select-none will-change-transform"
       >
         {title || "New chat"}
@@ -212,18 +216,22 @@ export function Sidebar({
   const { plan: userPlan } = useSubscription();
   const { theme, setTheme } = useTheme();
   const [showSearch, setShowSearch] = useState(false);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
   const [hoveredChatId, setHoveredChatId] = useState<string | null>(null);
   const [pressedChatId, setPressedChatId] = useState<string | null>(null);
   const [isLogoHovered, setIsLogoHovered] = useState(false);
   const [isCloseBtnHovered, setIsCloseBtnHovered] = useState(false);
 
   useEffect(() => {
-    setIsLogoHovered(false);
-    setIsCloseBtnHovered(false);
-    if (typeof document !== "undefined" && document.activeElement instanceof HTMLElement) {
-      document.activeElement.blur();
+    if (isOpen && showSearch) {
+      const timer = window.setTimeout(() => {
+        searchInputRef.current?.focus();
+      }, 50);
+
+      return () => window.clearTimeout(timer);
     }
-  }, [isOpen]);
+  }, [isOpen, showSearch]);
 
   const [collapsedSections, setCollapsedSections] = useState<
     Record<string, boolean>
@@ -450,7 +458,7 @@ export function Sidebar({
           </div>
           <div className="h-[1px] bg-neutral-200 dark:bg-[#383838] my-1" />
           <Link
-            href="/auth/login"
+            href="/?auth=login"
             className="flex items-center gap-2.5 px-2 py-2 rounded-xl text-md text-foreground [@media(hover:hover)]:hover:bg-secondary active:bg-secondary/80 transition-colors outline-none focus:outline-none focus:bg-transparent focus-visible:outline-none"
           >
             <Plus className="w-4 h-4 text-muted-foreground" />
@@ -508,9 +516,9 @@ export function Sidebar({
               </div>
             </DropdownMenuSubTrigger>
             <DropdownMenuSubContent
-              sideOffset={2}
-              alignOffset={-97}
-              className="w-64 rounded-2xl p-1.5 bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/80 dark:border-none"
+              sideOffset={5}
+              alignOffset={-100}
+              className="w-64 rounded-2xl p-2 bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/80 dark:border-none"
             >
               <div className="flex items-center gap-2 px-2 py-2 text-md text-muted-foreground hover:text-foreground select-none">
                 <UserIcon className="w-4 h-4 shrink-0" />
@@ -533,7 +541,7 @@ export function Sidebar({
               <DropdownMenuSeparator />
               <DropdownMenuItem asChild>
                 <Link
-                  href="/auth/login"
+                  href="/?auth=login"
                   className="flex items-center gap-2.5 px-2 py-2 cursor-pointer rounded-xl text-md"
                 >
                   <Plus className="w-4 h-4 text-muted-foreground group-hover:text-foreground" />
@@ -619,9 +627,9 @@ export function Sidebar({
               <span>Theme</span>
             </DropdownMenuSubTrigger>
             <DropdownMenuSubContent
-              sideOffset={2}
-              alignOffset={-89}
-              className="w-40 rounded-2xl p-1.5 bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/80 dark:border-none"
+              sideOffset={5}
+              alignOffset={-87}
+              className="w-40 rounded-2xl p-2 bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/80 dark:border-none"
             >
               <DropdownMenuRadioGroup value={theme} onValueChange={setTheme}>
                 <DropdownMenuRadioItem value="light">
@@ -659,9 +667,9 @@ export function Sidebar({
               <span>Help</span>
             </DropdownMenuSubTrigger>
             <DropdownMenuSubContent
-              sideOffset={2}
-              alignOffset={-261}
-              className="w-56 rounded-2xl p-1.5 bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/80 dark:border-none"
+              sideOffset={5}
+              alignOffset={-263}
+              className="w-56 rounded-2xl p-2 bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/80 dark:border-none"
             >
               <DropdownMenuItem asChild>
                 <Link
@@ -681,15 +689,12 @@ export function Sidebar({
                   <span>Release notes</span>
                 </Link>
               </DropdownMenuItem>
-              <DropdownMenuItem
-                onSelect={(e) => {
-                  e.preventDefault();
-                  toast.info("CloseAI app coming soon");
-                }}
-                className="flex items-center gap-2.5 px-2 py-2 rounded-xl text-md font-medium transition-colors outline-none focus:outline-none focus:bg-transparent focus-visible:outline-none whitespace-nowrap text-left cursor-pointer select-none text-foreground [@media(hover:hover)]:hover:bg-secondary dark:[@media(hover:hover)]:hover:bg-[#2f2f2f]"
-              >
-                <Download className="w-4 h-4 text-muted-foreground shrink-0" />
-                <span>Download app</span>
+              <DropdownMenuItem className="flex items-center gap-2.5 px-2 py-2 rounded-xl text-md font-normal transition-colors outline-none focus:outline-none focus:bg-transparent focus-visible:outline-none whitespace-nowrap text-left cursor-not-allowed select-none text-muted-foreground [@media(hover:hover)]:hover:bg-secondary dark:[@media(hover:hover)]:hover:bg-[#2f2f2f]">
+                <Download className="w-4 h-4 text-muted-foreground group-hover:text-foreground shrink-0" />
+                <AnimatedComingSoonText
+                  label="Download app"
+                  comingSoonText="Coming soon"
+                />
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
                 <Link
@@ -814,7 +819,7 @@ export function Sidebar({
           className={cn(
             "absolute right-2 inset-y-0 flex items-center gap-0.5 z-10 pointer-events-none",
             // Desktop (>= 1025px): full-height smooth gradient fade matching hover box
-            "min-[1025px]:right-0 min-[1025px]:pl-12 min-[1025px]:pr-2 min-[1025px]:rounded-r-xl",
+            "min-[1025px]:right-0 min-[1025px]:pl-16 min-[1025px]:pr-2 min-[1025px]:rounded-r-xl",
             "min-[1025px]:bg-gradient-to-l min-[1025px]:from-secondary min-[1025px]:via-secondary min-[1025px]:to-transparent",
             // Small screens (< 1025px): completely transparent, no gradient box, seamless with hover box!
             "max-[1025px]:bg-transparent max-[1025px]:bg-none max-[1025px]:opacity-100",
@@ -926,10 +931,10 @@ export function Sidebar({
       {/* Main Sidebar (Expands smoothly from 50px to 250px on Desktop, slides over on Mobile) */}
       <aside
         className={cn(
-          "h-[100dvh] max-h-[100dvh] bg-sidebar border-r border-border/80 flex flex-col shrink-0 select-none overflow-hidden relative group/sidebar",
+          "h-[100dvh] max-h-[100dvh] bg-sidebar border-r border-border/50 flex flex-col shrink-0 select-none overflow-hidden relative group/sidebar",
           "transition-[width] duration-300 ease-in-out will-change-[width]",
           isOpen
-            ? "fixed xl:relative inset-y-0 left-0 z-50 xl:z-20 w-full sm:w-[250px] animate-in slide-in-from-left-full xl:animate-none"
+            ? "fixed xl:relative inset-y-0 left-0 z-50 xl:z-20 w-[75%] max-w-[75%] sm:w-[250px] sm:max-w-[250px] animate-in slide-in-from-left-full xl:animate-none"
             : "hidden xl:flex xl:relative xl:w-[50px]"
         )}
       >
@@ -972,13 +977,17 @@ export function Sidebar({
                     aria-label="Open sidebar"
                   >
                     {isLogoHovered ? (
-                      <PanelRight className="w-4 h-4 text-foreground pointer-events-none" />
+                      <PanelRight className="w-5 h-5 text-foreground pointer-events-none" />
                     ) : (
                       <CloseAIIcon size={26} className="pointer-events-none" />
                     )}
                   </button>
                 </TooltipTrigger>
-                <TooltipContent side="right" sideOffset={8} className="text-md">
+                <TooltipContent
+                  side="right"
+                  sideOffset={10}
+                  className="text-md"
+                >
                   Open sidebar
                 </TooltipContent>
               </Tooltip>
@@ -994,10 +1003,14 @@ export function Sidebar({
                     className="w-10 h-10 rounded-xl flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors cursor-pointer"
                     aria-label="Search chats"
                   >
-                    <AnimatedSearchClose open={showSearch} size={18} />
+                    <AnimatedSearchClose open={showSearch} size={22} />
                   </button>
                 </TooltipTrigger>
-                <TooltipContent side="right" className="text-md">
+                <TooltipContent
+                  side="right"
+                  sideOffset={10}
+                  className="text-md"
+                >
                   Search chats
                 </TooltipContent>
               </Tooltip>
@@ -1018,10 +1031,14 @@ export function Sidebar({
                     className="w-10 h-10 rounded-xl flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors cursor-pointer"
                     aria-label="New chat"
                   >
-                    <Plus className="w-4 h-4" />
+                    <SquarePen className="w-5 h-5" />
                   </button>
                 </TooltipTrigger>
-                <TooltipContent side="right" className="text-md">
+                <TooltipContent
+                  side="right"
+                  sideOffset={10}
+                  className="text-md"
+                >
                   New chat
                 </TooltipContent>
               </Tooltip>
@@ -1034,10 +1051,14 @@ export function Sidebar({
                     className="w-10 h-10 rounded-xl flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors cursor-pointer"
                     aria-label="Pinned chats"
                   >
-                    <Pin className="w-4 h-4" />
+                    <Pin className="w-5 h-5" />
                   </button>
                 </TooltipTrigger>
-                <TooltipContent side="right" className="text-md">
+                <TooltipContent
+                  side="right"
+                  sideOffset={10}
+                  className="text-md"
+                >
                   Pinned chats
                 </TooltipContent>
               </Tooltip>
@@ -1050,10 +1071,14 @@ export function Sidebar({
                     className="w-10 h-10 rounded-xl flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors cursor-pointer"
                     aria-label="Archived chats"
                   >
-                    <Archive className="w-4 h-4" />
+                    <Archive className="w-5 h-5" />
                   </button>
                 </TooltipTrigger>
-                <TooltipContent side="right" className="text-md">
+                <TooltipContent
+                  side="right"
+                  sideOffset={10}
+                  className="text-md"
+                >
                   Archived chats
                 </TooltipContent>
               </Tooltip>
@@ -1070,8 +1095,8 @@ export function Sidebar({
             )}
             aria-hidden={!isOpen}
           >
-          {/* Top Header */}
-          <div className="p-3 pb-2 pt-[max(env(safe-area-inset-top),0.75rem)] flex items-center justify-between relative z-20">
+            {/* Top Header */}
+            <div className="p-3 pb-2 pt-[max(env(safe-area-inset-top),0.75rem)] flex items-center justify-between relative z-20">
               <Link
                 href="/"
                 className="flex items-center gap-2 px-1 hover:opacity-85 transition-opacity"
@@ -1087,15 +1112,15 @@ export function Sidebar({
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-8 w-8 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary cursor-pointer"
+                      className="w-10 h-10 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary cursor-pointer"
                       onClick={() => setShowSearch(!showSearch)}
                     >
-                      <AnimatedSearchClose open={showSearch} size={18} />
+                      <AnimatedSearchClose open={showSearch} size={22} />
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent
                     side="bottom"
-                    sideOffset={6}
+                    sideOffset={5}
                     className="text-md"
                   >
                     Search chats
@@ -1108,7 +1133,7 @@ export function Sidebar({
                       variant="ghost"
                       size="icon"
                       style={{ cursor: "ew-resize" }}
-                      className="h-8 w-8 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary !cursor-ew-resize [&_*]:!cursor-ew-resize"
+                      className="w-10 h-10 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary !cursor-ew-resize [&_*]:!cursor-ew-resize"
                       onClick={(e) => {
                         (e.currentTarget as HTMLElement)?.blur();
                         setIsCloseBtnHovered(false);
@@ -1118,12 +1143,12 @@ export function Sidebar({
                       onMouseEnter={() => setIsCloseBtnHovered(true)}
                       onMouseLeave={() => setIsCloseBtnHovered(false)}
                     >
-                      <PanelLeft className="w-4 h-4 pointer-events-none" />
+                      <PanelLeft className="w-5 h-5 pointer-events-none" />
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent
                     side="bottom"
-                    sideOffset={6}
+                    sideOffset={5}
                     className="text-md"
                   >
                     Close sidebar
@@ -1138,12 +1163,12 @@ export function Sidebar({
                 <div className="relative group">
                   <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-foreground transition-colors pointer-events-none" />
                   <input
+                    ref={searchInputRef}
                     type="text"
                     placeholder="Search anything"
                     value={searchQuery}
                     onChange={(e) => onSearchChange(e.target.value)}
-                    className="w-full pl-9 pr-3 h-10 text-md bg-secondary rounded-xl text-foreground placeholder:text-muted-foreground focus:placeholder:text-foreground focus:outline-none focus-visible:outline-none focus:ring-0 focus-visible:ring-0 border-0 transition-colors"
-                    autoFocus
+                    className="w-full pl-10 pr-3 h-12 text-base bg-secondary rounded-xl text-foreground placeholder:text-muted-foreground focus:placeholder:text-foreground focus:outline-none focus-visible:outline-none focus:ring-0 focus-visible:ring-0 border-0 transition-colors"
                   />
                 </div>
               )}
@@ -1158,7 +1183,7 @@ export function Sidebar({
                     onToggle();
                   }
                 }}
-                className="w-full flex items-center justify-between h-10 px-2 rounded-xl hover:bg-secondary text-foreground text-md group cursor-pointer transition-all duration-150"
+                className="w-full flex items-center justify-between h-12 px-2 rounded-xl hover:bg-secondary text-foreground text-md group cursor-pointer transition-all duration-150"
               >
                 <div className="flex items-center gap-2.5">
                   <SquarePen className="w-4 h-4 text-muted-foreground group-hover:text-foreground" />
@@ -1168,7 +1193,7 @@ export function Sidebar({
             </div>
 
             {/* Chat History Stream */}
-            <div className="flex-1 px-2 overflow-y-auto border-t border-border/80 sidebar-scroll min-h-0">
+            <div className="flex-1 px-2 overflow-y-auto border-t border-border/50 sidebar-scroll min-h-0">
               {isLoading ? (
                 <div className="space-y-5 py-3 px-1 select-none">
                   {/* PINNED Skeleton Group */}
@@ -1211,7 +1236,7 @@ export function Sidebar({
                         disableHover
                         orientation="right-down"
                         size={18}
-                        className="text-foreground shrink-0 xl:opacity-0 xl:group-hover/section:opacity-100 transition-opacity duration-150"
+                        className="text-muted-foreground group-hover/section:text-foreground shrink-0 xl:opacity-0 xl:group-hover/section:opacity-100 transition-opacity duration-150"
                       />
                     </button>
                     {!collapsedSections["Pinned"] && (
@@ -1242,7 +1267,7 @@ export function Sidebar({
                         disableHover
                         orientation="right-down"
                         size={18}
-                        className="text-foreground shrink-0 xl:opacity-0 xl:group-hover/section:opacity-100 transition-opacity duration-150"
+                        className="text-muted-foreground group-hover/section:text-foreground shrink-0 xl:opacity-0 xl:group-hover/section:opacity-100 transition-opacity duration-150"
                       />
                     </button>
                     {!collapsedSections["Archived"] && (
@@ -1277,7 +1302,6 @@ export function Sidebar({
                 </div>
               )}
             </div>
-
           </div>
         </div>
 
@@ -1285,7 +1309,7 @@ export function Sidebar({
         <div
           className={cn(
             "w-full px-[5px] pb-[max(env(safe-area-inset-bottom),0.5rem)] pt-2 mt-auto relative z-20 transition-colors duration-200",
-            isOpen ? "border-t border-border/80" : "border-t border-transparent"
+            isOpen ? "border-t border-border/50" : "border-t border-transparent"
           )}
         >
           {/* Collapsed View Download Button (Stacked above avatar in rail view) */}
@@ -1301,69 +1325,116 @@ export function Sidebar({
               <TooltipTrigger asChild>
                 <button
                   type="button"
-                  onClick={() => toast.info("CloseAI app coming soon")}
-                  className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 bg-transparent hover:bg-secondary dark:hover:bg-[#212121] text-muted-foreground hover:text-foreground transition-colors cursor-pointer select-none"
+                  disabled={isLoading || !user}
+                  onClick={() => {
+                    if (!isLoading && user) toast.info("CloseAI app coming soon");
+                  }}
+                  className={cn(
+                    "w-10 h-10 max-w-full rounded-xl flex items-center justify-center shrink-0 transition-colors select-none text-muted-foreground",
+                    isLoading || !user
+                      ? "cursor-not-allowed bg-transparent"
+                      : "bg-transparent hover:bg-secondary hover:text-foreground cursor-pointer"
+                  )}
                   aria-label="Download app"
                 >
                   <Store className="w-5 h-5 shrink-0" />
                 </button>
               </TooltipTrigger>
-              <TooltipContent side="right" sideOffset={8} className="text-md">
-                Download app
-              </TooltipContent>
+
+              {!isLoading && user && (
+                <TooltipContent side="right" sideOffset={10} className="text-md">
+                  Download app
+                </TooltipContent>
+              )}
             </Tooltip>
           </div>
 
           {/* Profile Row */}
           <div className="w-full h-10 flex items-center justify-between relative">
             {isLoading || !user ? (
-              <div className="w-full h-10 flex items-center gap-2 select-none">
-                <div className="w-8 h-8 rounded-full ml-1 bg-secondary/80 dark:bg-neutral-800/80 animate-pulse shrink-0" />
+              <div
+                className={cn(
+                  "w-full h-12 flex items-center justify-between rounded-xl select-none pl-0",
+                  isOpen ? "min-w-0" : "w-10 h-10 justify-center"
+                )}
+              >
                 <div
                   className={cn(
-                    "flex-1 min-w-0 space-y-1.5 transition-all duration-200 overflow-hidden",
-                    isOpen ? "opacity-100" : "w-0 opacity-0 pointer-events-none hidden"
+                    "h-10 flex items-center justify-start min-w-0",
+                    isOpen
+                      ? "flex-1 pr-1 gap-2 text-left"
+                      : "w-10 pr-0 justify-center"
                   )}
                 >
-                  <div className="h-3.5 w-20 bg-secondary/80 dark:bg-neutral-800/80 rounded animate-pulse" />
-                  <div className="h-2.5 w-10 bg-secondary/60 dark:bg-neutral-800/60 rounded animate-pulse" />
-                </div>
-                <div
-                  className={cn(
-                    "shrink-0 transition-all duration-200 overflow-hidden pr-0.5",
-                    isOpen ? "w-8 opacity-100 pointer-events-auto" : "w-0 opacity-0 pointer-events-none hidden"
-                  )}
-                >
-                  <button
-                    type="button"
-                    onClick={() => toast.info("CloseAI app coming soon")}
-                    className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 text-muted-foreground hover:text-foreground bg-transparent hover:bg-black/10 dark:hover:bg-white/10 transition-colors cursor-pointer select-none"
-                    aria-label="Download app"
+                  <div
+                    className={cn(
+                      "relative z-50 shrink-0",
+                      isOpen ? "ml-1" : "ml-0"
+                    )}
                   >
-                    <Store className="w-5 h-5 shrink-0" />
-                  </button>
+                    <div className="w-8 h-8 rounded-full bg-secondary/80 dark:bg-neutral-800/80 animate-pulse" />
+                  </div>
+
+                  <div
+                    className={cn(
+                      "flex-1 min-w-0 space-y-1.5 transition-all duration-200 overflow-hidden whitespace-nowrap",
+                      isOpen
+                        ? "opacity-100"
+                        : "w-0 opacity-0 pointer-events-none hidden"
+                    )}
+                  >
+                    <div className="h-3.5 w-20 bg-secondary/80 dark:bg-neutral-800/80 rounded animate-pulse" />
+                    <div className="h-2.5 w-10 bg-secondary/60 dark:bg-neutral-800/60 rounded animate-pulse" />
+                  </div>
                 </div>
+
+                {isOpen && (
+                  <div
+                    className="shrink-0 pr-1.5"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <button
+                      type="button"
+                      disabled
+                      className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0 transition-colors select-none text-muted-foreground bg-transparent cursor-not-allowed"
+                      aria-label="Download app"
+                    >
+                      <Store className="w-5 h-5 shrink-0" />
+                    </button>
+                  </div>
+                )}
               </div>
             ) : (
-              <>
-                <DropdownMenu
-                  onOpenChange={(open) => {
-                    if (!open) setAccountSubView("main");
-                  }}
-                >
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <DropdownMenuTrigger asChild>
-                        <button
+              <DropdownMenu
+                onOpenChange={(open) => {
+                  if (!open) setAccountSubView("main");
+                }}
+              >
+                {/* Entire profile row = dropdown trigger */}
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <DropdownMenuTrigger asChild>
+                      <div
+                        role="button"
+                        tabIndex={0}
+                        className={cn(
+                          "w-full h-12 flex items-center justify-between rounded-xl hover:bg-secondary transition-[width,background-color] duration-200 cursor-pointer select-none outline-none focus:outline-none focus-visible:outline-none focus:ring-0 focus-visible:ring-0 ring-0 border-0 pl-0",
+                          isOpen ? "min-w-0" : "w-10 h-10"
+                        )}
+                      >
+                        {/* Profile Section */}
+                        <div
                           className={cn(
-                            "h-10 flex items-center justify-start rounded-xl hover:bg-secondary transition-[width,background-color] duration-200 cursor-pointer select-none outline-none focus:outline-none focus-visible:outline-none focus:ring-0 focus-visible:ring-0 ring-0 border-0 pl-0",
+                            "h-10 flex items-center justify-start min-w-0",
                             isOpen
-                              ? "flex-1 min-w-0 pr-1 gap-2 text-left"
-                              : "w-10 pr-0"
+                              ? "flex-1 pr-1 gap-2 text-left"
+                              : "w-10 pr-0 justify-center"
                           )}
                         >
                           {/* Rock-solid, non-blinking avatar — perfectly stationary at 9px from sidebar left */}
-                          <div className="ml-1 shrink-0">
+                          <div
+                            className={cn("relative z-50 shrink-0", isOpen ? "ml-1" : "ml-0")}
+                          >
                             {renderAvatarContent()}
                           </div>
 
@@ -1379,6 +1450,7 @@ export function Sidebar({
                             <p className="text-md font-medium text-foreground truncate leading-snug">
                               {displayName}
                             </p>
+
                             <p
                               className="text-sm text-muted-foreground leading-none"
                               suppressHydrationWarning
@@ -1386,58 +1458,72 @@ export function Sidebar({
                               {planDisplay}
                             </p>
                           </div>
-                        </button>
-                      </DropdownMenuTrigger>
-                    </TooltipTrigger>
-                    {!isOpen && (
-                      <TooltipContent side="right" className="text-md">
-                        {displayName}
-                      </TooltipContent>
-                    )}
-                  </Tooltip>
+                        </div>
 
-                  <DropdownMenuContent
-                    side="top"
-                    align="start"
-                    alignOffset={isOpen ? 0 : -4}
-                    sideOffset={6}
-                    className={cn(
-                      "rounded-2xl p-1.5 bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/80 dark:border-none outline-none focus:outline-none ring-0",
-                      isOpen
-                        ? "w-[calc(100vw-1rem)] sm:w-[234px] max-h-[calc(100dvh-5rem)] overflow-y-auto"
-                        : "w-64"
-                    )}
-                  >
-                    {renderAccountMenuItems()}
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                        {/* Download App Button — INSIDE the same outer profile box */}
+                        {isOpen && (
+                          <div
+                            className="shrink-0 pr-1.5"
+                            onPointerDown={(e) => e.stopPropagation()}
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <button
+                                  type="button"
+                                  onPointerDown={(e) => e.stopPropagation()}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    if (!isLoading && user) toast.info("CloseAI app coming soon");
+                                  }}
+                                  className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0 transition-colors select-none text-muted-foreground hover:text-foreground bg-transparent hover:bg-black/10 dark:hover:bg-white/10 cursor-pointer"
+                                  aria-label="Download app"
+                                >
+                                  <Store className="w-5 h-5 shrink-0" />
+                                </button>
+                              </TooltipTrigger>
 
-                {/* Expanded Download App Button (on right side of profile row) */}
-                <div
+                              <TooltipContent
+                                side="top"
+                                sideOffset={5}
+                                className="text-md"
+                              >
+                                Download app
+                              </TooltipContent>
+                            </Tooltip>
+                          </div>
+                        )}
+                      </div>
+                    </DropdownMenuTrigger>
+                  </TooltipTrigger>
+
+                  {!isOpen && (
+                    <TooltipContent
+                      side="right"
+                      sideOffset={10}
+                      className="text-md"
+                    >
+                      {displayName}
+                    </TooltipContent>
+                  )}
+                </Tooltip>
+
+                {/* Account Dropdown */}
+                <DropdownMenuContent
+                  side="top"
+                  align="start"
+                  alignOffset={isOpen ? 0 : -4}
+                  sideOffset={5}
                   className={cn(
-                    "shrink-0 transition-all duration-200 overflow-hidden pr-0.5",
+                    "rounded-2xl p-2 bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/80 dark:border-none outline-none focus:outline-none ring-0",
                     isOpen
-                      ? "w-8 opacity-100 pointer-events-auto"
-                      : "w-0 opacity-0 pointer-events-none hidden"
+                      ? "w-[var(--radix-dropdown-menu-trigger-width)] max-w-[var(--radix-dropdown-menu-trigger-width)] max-h-[calc(100dvh-5rem)] overflow-y-auto"
+                      : "w-64"
                   )}
                 >
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <button
-                        type="button"
-                        onClick={() => toast.info("CloseAI app coming soon")}
-                        className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 text-muted-foreground hover:text-foreground bg-transparent hover:bg-black/10 dark:hover:bg-white/10 transition-colors cursor-pointer select-none"
-                        aria-label="Download app"
-                      >
-                        <Store className="w-5 h-5 shrink-0" />
-                      </button>
-                    </TooltipTrigger>
-                    <TooltipContent side="top" sideOffset={8} className="text-md">
-                      Download app
-                    </TooltipContent>
-                  </Tooltip>
-                </div>
-              </>
+                  {renderAccountMenuItems()}
+                </DropdownMenuContent>
+              </DropdownMenu>
             )}
           </div>
         </div>

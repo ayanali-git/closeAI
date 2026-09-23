@@ -289,14 +289,14 @@ function DrawerContent({
   > = {
     right: {
       containerClasses:
-        "fixed inset-y-0 right-0 h-full w-full sm:w-[400px] max-w-full",
+        "fixed inset-y-0 right-0 h-full w-[75%] max-w-[75%] sm:w-[400px] sm:max-w-full",
       initial: { x: "100%" },
       animate: { x: 0 },
       exit: { x: "100%" },
     },
     left: {
       containerClasses:
-        "fixed inset-y-0 left-0 h-full w-full sm:w-[400px] max-w-full",
+        "fixed inset-y-0 left-0 h-full w-[75%] max-w-[75%] sm:w-[400px] sm:max-w-full",
       initial: { x: "-100%" },
       animate: { x: 0 },
       exit: { x: "-100%" },

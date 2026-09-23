@@ -28,6 +28,51 @@ export interface BottomSheetProps {
   className?: string;
   /** Min drag distance (px) past current snap to dismiss. */
   dismissThreshold?: number;
+  /** When true, always render as a centered modal (never bottom sheet), even on mobile. */
+  forceModal?: boolean;
+  /** Whether the modal body should be scrollable internally. Defaults to false so content cannot scroll off-screen. */
+  scrollable?: boolean;
+}
+
+// Global scroll-lock reference counter to avoid race conditions when switching between modals
+let scrollLockCount = 0;
+let originalBodyOverflow = "";
+let originalHtmlOverflow = "";
+let originalBodyPaddingRight = "";
+
+function lockBodyScroll() {
+  if (scrollLockCount === 0) {
+    const sbWidth = window.innerWidth - document.documentElement.clientWidth;
+    originalBodyOverflow = document.body.style.overflow;
+    originalHtmlOverflow = document.documentElement.style.overflow;
+    originalBodyPaddingRight = document.body.style.paddingRight;
+
+    document.body.style.overflow = "hidden";
+    document.documentElement.style.overflow = "hidden";
+    document.body.classList.add("modal-open-no-scroll");
+    if (sbWidth > 0) {
+      document.body.style.paddingRight = `${sbWidth}px`;
+      // Expose scrollbar width for fixed-position elements (e.g. header)
+      document.documentElement.style.setProperty(
+        "--scrollbar-compensation",
+        `${sbWidth}px`
+      );
+    }
+  }
+  scrollLockCount++;
+}
+
+function unlockBodyScroll() {
+  scrollLockCount = Math.max(0, scrollLockCount - 1);
+  if (scrollLockCount === 0) {
+    document.body.style.overflow =
+      originalBodyOverflow === "hidden" ? "" : originalBodyOverflow;
+    document.documentElement.style.overflow =
+      originalHtmlOverflow === "hidden" ? "" : originalHtmlOverflow;
+    document.body.classList.remove("modal-open-no-scroll");
+    document.body.style.paddingRight = originalBodyPaddingRight;
+    document.documentElement.style.removeProperty("--scrollbar-compensation");
+  }
 }
 
 export function BottomSheet({
@@ -40,10 +85,12 @@ export function BottomSheet({
   children,
   className,
   dismissThreshold = 120,
+  forceModal = false,
+  scrollable = false,
 }: BottomSheetProps) {
   const [snap, setSnap] = useState(defaultSnap);
   const [mounted, setMounted] = useState(false);
-  const [isMobileScreen, setIsMobileScreen] = useState(false);
+  const [isMobileScreenRaw, setIsMobileScreenRaw] = useState(false);
   const dragControls = useDragControls();
   const sheetRef = useRef<HTMLDivElement>(null);
   const reduce = useReducedMotion();
@@ -51,11 +98,17 @@ export function BottomSheet({
   const uid = useId();
   const titleId = `${uid}-title`;
   const descriptionId = `${uid}-description`;
+  /** Stays false while the exit animation is playing so scroll stays locked. */
+  const [exitComplete, setExitComplete] = useState(true);
+
+  // When forceModal is true, always use centered modal layout (never bottom sheet)
+  const isMobileScreen = forceModal ? false : isMobileScreenRaw;
+  const showTopBar = (isMobileScreen && !forceModal) || Boolean(title || description);
 
   useEffect(() => {
     setMounted(true);
     const checkMobile = () => {
-      setIsMobileScreen(window.innerWidth < 1025);
+      setIsMobileScreenRaw(window.innerWidth < 1025);
     };
     checkMobile();
     window.addEventListener("resize", checkMobile);
@@ -66,28 +119,22 @@ export function BottomSheet({
     if (open) setSnap(defaultSnap);
   }, [open, defaultSnap]);
 
+  // Mark exit animation as pending when open goes from true → false
   useEffect(() => {
-    if (!open) return;
-    const prevBodyOverflow = document.body.style.overflow;
-    const prevHtmlOverflow = document.documentElement.style.overflow;
-    const alreadyLocked = prevBodyOverflow === "hidden";
-
-    if (!alreadyLocked) {
-      document.body.style.overflow = "hidden";
-      document.documentElement.style.overflow = "hidden";
-      document.body.classList.add("modal-open-no-scroll");
-    }
-
-    return () => {
-      if (!alreadyLocked) {
-        document.body.style.overflow =
-          prevBodyOverflow === "hidden" ? "" : prevBodyOverflow;
-        document.documentElement.style.overflow =
-          prevHtmlOverflow === "hidden" ? "" : prevHtmlOverflow;
-        document.body.classList.remove("modal-open-no-scroll");
-      }
-    };
+    if (open) setExitComplete(false);
   }, [open]);
+
+  // Keep scroll locked for the full visual lifetime (including exit animation).
+  // Also compensate for scrollbar width so the background content doesn't shift.
+  const shouldLockScroll = open || !exitComplete;
+
+  useEffect(() => {
+    if (!shouldLockScroll) return;
+    lockBodyScroll();
+    return () => {
+      unlockBodyScroll();
+    };
+  }, [shouldLockScroll]);
 
   useEffect(() => {
     if (!open) return;
@@ -129,29 +176,29 @@ export function BottomSheet({
   };
 
   const snapValue = snapPoints[snap];
+  const clampedSnap =
+    typeof snapValue === "number" ? Math.min(snapValue, 0.75) : snapValue;
   const heightStyle = isMobileScreen
-    ? snapValue === "auto"
-      ? { maxHeight: "92vh" }
-      : { height: `${snapValue * 100}vh` }
+    ? clampedSnap === "auto"
+      ? { maxHeight: "75dvh" }
+      : { height: `${clampedSnap * 100}dvh`, maxHeight: "75dvh" }
     : {};
 
   if (!mounted) return null;
 
   return createPortal(
-    <AnimatePresence>
+    <AnimatePresence onExitComplete={() => setExitComplete(true)}>
       {open ? (
         <PresenceGate key="backdrop">
           {({ gate }) => (
-            <motion.button
-              type="button"
-              aria-label="Close modal"
+            <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={DRAWER}
               {...gate}
-              onClick={() => onOpenChange(false)}
-              className="pointer-events-auto fixed inset-0 z-50 bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm"
+              data-bottom-sheet-backdrop="true"
+              className="pointer-events-auto fixed inset-0 z-50 bg-background/80 cursor-default"
             />
           )}
         </PresenceGate>
@@ -159,10 +206,12 @@ export function BottomSheet({
       {open ? (
         <PresenceGate key="sheet">
           {({ gate }) => (
-            <div className={cn(
-              "fixed inset-0 z-50 flex pointer-events-none",
-              isMobileScreen ? "items-end justify-center" : "items-center justify-center p-4"
-            )}>
+            <div
+              className={cn(
+                "fixed inset-0 z-50 flex pointer-events-none cursor-default",
+                isMobileScreen ? "items-end justify-center" : "items-center justify-center p-4"
+              )}
+            >
               <motion.div
                 ref={sheetRef}
                 drag={isMobileScreen ? "y" : false}
@@ -205,10 +254,10 @@ export function BottomSheet({
                     : { ...(gate.style as Record<string, any>) }
                 }
                 className={cn(
-                  "pointer-events-auto flex flex-col overflow-hidden bg-card border border-border will-change-transform",
+                  "pointer-events-auto flex flex-col overflow-hidden bg-card border border-border/90 dark:border-none will-change-transform",
                   isMobileScreen
                     ? "w-full max-w-2xl rounded-t-3xl"
-                    : "w-full max-w-md rounded-2xl max-h-[85vh]",
+                    : "w-full max-w-xl rounded-3xl max-h-[85vh]",
                   className
                 )}
                 role="dialog"
@@ -218,45 +267,55 @@ export function BottomSheet({
                 aria-label={title ? undefined : "Modal dialog"}
                 data-bottom-sheet="true"
               >
-                <div className="flex flex-col items-center px-6 pb-2 pt-4">
-                  {/* Drag handle pill only on mobile */}
-                  {isMobileScreen && (
-                    <div
-                      onPointerDown={(event) => dragControls.start(event)}
-                      className={cn(
-                        "flex cursor-grab touch-none items-center justify-center py-1 active:cursor-grabbing mb-1",
-                        TOUCH_GESTURE_CONTENT_CLASS
-                      )}
-                    >
-                      <div className="h-1.5 w-10 rounded-full bg-muted-foreground/40" />
-                    </div>
-                  )}
-                  {title || description ? (
-                    <div className="mt-1 w-full text-left">
-                      {title ? (
-                        <h2
-                          id={titleId}
-                          className="text-lg font-semibold text-foreground tracking-tight"
-                        >
-                          {title}
-                        </h2>
-                      ) : null}
-                      {description ? (
-                        <p
-                          id={descriptionId}
-                          className="mt-1 text-sm text-muted-foreground leading-relaxed"
-                        >
-                          {description}
-                        </p>
-                      ) : null}
-                    </div>
-                  ) : null}
-                </div>
+                {showTopBar && (
+                  <div className="flex flex-col items-center px-6 pb-2 pt-4 shrink-0">
+                    {/* Drag handle pill only on mobile */}
+                    {isMobileScreen && (
+                      <div
+                        onPointerDown={(event) => dragControls.start(event)}
+                        className={cn(
+                          "flex cursor-grab touch-none items-center justify-center py-1 active:cursor-grabbing mb-1",
+                          TOUCH_GESTURE_CONTENT_CLASS
+                        )}
+                      >
+                        <div className="h-1.5 w-10 rounded-full bg-muted-foreground/40" />
+                      </div>
+                    )}
+                    {title || description ? (
+                      <div className="mt-1 w-full text-left">
+                        {title ? (
+                          <h2
+                            id={titleId}
+                            className="text-lg font-semibold text-foreground tracking-tight"
+                          >
+                            {title}
+                          </h2>
+                        ) : null}
+                        {description ? (
+                          <p
+                            id={descriptionId}
+                            className="mt-1 text-sm text-muted-foreground leading-relaxed"
+                          >
+                            {description}
+                          </p>
+                        ) : null}
+                      </div>
+                    ) : null}
+                  </div>
+                )}
                 <div
                   className={cn(
-                    "flex-1 overflow-y-auto overscroll-contain px-6 pb-6 bottom-sheet-content",
-                    "max-sm:[-ms-overflow-style:none] max-sm:[scrollbar-width:none] max-sm:[&::-webkit-scrollbar]:hidden"
+                    "flex-1 min-h-0 px-6 bottom-sheet-content",
+                    !showTopBar && "pt-6",
+                    scrollable
+                      ? "overflow-y-auto overscroll-contain [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                      : "overflow-hidden"
                   )}
+                  style={{
+                    paddingBottom: isMobileScreen
+                      ? "max(1.5rem, calc(1rem + env(safe-area-inset-bottom, 0px)))"
+                      : "1.5rem",
+                  }}
                 >
                   {children}
                 </div>

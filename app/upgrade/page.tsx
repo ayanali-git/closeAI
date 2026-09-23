@@ -119,7 +119,7 @@ export default function UpgradePage() {
   const handleUpgrade = async (planId: string) => {
     if (!user) {
       toast.error('Please login to upgrade your plan');
-      router.push('/auth/login');
+      router.push('/?auth=login');
       return;
     }
 
@@ -159,7 +159,7 @@ export default function UpgradePage() {
 
   const handleManageSubscription = async () => {
     if (!user) {
-      router.push('/auth/login');
+      router.push('/?auth=login');
       return;
     }
 
@@ -192,7 +192,7 @@ export default function UpgradePage() {
   };
 
   return (
-    <div className="min-h-screen bg-background select-none">
+    <div className="chat-selection-theme selection:bg-secondary selection:text-foreground min-h-screen bg-background">
       {/* Back Header */}
       <div className="border-b border-border sticky top-0 z-10 bg-background">
         <div className="max-w-6xl mx-auto px-6 py-4">

@@ -217,13 +217,25 @@ export function FilePreviewModal({
       <BottomSheet
         open={open}
         onOpenChange={onOpenChange}
-        snapPoints={[0.92]}
+        snapPoints={[0.75]}
         defaultSnap={0}
-        className="w-full max-w-2xl h-[92vh] max-h-[92vh] flex flex-col"
+        className="w-full max-w-2xl h-[75dvh] max-h-[75dvh] flex flex-col"
       >
         <div className="flex flex-col h-full -mx-6 -mt-2 -mb-6">
           {/* Mobile BottomSheet Header */}
           <div className="flex items-center justify-between px-4 py-3 border-b border-border/80 select-none bg-card shrink-0">
+            <span className="text-sm font-semibold truncate max-w-[240px] text-foreground">
+              {fileName}
+            </span>
+            <button
+              type="button"
+              onClick={() => onOpenChange(false)}
+              className="w-9 h-9 rounded-xl flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors cursor-pointer"
+              title="Close preview"
+              aria-label="Close preview"
+            >
+              <X className="w-4 h-4" />
+            </button>
           </div>
           {/* Content Viewer Area */}
           <div className="flex-1 w-full h-full overflow-hidden p-0 flex flex-col min-h-0">
@@ -238,14 +250,12 @@ export function FilePreviewModal({
 
   return createPortal(
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm"
-      onClick={() => onOpenChange(false)}
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm cursor-default"
     >
       {/* Top-Right Toolbar matching Share & More buttons position */}
       <header className="fixed top-0 left-0 right-0 z-50 h-14 pt-[env(safe-area-inset-top,0px)] px-3 sm:px-4 flex items-center justify-end select-none pointer-events-none bg-transparent">
         <div
           className="flex items-center gap-1.5 sm:gap-2 pointer-events-auto mt-3 pr-3 sm:pr-1 select-none"
-          onClick={(e) => e.stopPropagation()}
         >
           <button
             type="button"
@@ -262,7 +272,6 @@ export function FilePreviewModal({
 
       <div
         className="relative w-[85vw] max-w-[85vw] h-[85vh] max-h-[85vh] flex flex-col bg-background/95 dark:bg-[#1e1e1e]/95 rounded-2xl overflow-hidden"
-        onClick={(e) => e.stopPropagation()}
       >
         {/* Content Viewer Area */}
         <div className="flex-1 w-full h-full overflow-hidden p-0 flex flex-col min-h-0">

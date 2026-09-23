@@ -61,9 +61,41 @@
   }
   html,
   body {
-    @apply bg-background text-foreground antialiased selection:bg-foreground selection:text-background;
+    @apply bg-background text-foreground antialiased;
     overflow-x: clip;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+
+  /* Prevent browser text-selection from showing a solid white block/bar on empty inputs/textareas */
+  textarea:placeholder-shown::selection,
+  input:placeholder-shown::selection {
+    background-color: transparent !important;
+    color: #ffffff !important;
+  }
+
+  /* Custom selection theme for /c, /c/[id], /s/[id], /settings, and /upgrade (matching bg-secondary) */
+  .chat-selection-theme ::selection,
+  .chat-selection-theme::selection,
+  [data-chat-page="true"] ::selection,
+  [data-chat-page="true"]::selection,
+  .chat-markdown ::selection,
+  .chat-markdown::selection,
+  .select-text ::selection,
+  .select-text::selection {
+    background-color: hsl(var(--secondary)) !important;
+    color: hsl(var(--foreground)) !important;
+  }
+
+  .chat-selection-theme ::-moz-selection,
+  .chat-selection-theme::-moz-selection,
+  [data-chat-page="true"] ::-moz-selection,
+  [data-chat-page="true"]::-moz-selection,
+  .chat-markdown ::-moz-selection,
+  .chat-markdown::-moz-selection,
+  .select-text ::-moz-selection,
+  .select-text::-moz-selection {
+    background-color: hsl(var(--secondary)) !important;
+    color: hsl(var(--foreground)) !important;
   }
 }
 
@@ -500,34 +532,31 @@ body.modal-open-no-scroll {
 }
 
 @media screen and (max-width: 1024px) {
-  /* Prevent scrollbars on background elements when modal/bottom-sheet is open */
-  body.modal-open-no-scroll::-webkit-scrollbar,
-  body.modal-open-no-scroll *::-webkit-scrollbar {
+  /* Prevent scrollbars on background body when modal/bottom-sheet is open */
+  body.modal-open-no-scroll::-webkit-scrollbar {
     display: none !important;
     width: 0 !important;
     height: 0 !important;
   }
 
-  /* Completely hide scrollbars on all bottom sheets and dialog contents on small screens */
-  [data-bottom-sheet],
-  [data-bottom-sheet] *,
-  .bottom-sheet-content,
-  .bottom-sheet-content *,
-  [role="dialog"],
-  [role="dialog"] * {
+  /* Hide scrollbars on the outer bottom sheet content container (inner cards retain native OS scrollbars) */
+  .bottom-sheet-content {
     -ms-overflow-style: none !important;
     scrollbar-width: none !important;
   }
 
-  [data-bottom-sheet]::-webkit-scrollbar,
-  [data-bottom-sheet] *::-webkit-scrollbar,
-  .bottom-sheet-content::-webkit-scrollbar,
-  .bottom-sheet-content *::-webkit-scrollbar,
-  [role="dialog"]::-webkit-scrollbar,
-  [role="dialog"] *::-webkit-scrollbar {
+  .bottom-sheet-content::-webkit-scrollbar {
     display: none !important;
     width: 0 !important;
     height: 0 !important;
   }
+}
+
+/* Guarantee that modal backdrops and outside areas never display pointer cursor */
+[data-bottom-sheet-backdrop],
+[data-radix-portal] > [data-state],
+[data-radix-dialog-overlay],
+[data-radix-alert-dialog-overlay] {
+  cursor: default !important;
 }
 

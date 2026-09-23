@@ -781,7 +781,7 @@ export function MessageList({
     <>
       <div
         data-message-actions={showMessageActions ? "visible" : "hidden"}
-        className="w-full max-w-3xl mx-auto pt-10 pb-2 space-y-5 px-6 [&[data-message-actions=hidden]_[data-message-action=copy]]:hidden [&[data-message-actions=hidden]_[data-message-action=share]]:hidden"
+        className="w-full max-w-3xl mx-auto pt-10 pb-2 space-y-5 px-6 selection:bg-secondary selection:text-foreground [&[data-message-actions=hidden]_[data-message-action=copy]]:hidden [&[data-message-actions=hidden]_[data-message-action=share]]:hidden"
       >
         {messages.map((msg, index) => {
           const isUser = msg.role === "user";

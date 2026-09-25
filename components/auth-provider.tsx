@@ -12,7 +12,7 @@ export interface AuthContextType {
   token: string | null;
   loading: boolean;
   isSigningOut: boolean;
-  signOut: () => Promise<void>;
+  signOut: (redirectTo?: string) => Promise<void>;
   refreshSession: () => Promise<Session | null>;
 }
 
@@ -22,7 +22,7 @@ export const AuthContext = createContext<AuthContextType>({
   token: null,
   loading: true,
   isSigningOut: false,
-  signOut: async () => { },
+  signOut: async (_redirectTo?: string) => { },
   refreshSession: async () => null,
 });
 
@@ -46,7 +46,7 @@ export function hasActiveAuthCookie(): boolean {
       const isAuthCookie =
         name === AUTH_COOKIE_NAME ||
         name.startsWith(`${AUTH_COOKIE_NAME}.`) ||
-        (name.startsWith('sb-') && name.endsWith('-auth-token'));
+        name.includes('auth-token');
 
       if (isAuthCookie) {
         // An active Supabase auth token session string is always > 30 characters
@@ -63,14 +63,16 @@ export function hasActiveAuthCookie(): boolean {
 
 export function AuthProvider({
   children,
+  initialUser = null,
   initialHasAuth = false,
 }: {
   children: React.ReactNode;
+  initialUser?: User | null;
   initialHasAuth?: boolean;
 }) {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<User | null>(initialUser ?? null);
   const [session, setSession] = useState<Session | null>(null);
-  const [loading, setLoading] = useState(initialHasAuth);
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
   const profileCheckedRef = useRef<string | null>(null);
   const isSigningOutRef = useRef(false);
@@ -160,46 +162,21 @@ export function AuthProvider({
   useEffect(() => {
     let isMounted = true;
 
-    // Fast path: If client browser has no active auth cookie, immediately finish loading (guest)
-    if (typeof document !== 'undefined' && !hasActiveAuthCookie()) {
-      setLoading(false);
-    }
-
     // Fast initial check to populate session immediately on mount
     supabase.auth.getSession().then(({ data: { session: initialSession }, error }) => {
       if (!isMounted) return;
       if (initialSession && !error) {
         setSession(initialSession);
-        setUser(initialSession.user);
-        healBloatedSession(initialSession.user);
-        ensureProfile(initialSession.user);
+        if (initialSession.user) {
+          setUser(initialSession.user);
+          healBloatedSession(initialSession.user);
+          ensureProfile(initialSession.user);
+        }
       }
-      if (!isSigningOutRef.current) {
-        setLoading(false);
-      }
+      setLoading(false);
     }).catch(() => {
-      if (isMounted && !isSigningOutRef.current) setLoading(false);
+      if (isMounted) setLoading(false);
     });
-
-    // Browser load synchronization: ensure loading smoothly resolves with browser load
-    const syncWithBrowserLoad = () => {
-      if (!isMounted) return;
-      if (!isSigningOutRef.current) {
-        setLoading(false);
-      }
-    };
-
-    let safetyTimer: NodeJS.Timeout | null = null;
-    let loadTimer: NodeJS.Timeout | null = null;
-
-    if (typeof document !== 'undefined') {
-      if (document.readyState === 'complete') {
-        loadTimer = setTimeout(syncWithBrowserLoad, 200);
-      } else {
-        window.addEventListener('load', syncWithBrowserLoad);
-      }
-      safetyTimer = setTimeout(syncWithBrowserLoad, 400);
-    }
 
     // Authoritative listener for auth state changes & token refreshes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -209,9 +186,7 @@ export function AuthProvider({
         const currentUser = newSession?.user ?? null;
         setSession(newSession);
         setUser(currentUser);
-        if (!isSigningOutRef.current) {
-          setLoading(false);
-        }
+        setLoading(false);
 
         if (currentUser && (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED' || event === 'INITIAL_SESSION')) {
           healBloatedSession(currentUser);
@@ -229,16 +204,11 @@ export function AuthProvider({
 
     return () => {
       isMounted = false;
-      if (safetyTimer) clearTimeout(safetyTimer);
-      if (loadTimer) clearTimeout(loadTimer);
-      if (typeof window !== 'undefined') {
-        window.removeEventListener('load', syncWithBrowserLoad);
-      }
       subscription.unsubscribe();
     };
   }, [ensureProfile, healBloatedSession]);
 
-  const signOut = async () => {
+  const signOut = async (redirectTo: string = '/gc') => {
     isSigningOutRef.current = true;
     setIsSigningOut(true);
     setUser(null);
@@ -255,7 +225,7 @@ export function AuthProvider({
         const isAuthSessionCookie =
           name === AUTH_COOKIE_NAME ||
           name.startsWith(`${AUTH_COOKIE_NAME}.`) ||
-          (name.startsWith('sb-') && name.endsWith('-auth-token')) ||
+          name.includes('auth-token') ||
           name.includes('code-verifier');
 
         if (isAuthSessionCookie) {
@@ -273,9 +243,9 @@ export function AuthProvider({
     setSession(null);
     setLoading(false);
     if (typeof window !== 'undefined') {
-      window.location.href = '/';
+      window.location.replace(redirectTo);
     } else {
-      router.push('/');
+      router.replace(redirectTo);
     }
   };
 

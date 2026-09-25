@@ -5,6 +5,20 @@ const nextConfig = {
     ignoreDuringBuilds: true,
   },
   images: { unoptimized: true },
+  async redirects() {
+    return [
+      {
+        source: '/help',
+        destination: '/support/help',
+        permanent: true,
+      },
+      {
+        source: '/pricing',
+        destination: '/product/pricing',
+        permanent: true,
+      },
+    ];
+  },
   webpack: (config) => {
     config.resolve.fallback = {
       ...config.resolve.fallback,

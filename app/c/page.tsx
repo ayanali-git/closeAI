@@ -1,20 +1,21 @@
 "use client";
 
 import React, { useState, useEffect, useRef, Suspense } from "react";
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/lib/supabase";
-import { chatService, Chat } from "@/lib/chat-service";
+import { chatService } from "@/lib/chat-service";
 import { Sidebar } from "@/components/chat/sidebar";
 import { WelcomeScreen } from "@/components/chat/welcome-screen";
 import { ChatInput } from "@/components/chat/chat-input";
 import { Loader, PanelRight } from "lucide-react";
-import { CloseAIIcon } from "@/components/brand/logo";
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { AnimatedArrowUpRight } from "@/components/ui/animated";
 import { useSidebarContext } from "@/components/chat/sidebar-context";
 import toast from "@/lib/toast";
 
@@ -29,13 +30,12 @@ function NewChatContent() {
     setSidebarOpen,
     toggleSidebar: handleToggleSidebar,
     chats,
-    setChats,
     isChatsLoading,
     loadChats,
     deleteChat,
   } = useSidebarContext();
+
   const [newChatKey, setNewChatKey] = useState(0);
-  const [isSidebarBtnHovered, setIsSidebarBtnHovered] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [message, setMessage] = useState("");
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
@@ -47,71 +47,19 @@ function NewChatContent() {
   const [thinkMode, setThinkMode] = useState(false);
   const autoCreateTriggeredRef = useRef(false);
 
-  const handleAutoCreateAndSend = async (promptText: string) => {
-    if (!user) return;
-    setIsAutoCreating(true);
-    try {
-      const cleanPrompt = promptText.trim().replace(/\s+/g, " ");
-      // 1. Create chat directly in Supabase
-      const { data: newChat, error: chatError } = await supabase
-        .from("chats")
-        .insert({
-          user_id: user.id,
-          title: cleanPrompt,
-          starred: false,
-        })
-        .select()
-        .single();
-
-      if (chatError || !newChat) {
-        throw new Error(chatError?.message || "Failed to create chat");
-      }
-
-      // 2. Mark pending prompt for immediate AI trigger in [id]/page
-      if (typeof window !== "undefined") {
-        sessionStorage.setItem(
-          `auto_send_${newChat.id}`,
-          JSON.stringify({
-            prompt: promptText,
-            model: selectedModel,
-            think: thinkMode,
-          })
-        );
-      }
-
-      // 3. Replace URL with active chat
-      router.replace(`/c/${newChat.id}`);
-    } catch (error: any) {
-      console.error("Error auto-starting chat:", error);
-      toast.error(error.message || "Failed to start chat");
-      setIsAutoCreating(false);
-      setMessage(promptText);
-    }
-  };
-
+  // If unauthorized, redirect to /gc immediately
   useEffect(() => {
     if (loading) return;
 
     if (!user) {
-      // Don't redirect to login during sign-out — signOut handler redirects to home
       if (isSigningOut) return;
-      const pending =
-        queryPrompt ||
-        (typeof window !== "undefined"
-          ? sessionStorage.getItem("pending_prompt")
-          : null);
-      if (pending) {
-        if (typeof window !== "undefined") {
-          sessionStorage.setItem("pending_prompt", pending);
-        }
-      }
-      router.push("/?auth=login");
+      const search = typeof window !== "undefined" ? window.location.search : "";
+      router.replace(`/gc${search}`);
       return;
     }
 
     loadChats();
 
-    // Check if we need to auto-create and send from query param or pending prompt
     const promptToSend =
       queryPrompt ||
       (typeof window !== "undefined"
@@ -131,6 +79,54 @@ function NewChatContent() {
     }
   }, [user, loading, isSigningOut, queryPrompt, router]);
 
+  const handleNewChat = () => {
+    setMessage("");
+    setUploadedFiles([]);
+    setNewChatKey((k) => k + 1);
+    if (typeof window !== "undefined" && window.innerWidth < 1025) {
+      setSidebarOpen(false);
+    }
+  };
+
+  const handleAutoCreateAndSend = async (promptText: string) => {
+    if (!user) return;
+    setIsAutoCreating(true);
+    try {
+      const cleanPrompt = promptText.trim().replace(/\s+/g, " ");
+      const { data: newChat, error: chatError } = await supabase
+        .from("chats")
+        .insert({
+          user_id: user.id,
+          title: cleanPrompt,
+          starred: false,
+        })
+        .select()
+        .single();
+
+      if (chatError || !newChat) {
+        throw new Error(chatError?.message || "Failed to create chat");
+      }
+
+      if (typeof window !== "undefined") {
+        sessionStorage.setItem(
+          `auto_send_${newChat.id}`,
+          JSON.stringify({
+            prompt: promptText,
+            model: selectedModel,
+            think: thinkMode,
+          })
+        );
+      }
+
+      router.replace(`/c/${newChat.id}`);
+    } catch (error: any) {
+      console.error("Error auto-starting chat:", error);
+      toast.error(error.message || "Failed to start chat");
+      setIsAutoCreating(false);
+      setMessage(promptText);
+    }
+  };
+
   const handleToggleArchive = async (id: string, archived: boolean) => {
     try {
       if (archived) {
@@ -147,11 +143,7 @@ function NewChatContent() {
 
   const handleSend = async () => {
     if (!message.trim() && uploadedFiles.length === 0) return;
-    if (!user) {
-      toast.error("Please log in to chat");
-      router.push("/?auth=login");
-      return;
-    }
+    if (!user) return;
 
     const messageText = message;
     const filesToSend = [...uploadedFiles];
@@ -161,7 +153,6 @@ function NewChatContent() {
 
     try {
       const cleanPrompt = messageText.trim().replace(/\s+/g, " ");
-      // 1. Create chat directly in Supabase immediately (<80ms)
       const { data: newChat, error: chatError } = await supabase
         .from("chats")
         .insert({
@@ -176,7 +167,6 @@ function NewChatContent() {
         throw new Error(chatError?.message || "Failed to create chat");
       }
 
-      // 2. Mark pending prompt for immediate AI trigger in [id]/page
       if (typeof window !== "undefined") {
         sessionStorage.setItem(
           `auto_send_${newChat.id}`,
@@ -192,7 +182,6 @@ function NewChatContent() {
         setThinkMode(false);
       }
 
-      // 3. Instantly navigate to the active chat!
       router.push(`/c/${newChat.id}`);
     } catch (error: any) {
       console.error("Error sending message:", error);
@@ -211,20 +200,14 @@ function NewChatContent() {
   return (
     <div className="flex h-full w-full bg-background text-foreground overflow-hidden">
       <title>CloseAI</title>
-      {/* Sidebar (Expanded or Mini Rail) */}
+
+      {/* Sidebar (Authenticated) */}
       <Sidebar
         user={user}
         chats={chats}
         currentChatId={null}
         onChatSelect={(id) => router.push(`/c/${id}`)}
-        onNewChat={() => {
-          setMessage("");
-          setUploadedFiles([]);
-          setNewChatKey((k) => k + 1);
-          if (typeof window !== "undefined" && window.innerWidth < 1025) {
-            setSidebarOpen(false);
-          }
-        }}
+        onNewChat={handleNewChat}
         onDeleteChat={(id) => {
           deleteChat(id)
             .then(() => toast.success("Chat deleted"))
@@ -248,21 +231,18 @@ function NewChatContent() {
 
       {/* Main Chat Workspace */}
       <div className="flex-1 flex flex-col min-w-0 h-full relative overflow-hidden selection:bg-secondary selection:text-foreground">
-        {/* Transparent Top Floating Header */}
-        <header className="shrink-0 z-30 h-14 pt-[env(safe-area-inset-top,0px)] px-3 sm:px-4 flex items-center justify-between select-none">
+        {/* Transparent Floating Header */}
+        <header className="absolute top-0 left-0 right-0 z-30 h-14 pt-[env(safe-area-inset-top,0px)] px-3 sm:px-4 flex items-center justify-between select-none pointer-events-none bg-transparent">
+          {/* Top gradient overlay */}
+          <div className="absolute top-0 left-0 right-4 sm:right-5 h-20 pointer-events-none bg-gradient-to-b from-background via-background to-transparent -z-10" />
+
           <div className="flex items-center gap-2 pointer-events-auto mt-3 pl-3 sm:pl-0">
             {!sidebarOpen && (
               <Tooltip>
                 <TooltipTrigger asChild>
                   <button
                     type="button"
-                    onClick={() => {
-                      setIsSidebarBtnHovered(false);
-                      handleToggleSidebar();
-                    }}
-                    onMouseEnter={() => setIsSidebarBtnHovered(true)}
-                    onMouseLeave={() => setIsSidebarBtnHovered(false)}
-                    onBlur={() => setIsSidebarBtnHovered(false)}
+                    onClick={() => handleToggleSidebar()}
                     className="xl:hidden w-9 h-9 rounded-xl bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/50 dark:border-none text-muted-foreground hover:text-foreground flex items-center justify-center transition-colors cursor-pointer outline-none focus:outline-none"
                     aria-label="Open sidebar"
                   >
@@ -282,8 +262,8 @@ function NewChatContent() {
           </div>
         </header>
 
-        {/* Content Stream (Welcome Zero State) */}
-        <div className="flex-1 flex flex-col justify-center overflow-y-auto px-2 sm:px-4 pb-[env(safe-area-inset-bottom,0px)] no-overscroll">
+        {/* Content Stream */}
+        <div className="flex-1 flex flex-col justify-center overflow-y-auto px-2 sm:px-4 pb-2 no-overscroll pt-14">
           {isAutoCreating ||
           (queryPrompt && !autoCreateTriggeredRef.current) ? (
             <div className="flex-1 w-full h-full flex flex-col items-center justify-center space-y-3 pb-12 text-muted-foreground">
@@ -315,20 +295,42 @@ function NewChatContent() {
             </WelcomeScreen>
           )}
         </div>
-      </div>
-    </div>
-  );
-}
 
-function NewChatFallback() {
-  return (
-    <div className="flex h-full w-full bg-background text-foreground overflow-hidden">
-      <div className="hidden xl:flex w-[60px] h-full bg-sidebar border-r border-border flex-col items-center justify-between p-2 shrink-0">
-        <div className="w-9 h-9 rounded-xl bg-secondary/80 dark:bg-neutral-800/60 animate-pulse mt-2" />
-        <div className="w-9 h-9 rounded-full bg-secondary/80 dark:bg-neutral-800/80 animate-pulse mb-2" />
-      </div>
-      <div className="flex-1 flex flex-col items-center justify-center min-w-0">
-        <Loader className="w-6 h-6 animate-spin text-muted-foreground" />
+        {/* Bottom Disclaimer for Empty State */}
+        <div className="w-full text-center pb-[max(env(safe-area-inset-bottom),0.75rem)] pt-1 px-4 select-none shrink-0 z-20">
+          <p className="max-w-3xl mx-auto text-[11.5px] sm:text-[12px] text-muted-foreground font-normal tracking-tight leading-normal">
+            CloseAI is AI. By using, you agree to our{" "}
+            <Link
+              href="/support/terms"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-0.5 text-muted-foreground hover:text-foreground transition-colors align-baseline"
+            >
+              <span>Terms</span>
+              <AnimatedArrowUpRight size={15} className="shrink-0" />
+            </Link>{" "}
+            &amp;{" "}
+            <Link
+              href="/support/privacy"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-0.5 text-muted-foreground hover:text-foreground transition-colors align-baseline"
+            >
+              <span>Privacy</span>
+              <AnimatedArrowUpRight size={15} className="shrink-0" />
+            </Link>
+            . Chats may be reviewed and used to improve AI models.{" "}
+            <Link
+              href="/support/help"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-0.5 text-muted-foreground hover:text-foreground transition-colors align-baseline"
+            >
+              <span>Learn more</span>
+              <AnimatedArrowUpRight size={15} className="shrink-0" />
+            </Link>
+          </p>
+        </div>
       </div>
     </div>
   );
@@ -336,7 +338,7 @@ function NewChatFallback() {
 
 export default function NewChatPage() {
   return (
-    <Suspense fallback={<NewChatFallback />}>
+    <Suspense fallback={null}>
       <NewChatContent />
     </Suspense>
   );

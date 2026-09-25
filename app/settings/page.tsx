@@ -216,7 +216,7 @@ export default function SettingsPage() {
                   disabled={isSaveDisabled}
                 >
                   {saving ? (
-                    <Loader className="w-4 h-4 animate-spin" />
+                    <Loader className="w-5 h-5 animate-spin" />
                   ) : (
                     <span>Save changes</span>
                   )}
@@ -285,7 +285,7 @@ export default function SettingsPage() {
                   className="w-full cursor-pointer disabled:pointer-events-auto disabled:cursor-not-allowed"
                   disabled={saving || !newPassword || !confirmPassword}
                 >
-                  {saving ? <Loader className="w-4 h-4 animate-spin" /> : 'Update password'}
+                  {saving ? <Loader className="w-5 h-5 animate-spin" /> : 'Update password'}
                 </Button>
               </form>
             </div>

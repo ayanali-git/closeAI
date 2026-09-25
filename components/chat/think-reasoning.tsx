@@ -310,8 +310,7 @@ export function ThinkReasoning({
         <AnimatedChevron
           open={open}
           orientation="right-down"
-          size={13}
-          strokeWidth={1.5}
+          size={15}
           disableHover
           className="text-muted-foreground group-hover:text-foreground shrink-0 transition-colors"
         />

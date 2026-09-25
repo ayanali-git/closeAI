@@ -4,9 +4,6 @@ import { getServerAuthUser, supabaseAdmin } from '@/lib/supabase-server';
 export async function POST(request: NextRequest) {
     try {
         const { user, error: authError } = await getServerAuthUser(request);
-        if (authError || !user) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-        }
 
         const formData = await request.formData();
         const file = formData.get('file') as File;
@@ -15,10 +12,16 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'No file provided' }, { status: 400 });
         }
 
+        // For guest / unauthorized users, only photo uploads are allowed
+        if (!user && !file.type.startsWith('image/')) {
+            return NextResponse.json({ error: 'Only image uploads are allowed for guest sessions' }, { status: 403 });
+        }
+
         // Generate unique filename
         const timestamp = Date.now();
         const sanitizedName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
-        const filename = `${user.id}/${timestamp}_${sanitizedName}`;
+        const userFolder = user ? user.id : 'guest';
+        const filename = `${userFolder}/${timestamp}_${sanitizedName}`;
 
         // Convert file to buffer
         const arrayBuffer = await file.arrayBuffer();

@@ -128,7 +128,6 @@ export default function HelpPage() {
             <AnimatedSearchClose
               isOpen={Boolean(searchQuery.trim())}
               size={18}
-              strokeWidth={1.25}
             />
           </button>
           <input
@@ -276,7 +275,6 @@ export default function HelpPage() {
                       <AnimatedPlusMinus
                         open={isOpen}
                         size={18}
-                        strokeWidth={1.25}
                       />
                     </span>
                   </button>

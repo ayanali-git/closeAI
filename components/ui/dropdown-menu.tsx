@@ -32,7 +32,7 @@ const DropdownMenuSubTrigger = React.forwardRef<
       onPointerMove?.(e);
     }}
     className={cn(
-      'flex cursor-pointer select-none items-center rounded-xl px-3 py-2 text-md outline-none transition-colors duration-75 hover:bg-secondary dark:hover:bg-[#2f2f2f] focus:bg-secondary dark:focus:bg-[#2f2f2f] data-[state=open]:bg-secondary dark:data-[state=open]:bg-[#2f2f2f] text-foreground group focus:outline-none focus:ring-0 ring-0 text-left',
+      'flex cursor-pointer select-none items-center rounded-xl px-3 py-2 text-md outline-none transition-colors duration-75 hover:bg-secondary dark:hover:bg-[#2f2f2f] focus:bg-secondary dark:focus:bg-[#2f2f2f] data-[highlighted]:bg-secondary dark:data-[highlighted]:bg-[#2f2f2f] data-[state=open]:bg-secondary dark:data-[state=open]:bg-[#2f2f2f] text-foreground group focus:outline-none focus:ring-0 ring-0 text-left',
       inset && 'pl-8',
       className
     )}
@@ -103,7 +103,7 @@ const DropdownMenuItem = React.forwardRef<
       onPointerMove?.(e);
     }}
     className={cn(
-      'relative flex cursor-pointer select-none items-center rounded-xl px-3 py-2 text-md outline-none transition-colors duration-75 hover:bg-secondary dark:hover:bg-[#2f2f2f] focus:bg-secondary dark:focus:bg-[#2f2f2f] data-[disabled]:pointer-events-none data-[disabled]:opacity-50 text-foreground group focus:outline-none focus:ring-0 ring-0 text-left',
+      'relative flex cursor-pointer select-none items-center rounded-xl px-3 py-2 text-md outline-none transition-colors duration-75 hover:bg-secondary dark:hover:bg-[#2f2f2f] focus:bg-secondary dark:focus:bg-[#2f2f2f] data-[highlighted]:bg-secondary dark:data-[highlighted]:bg-[#2f2f2f] data-[disabled]:pointer-events-none data-[disabled]:opacity-50 text-foreground group focus:outline-none focus:ring-0 ring-0 text-left',
       inset && 'pl-8',
       className
     )}

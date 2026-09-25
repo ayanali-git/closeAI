@@ -47,7 +47,7 @@ export default function EnterprisePage() {
           <Button asChild variant="outline" size="lg" className="rounded-full px-8 border border-border/80 dark:border-none hover:bg-secondary">
             <Link href="/product/pricing">View Pricing</Link>
           </Button>
-          <Button asChild size="lg" className="group rounded-full px-8 bg-foreground text-background hover:opacity-90">
+          <Button asChild size="lg" className="group rounded-full px-8 bg-foreground text-background hover:opacity/90">
             <Link href="/company/contact" className="inline-flex items-center justify-center">
               <span>Contact Sales</span>
               <AnimatedArrow size={18} />
@@ -85,7 +85,7 @@ export default function EnterprisePage() {
         <p className="text-muted-foreground text-md max-w-lg mx-auto mb-8">
           Join thousands of enterprises transforming productivity with closeAI's secure reasoning infrastructure.
         </p>
-        <Button asChild className="group rounded-full px-8 h-12 bg-foreground text-background hover:opacity-90">
+        <Button asChild className="group rounded-full px-8 h-12 bg-foreground text-background hover:opacity/90">
           <Link href="/company/contact" className="flex items-center">
             <span>Schedule Demo</span>
             <AnimatedArrow size={18} />

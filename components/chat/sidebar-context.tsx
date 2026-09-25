@@ -91,33 +91,33 @@ export function SidebarProvider({
     }
   }, [user, loadChats]);
 
-  // Sync state on client mount strictly for desktop from localStorage/cookie; mobile is always closed
+  const persistSidebarState = (open: boolean) => {
+    try {
+      if (typeof document !== 'undefined') {
+        document.cookie = `sidebar_open=${open}; path=/; max-age=31536000; SameSite=Lax`;
+      }
+    } catch (e) {}
+  };
+
+  // Set mounted on client; on medium and small screens (< 1280px), mobile drawer is closed by default
   useEffect(() => {
-    const isDesktop = window.innerWidth >= 1025;
-    if (!isDesktop) {
-      setSidebarOpen(false);
-    } else {
-      try {
-        const stored = localStorage.getItem('sidebar_open');
-        if (stored !== null) {
-          setSidebarOpen(stored === 'true');
-        }
-      } catch (e) {}
-    }
     setMounted(true);
+    if (window.innerWidth < 1280) {
+      setSidebarOpen(false);
+    }
   }, []);
 
-  // Whenever user navigates on small screens (< 1025px), automatically close the sidebar
+  // Whenever user navigates on medium and small screens (< 1280px), automatically close the mobile drawer
   useEffect(() => {
-    if (typeof window !== 'undefined' && window.innerWidth < 1025) {
+    if (typeof window !== 'undefined' && window.innerWidth < 1280) {
       setSidebarOpen(false);
     }
   }, [pathname]);
 
-  // Handle window resize between mobile and desktop
+  // Handle window resize between medium and big screens
   useEffect(() => {
     const handleResize = () => {
-      if (window.innerWidth < 1025) {
+      if (window.innerWidth < 1280) {
         setSidebarOpen(false);
       }
     };
@@ -125,25 +125,27 @@ export function SidebarProvider({
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // Save to localStorage AND document.cookie on desktop (>= 1025px)
-  useEffect(() => {
-    if (mounted && typeof window !== 'undefined' && window.innerWidth >= 1025) {
-      try {
-        localStorage.setItem('sidebar_open', String(sidebarOpen));
-        document.cookie = `sidebar_open=${sidebarOpen}; path=/; max-age=31536000; SameSite=Lax`;
-      } catch (e) {}
-    }
-  }, [sidebarOpen, mounted]);
+  const toggleSidebar = useCallback(() => {
+    setSidebarOpen((prev) => {
+      const next = !prev;
+      persistSidebarState(next);
+      return next;
+    });
+  }, []);
 
-  const toggleSidebar = () => {
-    setSidebarOpen((prev) => !prev);
-  };
+  const handleSetSidebarOpen: React.Dispatch<React.SetStateAction<boolean>> = useCallback((action) => {
+    setSidebarOpen((prev) => {
+      const next = typeof action === 'function' ? action(prev) : action;
+      persistSidebarState(next);
+      return next;
+    });
+  }, []);
 
   return (
     <SidebarContext.Provider
       value={{
         sidebarOpen,
-        setSidebarOpen,
+        setSidebarOpen: handleSetSidebarOpen,
         toggleSidebar,
         chats,
         setChats,

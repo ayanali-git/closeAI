@@ -60,6 +60,10 @@ interface ChatInputProps {
   placeholder?: string;
   disableAttach?: boolean;
   autoFocus?: boolean;
+  isGuest?: boolean;
+  onOpenLoginModal?: () => void;
+  onOpenWebSearchModal?: () => void;
+  onOpenAdvancedFeaturesModal?: () => void;
 }
 
 /** preview card with thumbnail or code icon */
@@ -98,7 +102,7 @@ function FilePreviewCard({
         title={`Preview ${file.name}`}
       >
         <ImagePreview src={imageUrl || ""} alt={file.name}>
-          <div className="w-14 h-14 rounded-xl overflow-hidden bg-neutral-100 dark:bg-[#262626] flex items-center justify-center shrink-0 hover:opacity-90 transition-all cursor-pointer">
+          <div className="w-14 h-14 rounded-xl overflow-hidden bg-neutral-100 dark:bg-[#262626] flex items-center justify-center shrink-0 hover:opacity/90 transition-all cursor-pointer">
             {imageUrl ? (
               <img
                 src={imageUrl}
@@ -183,11 +187,16 @@ export const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(function Cha
     placeholder = "Ask anything",
     disableAttach = false,
     autoFocus = true,
+    isGuest = false,
+    onOpenLoginModal,
+    onOpenWebSearchModal,
+    onOpenAdvancedFeaturesModal,
   },
   ref
 ) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const photoInputRef = useRef<HTMLInputElement>(null);
   const pillRef = useRef<HTMLDivElement>(null);
   const plusButtonRef = useRef<HTMLButtonElement>(null);
   const [isListening, setIsListening] = useState(false);
@@ -450,7 +459,7 @@ export const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(function Cha
       recognitionRef.current = recognition;
       recognition.start();
       setIsListening(true);
-      toast.success("Listening... Speak now");
+      toast.success("Listening");
     } catch (err: any) {
       console.error("Failed to start speech recognition:", err);
       toast.error("Could not start speech recognition.");
@@ -572,8 +581,8 @@ export const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(function Cha
               disabled={isTyping || isUploading}
               onMouseEnter={updateMenuPosition}
               onKeyDown={handlePillButtonKeyDown}
-              className="w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary dark:hover:bg-[#2f2f2f] transition-colors shrink-0 cursor-pointer outline-none focus:outline-none focus-visible:ring-2 focus-visible:ring-foreground/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-              aria-label="Add files and more"
+              className="w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary dark:hover:bg-[#383838] focus:bg-secondary dark:focus:bg-[#383838] active:bg-secondary/80 dark:active:bg-[#383838]/80 data-[state=open]:bg-secondary dark:data-[state=open]:bg-[#383838] transition-colors shrink-0 cursor-pointer outline-none focus:outline-none focus-visible:ring-2 focus-visible:ring-foreground/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+              aria-label="Attach files and more"
             >
               <Plus className="w-5 h-5" />
             </button>
@@ -592,7 +601,10 @@ export const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(function Cha
         avoidCollisions={true}
         collisionPadding={12}
         className={cn(
-          "rounded-2xl p-1.5 bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/80 dark:border-none select-none outline-none",
+          "rounded-2xl p-1.5 select-none outline-none",
+          isGuest
+            ? "bg-white dark:bg-[#2f2f2f] border border-border/80 dark:border-neutral-700/60"
+            : "bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/80 dark:border-none",
           menuWidth ? "" : "w-[244px] max-w-[calc(100vw-24px)]"
         )}
         style={{
@@ -606,6 +618,10 @@ export const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(function Cha
             fileInputRef.current?.click();
             setPlusMenuOpen(false);
           }}
+          onAddPhotos={() => {
+            photoInputRef.current?.click();
+            setPlusMenuOpen(false);
+          }}
           selectedModel={currentModel}
           onModelChange={(newModel) => {
             handleSelectModel(newModel);
@@ -614,6 +630,19 @@ export const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(function Cha
           onTierChange={onTierChange}
           isOpen={plusMenuOpen}
           disableAttach={disableAttach}
+          isGuest={isGuest}
+          onOpenLoginModal={() => {
+            setPlusMenuOpen(false);
+            onOpenLoginModal?.();
+          }}
+          onOpenWebSearchModal={() => {
+            setPlusMenuOpen(false);
+            onOpenWebSearchModal?.();
+          }}
+          onOpenAdvancedFeaturesModal={() => {
+            setPlusMenuOpen(false);
+            onOpenAdvancedFeaturesModal?.();
+          }}
         />
       </DropdownMenuContent>
     </DropdownMenu>
@@ -628,6 +657,11 @@ export const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(function Cha
             type="button"
             onClick={(e) => {
               (e.currentTarget as HTMLElement)?.blur();
+              if (isGuest) {
+                if (onOpenLoginModal) onOpenLoginModal();
+                else onOpenAdvancedFeaturesModal?.();
+                return;
+              }
               onThinkModeChange?.(!thinkMode);
             }}
             onMouseEnter={updateMenuPosition}
@@ -635,8 +669,8 @@ export const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(function Cha
             className={cn(
               "h-9 sm:h-10 px-2 sm:px-5 group/think-btn rounded-full flex items-center justify-center gap-1.5 text-[13px] sm:text-[14px] font-medium select-none transition-all shrink-0 cursor-pointer outline-none focus:outline-none focus-visible:ring-2 focus-visible:ring-foreground/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
               thinkMode
-                ? "bg-bubble dark:bg-[#2F2F2F] text-foreground"
-                : "text-muted-foreground hover:text-foreground hover:bg-secondary"
+                ? "bg-secondary dark:bg-[#383838] text-foreground"
+                : "text-muted-foreground hover:text-foreground hover:bg-secondary dark:hover:bg-[#383838]"
             )}
             aria-label="Think mode"
           >
@@ -671,7 +705,7 @@ export const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(function Cha
               "w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-all cursor-pointer shrink-0 outline-none focus:outline-none focus-visible:ring-2 focus-visible:ring-foreground/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
               isListening
                 ? "bg-red-500/15 text-red-500 hover:bg-red-500/25 ring-red-500/30"
-                : "text-muted-foreground hover:text-foreground hover:bg-secondary"
+                : "text-muted-foreground hover:text-foreground hover:bg-secondary dark:hover:bg-[#383838]"
             )}
             aria-label={isListening ? "Stop dictation" : "Start dictation"}
           >
@@ -711,7 +745,7 @@ export const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(function Cha
                 : isUploading
                 ? "bg-secondary dark:bg-neutral-800 text-foreground cursor-wait opacity-90"
                 : hasContent
-                ? "bg-foreground text-background cursor-pointer hover:opacity-90 active:scale-95"
+                ? "bg-foreground text-background cursor-pointer hover:opacity/90 active:scale-95"
                 : "bg-neutral-300 dark:bg-[#383838] text-muted-foreground/50 cursor-not-allowed opacity-50"
             )}
             aria-label={isTyping ? "Stop generating" : "Send message"}
@@ -757,7 +791,10 @@ export const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(function Cha
         })}
         ref={pillRef}
         className={cn(
-          "relative bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/80 dark:border-none transition-all duration-200",
+          "relative transition-all duration-200",
+          isGuest
+            ? "bg-white dark:bg-[#2f2f2f] border border-border/80 dark:border-neutral-700/60"
+            : "bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/80 dark:border-none",
           "focus-within:text-foreground dark:focus-within:text-foreground",
           "rounded-3xl",
           isExpandedLayout
@@ -779,6 +816,29 @@ export const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(function Cha
                 ...uploadedFiles,
                 ...Array.from(e.target.files),
               ]);
+            }
+          }}
+        />
+
+        {/* Photos Only Input (for guests) */}
+        <input
+          type="file"
+          accept="image/*"
+          multiple
+          className="hidden"
+          ref={photoInputRef}
+          onChange={(e) => {
+            if (e.target.files && e.target.files.length > 0) {
+              const selected = Array.from(e.target.files).filter((f) =>
+                f.type.startsWith("image/")
+              );
+              if (selected.length > 0) {
+                onFilesChange([...uploadedFiles, ...selected]);
+                toast.success(
+                  selected.length === 1 ? "Photo attached" : `${selected.length} photos attached`
+                );
+              }
+              e.target.value = "";
             }
           }}
         />
@@ -841,7 +901,7 @@ export const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(function Cha
                 )}
               />
 
-              {/* Expand / Collapse button: matches Add files & Dictate button style & tooltip */}
+              {/* Expand / Collapse button: matches Attach files & Dictate button style & tooltip */}
               {isBigContent && (
                 <div className="absolute top-0.5 right-6 sm:right-8 z-10">
                   <Tooltip>
@@ -853,7 +913,7 @@ export const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(function Cha
                           setIsFullyExpanded((prev) => !prev);
                         }}
                         onKeyDown={handlePillButtonKeyDown}
-                        className="w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary transition-all shrink-0 cursor-pointer outline-none focus:outline-none focus-visible:ring-2 focus-visible:ring-foreground/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                        className="w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary dark:hover:bg-[#383838] transition-all shrink-0 cursor-pointer outline-none focus:outline-none focus-visible:ring-2 focus-visible:ring-foreground/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                         aria-label={isFullyExpanded ? "Collapse" : "Expand"}
                       >
                         {isFullyExpanded ? (

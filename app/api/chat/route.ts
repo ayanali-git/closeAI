@@ -6,17 +6,62 @@ import { subscriptionService } from '@/lib/subscription-service';
 export async function POST(request: NextRequest) {
     try {
         const { user, error: authError } = await getServerAuthUser(request);
-        if (authError || !user) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-        }
 
-        const { message, chatId, files, truncateMessageId, model, think } = await request.json();
+        const { message, chatId, files, truncateMessageId, model, think, previousMessages: clientPreviousMessages } = await request.json();
 
         if (!message || typeof message !== 'string') {
             return NextResponse.json({ error: 'Message is required' }, { status: 400 });
         }
 
-        // Check usage limits
+        // Support guest / unauthorized chatting without Supabase database persistence
+        if (!user) {
+            const aiMessages = [
+                ...(Array.isArray(clientPreviousMessages) ? clientPreviousMessages : []).map((m: any) => ({
+                    role: m.role as 'user' | 'assistant',
+                    content: m.content || '',
+                })),
+                { role: 'user' as const, content: message },
+            ];
+
+            const imageUrls = files
+                ?.filter((f: any) => f.type?.startsWith('image/'))
+                ?.map((f: any) => f.url) || [];
+
+            let aiResponse;
+            const chosenModel = model || "gemini-3.8 flash";
+            try {
+                aiResponse = await aiService.generateResponse(aiMessages, undefined, imageUrls, chosenModel, !!think);
+            } catch (aiError: any) {
+                console.error('Guest AI generation error:', aiError);
+                aiResponse = {
+                    content: `I encountered an issue while generating a response: ${aiError.message || 'Unknown error'}. Please try again.`,
+                };
+            }
+
+            const guestTimestamp = new Date().toISOString();
+            return NextResponse.json({
+                chatId: 'guest',
+                userMessage: {
+                    id: `guest_u_${Date.now()}`,
+                    role: 'user',
+                    content: message,
+                    createdAt: guestTimestamp,
+                    chatId: 'guest',
+                    files: files || [],
+                },
+                assistantMessage: {
+                    id: `guest_a_${Date.now()}`,
+                    role: 'assistant',
+                    content: aiResponse.content,
+                    createdAt: guestTimestamp,
+                    chatId: 'guest',
+                    model: chosenModel,
+                    metadata: { model: chosenModel, think: !!think },
+                },
+            });
+        }
+
+        // Check usage limits for authenticated user
         const usageCheck = await subscriptionService.checkUsageLimit(user.id, 'messages');
         if (!usageCheck.allowed) {
             return NextResponse.json({

@@ -307,28 +307,33 @@ html:not(.dark) .gooey-title {
   background-color: #383838 !important;
 }
 
-/* Animated Shimmer for Thinking / Loading text */
+/* Animated Shimmer for Thinking / Loading text (Single smooth wave) */
 @keyframes shimmer-sweep {
   0% {
-    background-position: 200% 0;
+    background-position: 120% 0;
+  }
+  75% {
+    background-position: -80% 0;
   }
   100% {
-    background-position: -200% 0;
+    background-position: -80% 0;
   }
 }
 
 .animate-shimmer-text {
   background: linear-gradient(
     90deg,
-    rgba(160, 160, 165, 0.35) 0%,
+    rgba(160, 160, 165, 0.4) 0%,
+    rgba(160, 160, 165, 0.4) 35%,
     rgba(255, 255, 255, 0.98) 50%,
-    rgba(160, 160, 165, 0.35) 100%
+    rgba(160, 160, 165, 0.4) 65%,
+    rgba(160, 160, 165, 0.4) 100%
   );
-  background-size: 200% 100%;
+  background-size: 220% 100%;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  animation: shimmer-sweep 2.2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  animation: shimmer-sweep 2.4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
   display: inline-block;
 }
 
@@ -336,10 +341,12 @@ html:not(.dark) .animate-shimmer-text {
   background: linear-gradient(
     90deg,
     rgba(130, 130, 135, 0.4) 0%,
+    rgba(130, 130, 135, 0.4) 35%,
     rgba(20, 20, 20, 0.98) 50%,
+    rgba(130, 130, 135, 0.4) 65%,
     rgba(130, 130, 135, 0.4) 100%
   );
-  background-size: 200% 100%;
+  background-size: 220% 100%;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -558,5 +565,19 @@ body.modal-open-no-scroll {
 [data-radix-dialog-overlay],
 [data-radix-alert-dialog-overlay] {
   cursor: default !important;
+}
+
+/* Enforce instant display without animations or transitions for Popover & HoverCard */
+[data-radix-popover-content],
+[data-radix-popover-content] *,
+[data-radix-hover-card-content],
+[data-radix-hover-card-content] * {
+  animation: none !important;
+  transition: none !important;
+}
+
+/* Instantly suppress dismissed guest callout card on initial render */
+[data-guest-card-dismissed="true"] #guest-sidebar-callout-card {
+  display: none !important;
 }
 

@@ -3,7 +3,8 @@ import 'katex/dist/katex.min.css';
 import 'goey-toast/styles.css';
 import type { Metadata } from 'next';
 import { cookies } from 'next/headers';
-import { AUTH_COOKIE_NAME } from '@/lib/auth-cookie';
+import { createServerClient } from '@supabase/ssr';
+import { AUTH_COOKIE_NAME, authCookieOptions } from '@/lib/auth-cookie';
 import { ToasterProvider } from '@/components/ui/toaster';
 import { AuthProvider } from '@/components/auth-provider';
 import { SubscriptionProvider } from '@/components/subscription-provider';
@@ -41,32 +42,44 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
   const cookieStore = cookies();
   const initialPlan = cookieStore.get('user_plan')?.value || 'free';
-  const initialHasAuth = cookieStore.getAll().some(
-    (c) =>
-      !c.name.includes('code-verifier') &&
-      !c.name.includes('csrf') &&
-      !c.name.includes('state') &&
-      (c.name === AUTH_COOKIE_NAME ||
-        c.name.startsWith(`${AUTH_COOKIE_NAME}.`) ||
-        (c.name.startsWith('sb-') && c.name.endsWith('-auth-token'))) &&
-      c.value &&
-      c.value.length > 30 &&
-      c.value !== 'deleted'
-  );
+  const isGuestCardDismissed = cookieStore.get('guest_card_dismissed')?.value === 'true';
+
+  let initialUser = null;
+  try {
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookieOptions: authCookieOptions,
+        cookies: {
+          getAll() {
+            return cookieStore.getAll();
+          },
+        },
+      }
+    );
+    const { data: { user } } = await supabase.auth.getUser();
+    initialUser = user;
+  } catch (e) {
+    initialUser = null;
+  }
 
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
       </head>
-      <body className="min-h-screen bg-background text-foreground antialiased font-sans">
+      <body
+        data-guest-card-dismissed={isGuestCardDismissed ? "true" : undefined}
+        className="min-h-screen bg-background text-foreground antialiased font-sans"
+      >
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
@@ -74,7 +87,7 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <TooltipProvider delayDuration={150}>
-            <AuthProvider initialHasAuth={initialHasAuth}>
+            <AuthProvider initialUser={initialUser}>
               <SubscriptionProvider initialPlan={initialPlan}>
                 {children}
                 <ToasterProvider />

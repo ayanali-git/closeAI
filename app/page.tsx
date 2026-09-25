@@ -19,10 +19,12 @@ import {
   Loader,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/hooks/use-auth";
 import { cn } from "@/lib/utils";
 
 export default function LandingPage() {
   const router = useRouter();
+  const { user } = useAuth();
   const [heroPrompt, setHeroPrompt] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -52,7 +54,10 @@ export default function LandingPage() {
     if (!prompt || isSubmitting) return;
 
     setIsSubmitting(true);
-    router.push(`/c?q=${encodeURIComponent(prompt)}`);
+    const targetUrl = user
+      ? `/c?q=${encodeURIComponent(prompt)}`
+      : `/gc?q=${encodeURIComponent(prompt)}`;
+    router.push(targetUrl);
   };
 
   const handlePillClick = (prompt: string) => {
@@ -78,8 +83,8 @@ export default function LandingPage() {
       id: "api",
       label: "API Platform",
       prompt: "How do I get started with the API and developer platform?",
-      disabled: true,
-      hoverText: "Coming soon",
+      // disabled: true,
+      // hoverText: "Coming soon",
     },
     {
       id: "business",
@@ -139,7 +144,7 @@ export default function LandingPage() {
               onClick={() =>
                 textareaRef.current?.focus({ preventScroll: true })
               }
-              className="relative w-full rounded-3xl bg-white/50 dark:bg-[#212121]/50 border border-border/80 dark:border-none backdrop-blur-sm p-4 min-h-[100px] flex flex-col justify-between transition-all cursor-text"
+              className="relative w-full rounded-3xl bg-white dark:bg-[#2f2f2f] border border-border/80 dark:border-neutral-700/60 p-4 min-h-[100px] flex flex-col justify-between transition-all cursor-text"
             >
               <textarea
                 ref={textareaRef}
@@ -154,7 +159,7 @@ export default function LandingPage() {
                 placeholder="Ask about anything"
                 rows={3}
                 disabled={isSubmitting}
-                className="w-full bg-transparent resize-none text-[17px] font-normal placeholder:text-muted-foreground transition-colors outline-none border-none ring-0 leading-relaxed"
+                className="w-full bg-transparent resize-none text-[17px] font-normal placeholder:text-muted-foreground text-foreground dark:text-white transition-colors outline-none border-none ring-0 leading-relaxed"
               />
               <div
                 className="flex items-center justify-end pt-3"
@@ -166,8 +171,8 @@ export default function LandingPage() {
                   className={cn(
                     "w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-all shrink-0",
                     heroPrompt.trim().length > 0 && !isSubmitting
-                      ? "bg-foreground text-background cursor-pointer hover:opacity-90 active:scale-95"
-                      : "bg-white/50 dark:bg-[#212121]/50 text-foreground border border-border/80 dark:border-none cursor-not-allowed opacity-60"
+                      ? "bg-foreground text-background cursor-pointer hover:opacity/90 active:scale-95"
+                      : "bg-white hover:bg-secondary dark:bg-[#212121] text-foreground dark:text-white border border-border/80 dark:border-neutral-700/60 cursor-not-allowed opacity-60"
                   )}
                   aria-label="Send prompt"
                 >
@@ -196,10 +201,11 @@ export default function LandingPage() {
                   type="button"
                   onClick={(e) => {
                     if (pill.id === "talk") {
+                      const dest = user ? "/c" : "/gc";
                       if (e.metaKey || e.ctrlKey) {
-                        window.open("/c", "_blank");
+                        window.open(dest, "_blank");
                       } else {
-                        router.push("/c");
+                        router.push(dest);
                       }
                       return;
                     }
@@ -211,12 +217,12 @@ export default function LandingPage() {
                     handlePillClick(pill.prompt);
                   }}
                   className={cn(
-                    "px-4 py-3 rounded-full text-md sm:text-[15px] transition-all outline-none focus:outline-none focus-visible:outline-none focus:ring-0 focus-visible:ring-0 ring-0 border border-border/80 dark:border-none backdrop-blur-sm",
+                    "h-12 px-3 rounded-full text-md sm:text-[15px] font-normal transition-colors outline-none focus:outline-none focus-visible:outline-none focus:ring-0 focus-visible:ring-0 ring-0 border border-border/80 dark:border-neutral-700/60",
                     pill.disabled
-                      ? "cursor-not-allowed select-none bg-white/50 dark:bg-[#212121]/50 hover:bg-secondary dark:hover:bg-[#2f2f2f] text-muted-foreground"
+                      ? "cursor-not-allowed select-none bg-white hover:bg-secondary text-black/60 dark:bg-[#2f2f2f]/60 dark:text-white/60"
                       : isSelected
-                      ? "cursor-pointer bg-secondary dark:bg-[#2f2f2f] text-foreground hover:bg-secondary dark:hover:bg-[#2f2f2f]"
-                      : "cursor-pointer bg-white/50 dark:bg-[#212121]/50 hover:bg-secondary dark:hover:bg-[#2f2f2f] text-muted-foreground"
+                      ? "cursor-pointer bg-secondary text-black dark:bg-[#383838] dark:text-white"
+                      : "cursor-pointer bg-white hover:bg-secondary text-muted-foreground dark:bg-[#2f2f2f] dark:hover:bg-[#383838]"
                   )}
                 >
                   {pill.disabled ? (
@@ -248,6 +254,7 @@ export default function LandingPage() {
                 <Link
                   href="/research/overview"
                   onMouseEnter={() => setHoveredSpotlight(0)}
+                  onMouseLeave={() => setHoveredSpotlight(null)}
                   className={cn(
                     "block transition-opacity duration-200",
                     getOpacity(hoveredSpotlight, 0)
@@ -294,6 +301,7 @@ export default function LandingPage() {
               <Link
                 href="/product/features"
                 onMouseEnter={() => setHoveredSpotlight(1)}
+                onMouseLeave={() => setHoveredSpotlight(null)}
                 className={cn(
                   "block transition-opacity duration-200",
                   getOpacity(hoveredSpotlight, 1)
@@ -332,6 +340,7 @@ export default function LandingPage() {
               <Link
                 href="/company/blog"
                 onMouseEnter={() => setHoveredSpotlight(2)}
+                onMouseLeave={() => setHoveredSpotlight(null)}
                 className={cn(
                   "block transition-opacity duration-200",
                   getOpacity(hoveredSpotlight, 2)
@@ -370,6 +379,7 @@ export default function LandingPage() {
               <Link
                 href="/product/features"
                 onMouseEnter={() => setHoveredSpotlight(3)}
+                onMouseLeave={() => setHoveredSpotlight(null)}
                 className={cn(
                   "block transition-opacity duration-200",
                   getOpacity(hoveredSpotlight, 3)
@@ -469,6 +479,7 @@ export default function LandingPage() {
                 key={i}
                 href="/company/blog"
                 onMouseEnter={() => setHoveredNews(i)}
+                onMouseLeave={() => setHoveredNews(null)}
                 className="flex flex-col rounded-md overflow-hidden bg-card border border-border/80 dark:border-none transition-all"
               >
                 {/* Visual Thumbnail: DiceBear blobs avatar */}
@@ -546,6 +557,7 @@ export default function LandingPage() {
                 key={i}
                 href="/research/overview"
                 onMouseEnter={() => setHoveredResearch(i)}
+                onMouseLeave={() => setHoveredResearch(null)}
                 className="flex flex-col rounded-md overflow-hidden bg-card border border-border/80 dark:border-none transition-all"
               >
                 {/* Visual Thumbnail: DiceBear waves avatar */}
@@ -617,6 +629,7 @@ export default function LandingPage() {
                 key={i}
                 href="/business/enterprise"
                 onMouseEnter={() => setHoveredBusiness(i)}
+                onMouseLeave={() => setHoveredBusiness(null)}
                 className="flex flex-col rounded-md overflow-hidden bg-card border border-border/80 dark:border-none transition-all"
               >
                 {/* Visual Thumbnail: DiceBear squircles avatar */}
@@ -650,7 +663,7 @@ export default function LandingPage() {
         <section className="px-6 sm:px-8 max-w-[1500px] mx-auto py-16">
           <div className="rounded-md bg-card border border-border/80 dark:border-none p-12 sm:p-16 text-center flex flex-col items-center justify-center space-y-6">
             <h2 className="text-3xl sm:text-5xl font-semibold tracking-tight text-foreground">
-              Get started with closeAI
+              Get started with CloseAI
             </h2>
             <p className="text-muted-foreground text-base sm:text-lg md:text-xl max-w-md">
               Experience the frontier intelligence designed to think, create,
@@ -660,9 +673,9 @@ export default function LandingPage() {
               <Button
                 asChild
                 size="lg"
-                className="group rounded-full px-8 h-12 text-md font-medium bg-foreground text-background hover:opacity-90 transition-opacity cursor-pointer"
+                className="group rounded-full px-4 h-12 text-md font-normal bg-foreground text-background hover:opacity/90 transition-opacity cursor-pointer"
               >
-                <Link href="/c" className="flex items-center">
+                <Link href={user ? "/c" : "/gc"} className="flex items-center">
                   <span>Explore Now</span>
                   <AnimatedArrow size={18} />
                 </Link>

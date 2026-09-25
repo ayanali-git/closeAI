@@ -39,6 +39,9 @@ import {
   ArrowUpRight,
   Store,
   SquarePen,
+  Image as ImageIcon,
+  Globe,
+  X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -59,6 +62,11 @@ import {
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
 } from "@/components/ui/dropdown-menu";
+import {
+  HoverCard,
+  HoverCardTrigger,
+  HoverCardContent,
+} from "@/components/ui/hover-card";
 import { useTheme } from "next-themes";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
@@ -85,6 +93,10 @@ interface SidebarProps {
   isOpen: boolean;
   onToggle: () => void;
   isLoading?: boolean;
+  onOpenLoginModal?: () => void;
+  onOpenWebSearchModal?: () => void;
+  onOpenAdvancedFeaturesModal?: () => void;
+  onWebSearchHover?: () => void;
 }
 
 /**
@@ -107,7 +119,7 @@ function ChatTitleMarquee({
     const measure = () => {
       if (textRef.current && containerRef.current) {
         const isMobile =
-          typeof window !== "undefined" && window.innerWidth < 1025;
+          typeof window !== "undefined" && window.innerWidth < 1280;
         const actionSpace = isMobile ? 0 : 70;
 
         const diff =
@@ -135,7 +147,7 @@ function ChatTitleMarquee({
   return (
     <div
       ref={containerRef}
-      className="relative flex-1 min-w-0 overflow-hidden pr-1 max-[1025px]:mr-[78px]"
+      className="relative flex-1 min-w-0 overflow-hidden pr-1 max-xl:mr-[78px]"
       style={{
         maskImage:
           overflowWidth > 0
@@ -211,6 +223,10 @@ export function Sidebar({
   isOpen,
   onToggle,
   isLoading = false,
+  onOpenLoginModal,
+  onOpenWebSearchModal,
+  onOpenAdvancedFeaturesModal,
+  onWebSearchHover,
 }: SidebarProps) {
   const { signOut } = useAuth();
   const { plan: userPlan } = useSubscription();
@@ -222,6 +238,7 @@ export function Sidebar({
   const [pressedChatId, setPressedChatId] = useState<string | null>(null);
   const [isLogoHovered, setIsLogoHovered] = useState(false);
   const [isCloseBtnHovered, setIsCloseBtnHovered] = useState(false);
+  const [isImagesHovered, setIsImagesHovered] = useState(false);
 
   useEffect(() => {
     if (isOpen && showSearch) {
@@ -238,6 +255,30 @@ export function Sidebar({
   >({});
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [chatToDelete, setChatToDelete] = useState<Chat | null>(null);
+  const [isGuestCardDismissed, setIsGuestCardDismissed] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const isDismissed =
+        document.body.getAttribute("data-guest-card-dismissed") === "true" ||
+        document.cookie.includes("guest_card_dismissed=true");
+      if (isDismissed) {
+        setIsGuestCardDismissed(true);
+        document.body.setAttribute("data-guest-card-dismissed", "true");
+      }
+    }
+    fetch("/api/guest-card")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data?.dismissed) {
+          setIsGuestCardDismissed(true);
+          if (typeof document !== "undefined") {
+            document.body.setAttribute("data-guest-card-dismissed", "true");
+          }
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   // Close sidebar drawer on Escape key (matching FilesDrawer behavior)
   useEffect(() => {
@@ -282,13 +323,18 @@ export function Sidebar({
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    setMounted(true);
+    const raf = requestAnimationFrame(() => {
+      setMounted(true);
+    });
     const checkMobile = () => {
-      setIsMobileScreen(window.innerWidth <= 1025);
+      setIsMobileScreen(window.innerWidth < 1280);
     };
     checkMobile();
     window.addEventListener("resize", checkMobile);
-    return () => window.removeEventListener("resize", checkMobile);
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener("resize", checkMobile);
+    };
   }, []);
 
   /**
@@ -369,7 +415,7 @@ export function Sidebar({
           </Link>
           <button
             type="button"
-            onClick={() => toast.info("CloseAI app coming soon")}
+            onClick={() => toast.info("App coming soon")}
             className="w-full flex items-center gap-2.5 px-2 py-2 rounded-xl text-md font-medium transition-colors outline-none focus:outline-none focus:bg-transparent focus-visible:outline-none whitespace-nowrap text-left cursor-pointer select-none text-foreground [@media(hover:hover)]:hover:bg-secondary dark:[@media(hover:hover)]:hover:bg-[#2f2f2f]"
           >
             <Download className="w-4 h-4 text-muted-foreground shrink-0" />
@@ -393,7 +439,7 @@ export function Sidebar({
               <FileText className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors shrink-0" />
               <span>Terms of Use</span>
             </div>
-            <ArrowUpRight className="w-4 h-4 text-muted-foreground group-hover:text-foreground shrink-0 ml-auto transition-opacity duration-150 opacity-100 min-[1025px]:opacity-0 min-[1025px]:group-hover:opacity-100" />
+            <ArrowUpRight className="w-4 h-4 text-muted-foreground group-hover:text-foreground shrink-0 ml-auto transition-opacity duration-150 opacity-100 xl:opacity-0 xl:group-hover:opacity-100" />
           </Link>
           <Link
             href="/support/privacy"
@@ -405,7 +451,7 @@ export function Sidebar({
               <Info className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors shrink-0" />
               <span>Privacy Policy</span>
             </div>
-            <ArrowUpRight className="w-4 h-4 text-muted-foreground group-hover:text-foreground shrink-0 ml-auto transition-opacity duration-150 opacity-100 min-[1025px]:opacity-0 min-[1025px]:group-hover:opacity-100" />
+            <ArrowUpRight className="w-4 h-4 text-muted-foreground group-hover:text-foreground shrink-0 ml-auto transition-opacity duration-150 opacity-100 xl:opacity-0 xl:group-hover:opacity-100" />
           </Link>
           <Link
             href="/company/contact"
@@ -417,7 +463,7 @@ export function Sidebar({
               <Bug className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors shrink-0" />
               <span>Report a bug</span>
             </div>
-            <ArrowUpRight className="w-4 h-4 text-muted-foreground group-hover:text-foreground shrink-0 ml-auto transition-opacity duration-150 opacity-100 min-[1025px]:opacity-0 min-[1025px]:group-hover:opacity-100" />
+            <ArrowUpRight className="w-4 h-4 text-muted-foreground group-hover:text-foreground shrink-0 ml-auto transition-opacity duration-150 opacity-100 xl:opacity-0 xl:group-hover:opacity-100" />
           </Link>
         </div>
       );
@@ -717,7 +763,7 @@ export function Sidebar({
                     <FileText className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors shrink-0" />
                     <span>Terms of Use</span>
                   </div>
-                  <ArrowUpRight className="w-4 h-4 text-muted-foreground group-hover:text-foreground shrink-0 ml-auto transition-opacity duration-150 opacity-100 min-[1025px]:opacity-0 min-[1025px]:group-hover:opacity-100" />
+                  <ArrowUpRight className="w-4 h-4 text-muted-foreground group-hover:text-foreground shrink-0 ml-auto transition-opacity duration-150 opacity-100 xl:opacity-0 xl:group-hover:opacity-100" />
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
@@ -731,7 +777,7 @@ export function Sidebar({
                     <Info className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors shrink-0" />
                     <span>Privacy Policy</span>
                   </div>
-                  <ArrowUpRight className="w-4 h-4 text-muted-foreground group-hover:text-foreground shrink-0 ml-auto transition-opacity duration-150 opacity-100 min-[1025px]:opacity-0 min-[1025px]:group-hover:opacity-100" />
+                  <ArrowUpRight className="w-4 h-4 text-muted-foreground group-hover:text-foreground shrink-0 ml-auto transition-opacity duration-150 opacity-100 xl:opacity-0 xl:group-hover:opacity-100" />
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
@@ -745,7 +791,7 @@ export function Sidebar({
                     <Bug className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors shrink-0" />
                     <span>Report a bug</span>
                   </div>
-                  <ArrowUpRight className="w-4 h-4 text-muted-foreground group-hover:text-foreground shrink-0 ml-auto transition-opacity duration-150 opacity-100 min-[1025px]:opacity-0 min-[1025px]:group-hover:opacity-100" />
+                  <ArrowUpRight className="w-4 h-4 text-muted-foreground group-hover:text-foreground shrink-0 ml-auto transition-opacity duration-150 opacity-100 xl:opacity-0 xl:group-hover:opacity-100" />
                 </Link>
               </DropdownMenuItem>
             </DropdownMenuSubContent>
@@ -777,7 +823,7 @@ export function Sidebar({
         key={chat.id}
         onClick={() => {
           onChatSelect(chat.id);
-          if (typeof window !== "undefined" && window.innerWidth < 1025) {
+          if (typeof window !== "undefined" && window.innerWidth < 1280) {
             onToggle();
           }
         }}
@@ -808,25 +854,25 @@ export function Sidebar({
 
         {/* Status indicators when not hovered (hidden on mobile where action buttons are always visible) */}
         {chat.starred && !isHovered && (
-          <PinOff className="w-4 h-4 text-muted-foreground shrink-0 ml-1.5 max-[1025px]:hidden" />
+          <PinOff className="w-4 h-4 text-muted-foreground shrink-0 ml-1.5 max-xl:hidden" />
         )}
         {chat.archived && !chat.starred && !isHovered && (
-          <ArchiveX className="w-4 h-4 text-muted-foreground shrink-0 ml-1.5 max-[1025px]:hidden" />
+          <ArchiveX className="w-4 h-4 text-muted-foreground shrink-0 ml-1.5 max-xl:hidden" />
         )}
 
         {/* Actions */}
         <div
           className={cn(
             "absolute right-2 inset-y-0 flex items-center gap-0.5 z-10 pointer-events-none",
-            // Desktop (>= 1025px): full-height smooth gradient fade matching hover box
-            "min-[1025px]:right-0 min-[1025px]:pl-16 min-[1025px]:pr-2 min-[1025px]:rounded-r-xl",
-            "min-[1025px]:bg-gradient-to-l min-[1025px]:from-secondary min-[1025px]:via-secondary min-[1025px]:to-transparent",
-            // Small screens (< 1025px): completely transparent, no gradient box, seamless with hover box!
-            "max-[1025px]:bg-transparent max-[1025px]:bg-none max-[1025px]:opacity-100",
+            // Desktop (>= 1280px): full-height smooth gradient fade matching hover box
+            "xl:right-0 xl:pl-16 xl:pr-2 xl:rounded-r-xl",
+            "xl:bg-gradient-to-l xl:from-secondary xl:via-secondary xl:to-transparent",
+            // Small screens (< 1280px): completely transparent, no gradient box, seamless with hover box!
+            "max-xl:bg-transparent max-xl:bg-none max-xl:opacity-100",
             // Desktop visibility: shown on hover or when selected
             isSelected
               ? "opacity-100"
-              : "min-[1025px]:opacity-0 [@media(hover:hover)]:group-hover:opacity-100"
+              : "xl:opacity-0 [@media(hover:hover)]:group-hover:opacity-100"
           )}
         >
           <Tooltip>
@@ -836,7 +882,7 @@ export function Sidebar({
                   e.stopPropagation();
                   onToggleStar(chat.id, !chat.starred);
                 }}
-                className="p-1 rounded-md text-muted-foreground hover:text-foreground transition-colors cursor-pointer pointer-events-auto"
+                className="p-1 rounded-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer pointer-events-auto"
               >
                 {chat.starred ? (
                   <PinOff className="w-4 h-4 text-foreground" />
@@ -858,7 +904,7 @@ export function Sidebar({
                     e.stopPropagation();
                     onToggleArchive(chat.id, !chat.archived);
                   }}
-                  className="p-1 rounded-md text-muted-foreground hover:text-foreground transition-colors cursor-pointer pointer-events-auto"
+                  className="p-1 rounded-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer pointer-events-auto"
                 >
                   {chat.archived ? (
                     <ArchiveX className="w-4 h-4" />
@@ -880,7 +926,7 @@ export function Sidebar({
                   e.stopPropagation();
                   setChatToDelete(chat);
                 }}
-                className="p-1 rounded-md text-muted-foreground hover:text-red-500 transition-colors cursor-pointer pointer-events-auto"
+                className="p-1 rounded-sm text-muted-foreground hover:text-red-500 transition-colors cursor-pointer pointer-events-auto"
               >
                 <Trash2 className="w-4 h-4" />
               </button>
@@ -921,21 +967,24 @@ export function Sidebar({
   return (
     <>
       {/* Mobile overlay backdrop */}
-      {isOpen && (
-        <div
-          className="fixed inset-0 z-40 bg-sidebar/50 xl:hidden"
-          onClick={onToggle}
-        />
-      )}
+      <div
+        className={cn(
+          "fixed inset-0 z-40 bg-sidebar/50 xl:hidden transition-opacity duration-200",
+          isOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+        )}
+        onClick={onToggle}
+      />
 
-      {/* Main Sidebar (Expands smoothly from 50px to 250px on Desktop, slides over on Mobile) */}
+      {/* Main Sidebar (Expands smoothly from 60px to 250px on Desktop, slides over on Mobile) */}
       <aside
+        suppressHydrationWarning
         className={cn(
           "h-[100dvh] max-h-[100dvh] bg-sidebar border-r border-border/50 flex flex-col shrink-0 select-none overflow-hidden relative group/sidebar",
-          "transition-[width] duration-300 ease-in-out will-change-[width]",
+          mounted && "transition-[width] duration-300 ease-in-out will-change-[width]",
           isOpen
-            ? "fixed xl:relative inset-y-0 left-0 z-50 xl:z-20 w-[75%] max-w-[75%] sm:w-[250px] sm:max-w-[250px] animate-in slide-in-from-left-full xl:animate-none"
-            : "hidden xl:flex xl:relative xl:w-[50px]"
+            ? "fixed xl:relative inset-y-0 left-0 z-50 xl:z-20 w-[77.5%] max-w-[77.5%] sm:w-[250px] sm:max-w-[250px]"
+            : "hidden xl:flex xl:relative xl:w-[60px]",
+          isOpen && mounted && "animate-in slide-in-from-left-full xl:animate-none"
         )}
       >
         {/* Full-height border resize/toggle handle */}
@@ -945,12 +994,28 @@ export function Sidebar({
           className="absolute -right-[3px] top-0 bottom-0 w-[6px] z-30 hover:bg-foreground/15 transition-colors cursor-ew-resize"
         />
 
-        {/* Middle Navigation & Chats Area */}
-        <div className="flex-1 min-h-0 relative overflow-hidden">
-          {/* Collapsed Rail Body (50px) */}
+        {/* Persistent Non-Blinking Profile Avatar for Authenticated Users */}
+        {user && (
           <div
+            suppressHydrationWarning
+            className="absolute left-[14px] z-30 pointer-events-none select-none transition-none"
+            style={{
+              bottom: "calc(max(env(safe-area-inset-bottom), 0.5rem) + 4px)",
+            }}
+          >
+            {renderAvatarContent()}
+          </div>
+        )}
+
+        {/* Middle Navigation & Chats Area */}
+        <div className="w-full h-full relative overflow-hidden flex-1">
+          {/* Collapsed Rail Body (60px) */}
+          <div
+            data-sidebar-rail
+            suppressHydrationWarning
             className={cn(
-              "w-[50px] h-full flex flex-col items-center shrink-0 absolute top-0 left-0 transition-opacity duration-200 z-10",
+              "w-[60px] h-full flex flex-col items-center shrink-0 absolute top-0 left-0 z-10",
+              mounted && "transition-opacity duration-200",
               !isOpen
                 ? "opacity-100 pointer-events-auto"
                 : "opacity-0 pointer-events-none"
@@ -958,137 +1023,315 @@ export function Sidebar({
             aria-hidden={isOpen}
             onMouseLeave={() => setIsLogoHovered(false)}
           >
-            <div className="flex flex-col items-center gap-2 pt-3.5 relative z-20">
-              {/* Brand Emblem / Expand (Open Sidebar Button) */}
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      (e.currentTarget as HTMLElement)?.blur();
-                      setIsLogoHovered(false);
-                      onToggle();
-                    }}
-                    onMouseEnter={() => setIsLogoHovered(true)}
-                    onMouseLeave={() => setIsLogoHovered(false)}
-                    onBlur={() => setIsLogoHovered(false)}
-                    style={{ cursor: "ew-resize" }}
-                    className="w-10 h-10 rounded-xl flex items-center justify-center text-foreground hover:bg-secondary transition-colors !cursor-ew-resize [&_*]:!cursor-ew-resize"
-                    aria-label="Open sidebar"
-                  >
-                    {isLogoHovered ? (
-                      <PanelRight className="w-5 h-5 text-foreground pointer-events-none" />
-                    ) : (
-                      <CloseAIIcon size={26} className="pointer-events-none" />
-                    )}
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent
-                  side="right"
-                  sideOffset={10}
-                  className="text-md"
-                >
-                  Open sidebar
-                </TooltipContent>
-              </Tooltip>
-
-              {/* Search */}
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <button
-                    onClick={() => {
-                      onToggle();
-                      setShowSearch(true);
-                    }}
-                    className="w-10 h-10 rounded-xl flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors cursor-pointer"
-                    aria-label="Search chats"
-                  >
-                    <AnimatedSearchClose open={showSearch} size={22} />
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent
-                  side="right"
-                  sideOffset={10}
-                  className="text-md"
-                >
-                  Search chats
-                </TooltipContent>
-              </Tooltip>
-
-              {/* New Chat */}
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <button
-                    onClick={() => {
-                      onNewChat();
-                      if (
-                        typeof window !== "undefined" &&
-                        window.innerWidth < 1025
-                      ) {
+            <div className="flex flex-col items-center relative z-20">
+              {/* Brand Emblem / Expand (h-14 container matching header h-14) */}
+              <div className="w-[60px] h-14 pt-[env(safe-area-inset-top,0px)] flex items-center justify-center shrink-0">
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        (e.currentTarget as HTMLElement)?.blur();
+                        setIsLogoHovered(false);
                         onToggle();
-                      }
+                      }}
+                      onMouseEnter={() => setIsLogoHovered(true)}
+                      onMouseLeave={() => setIsLogoHovered(false)}
+                      onBlur={() => setIsLogoHovered(false)}
+                      style={{ cursor: "ew-resize" }}
+                      className="w-10 h-10 rounded-sm flex items-center justify-center text-foreground hover:bg-secondary transition-colors !cursor-ew-resize [&_*]:!cursor-ew-resize"
+                      aria-label="Open sidebar"
+                    >
+                      {isLogoHovered ? (
+                        <PanelRight className="w-4 h-4 text-foreground pointer-events-none" />
+                      ) : (
+                        <CloseAIIcon
+                          size={20}
+                          className="w-4 h-4 pointer-events-none"
+                        />
+                      )}
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent
+                    side="right"
+                    sideOffset={10}
+                    className="text-md"
+                  >
+                    Open sidebar
+                  </TooltipContent>
+                </Tooltip>
+              </div>
+
+              {/* Rail Navigation Items */}
+              <div className="flex flex-col items-center gap-1.5 pt-1">
+                {/* New Chat */}
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      onClick={() => {
+                        onNewChat();
+                        if (
+                          typeof window !== "undefined" &&
+                          window.innerWidth < 1280
+                        ) {
+                          onToggle();
+                        }
+                      }}
+                      className="w-10 h-10 rounded-sm flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors cursor-pointer"
+                      aria-label="New chat"
+                    >
+                      <SquarePen className="w-4 h-4" />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent
+                    side="right"
+                    sideOffset={10}
+                    className="text-md"
+                  >
+                    New chat
+                  </TooltipContent>
+                </Tooltip>
+
+                {user ? (
+                  <>
+                    {/* Search */}
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <button
+                          onClick={() => {
+                            onToggle();
+                            setShowSearch(true);
+                          }}
+                          className="w-10 h-10 rounded-sm flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors cursor-pointer"
+                          aria-label="Search chats"
+                        >
+                          <AnimatedSearchClose open={showSearch} size={18} />
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent
+                        side="right"
+                        sideOffset={10}
+                        className="text-md"
+                      >
+                        Search chats
+                      </TooltipContent>
+                    </Tooltip>
+
+                    {/* Pinned Shortcut */}
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <button
+                          onClick={onToggle}
+                          className="w-10 h-10 rounded-sm flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors cursor-pointer"
+                          aria-label="Pinned chats"
+                        >
+                          <Pin className="w-4 h-4" />
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent
+                        side="right"
+                        sideOffset={10}
+                        className="text-md"
+                      >
+                        Pinned chats
+                      </TooltipContent>
+                    </Tooltip>
+
+                    {/* Archived Shortcut */}
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <button
+                          onClick={onToggle}
+                          className="w-10 h-10 rounded-sm flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors cursor-pointer"
+                          aria-label="Archived chats"
+                        >
+                          <Archive className="w-4 h-4" />
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent
+                        side="right"
+                        sideOffset={10}
+                        className="text-md"
+                      >
+                        Archived chats
+                      </TooltipContent>
+                    </Tooltip>
+                  </>
+                ) : (
+                  <>
+                    {/* Create Images (Coming soon) */}
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <button
+                          type="button"
+                          className="w-10 h-10 rounded-sm flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors select-none cursor-not-allowed"
+                          aria-label="Create Images"
+                        >
+                          <ImageIcon className="w-4 h-4" />
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent
+                        side="right"
+                        sideOffset={10}
+                        className="text-md"
+                      >
+                        Create Images
+                      </TooltipContent>
+                    </Tooltip>
+
+                    {/* Web search */}
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <button
+                          type="button"
+                          onClick={() => onOpenWebSearchModal?.()}
+                          className="w-10 h-10 rounded-sm flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors cursor-pointer"
+                          aria-label="Web search"
+                        >
+                          <Globe className="w-4 h-4" />
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent
+                        side="right"
+                        sideOffset={10}
+                        className="text-md"
+                      >
+                        Web search
+                      </TooltipContent>
+                    </Tooltip>
+                  </>
+                )}
+              </div>
+            </div>
+
+            {/* Rail Bottom Dock (mt-auto) */}
+            <div className="mt-auto w-full pb-[max(env(safe-area-inset-bottom),0.5rem)] pt-2 flex flex-col items-center gap-1.5 relative z-20">
+              {user ? (
+                <>
+                  {/* Collapsed View Download Button */}
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          toast.info("App coming soon");
+                        }}
+                        className="w-10 h-10 rounded-sm flex items-center justify-center shrink-0 transition-colors select-none text-muted-foreground bg-transparent hover:bg-secondary hover:text-foreground cursor-pointer"
+                        aria-label="Download app"
+                      >
+                        <Store className="w-4 h-4 shrink-0" />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent side="right" sideOffset={10} className="text-md">
+                      Download app
+                    </TooltipContent>
+                  </Tooltip>
+
+                  {/* Collapsed Avatar Trigger */}
+                  <DropdownMenu
+                    onOpenChange={(open) => {
+                      if (!open) setAccountSubView("main");
                     }}
-                    className="w-10 h-10 rounded-xl flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors cursor-pointer"
-                    aria-label="New chat"
                   >
-                    <SquarePen className="w-5 h-5" />
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent
-                  side="right"
-                  sideOffset={10}
-                  className="text-md"
-                >
-                  New chat
-                </TooltipContent>
-              </Tooltip>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <DropdownMenuTrigger asChild>
+                          <button
+                            type="button"
+                            className="w-10 h-10 rounded-sm flex items-center justify-center hover:bg-secondary transition-colors cursor-pointer select-none outline-none focus:outline-none"
+                            aria-label="Account menu"
+                          >
+                            <div className="relative z-50 shrink-0 opacity-0">
+                              {renderAvatarContent()}
+                            </div>
+                          </button>
+                        </DropdownMenuTrigger>
+                      </TooltipTrigger>
+                      <TooltipContent side="right" sideOffset={10} className="text-md">
+                        {displayName}
+                      </TooltipContent>
+                    </Tooltip>
+                    <DropdownMenuContent
+                      side="top"
+                      align="start"
+                      alignOffset={-4}
+                      sideOffset={5}
+                      className="w-64 rounded-2xl p-2 bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/80 dark:border-none outline-none focus:outline-none ring-0"
+                    >
+                      {renderAccountMenuItems()}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </>
+              ) : (
+                <>
+                  {/* Rail Pricing */}
+                  <Tooltip open={isOpen ? false : undefined}>
+                    <TooltipTrigger asChild>
+                      <Link
+                        id="guest-rail-pricing-plans"
+                        href="/product/pricing"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        tabIndex={isOpen ? -1 : 0}
+                        className="w-10 h-10 rounded-sm flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors cursor-pointer"
+                        aria-label="Pricing & Plans"
+                      >
+                        <Sparkles className="w-4 h-4 shrink-0" />
+                      </Link>
+                    </TooltipTrigger>
+                    <TooltipContent side="right" sideOffset={10} className="text-md">
+                      Pricing & Plans
+                    </TooltipContent>
+                  </Tooltip>
 
-              {/* Pinned Shortcut */}
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <button
-                    onClick={onToggle}
-                    className="w-10 h-10 rounded-xl flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors cursor-pointer"
-                    aria-label="Pinned chats"
-                  >
-                    <Pin className="w-5 h-5" />
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent
-                  side="right"
-                  sideOffset={10}
-                  className="text-md"
-                >
-                  Pinned chats
-                </TooltipContent>
-              </Tooltip>
+                  {/* Rail Help */}
+                  <Tooltip open={isOpen ? false : undefined}>
+                    <TooltipTrigger asChild>
+                      <Link
+                        href="/support/help"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        tabIndex={isOpen ? -1 : 0}
+                        className="w-10 h-10 rounded-sm flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors cursor-pointer"
+                        aria-label="Help & Support"
+                      >
+                        <LifeBuoy className="w-4 h-4 shrink-0" />
+                      </Link>
+                    </TooltipTrigger>
+                    <TooltipContent side="right" sideOffset={10} className="text-md">
+                      Help & Support
+                    </TooltipContent>
+                  </Tooltip>
 
-              {/* Archived Shortcut */}
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <button
-                    onClick={onToggle}
-                    className="w-10 h-10 rounded-xl flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors cursor-pointer"
-                    aria-label="Archived chats"
-                  >
-                    <Archive className="w-5 h-5" />
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent
-                  side="right"
-                  sideOffset={10}
-                  className="text-md"
-                >
-                  Archived chats
-                </TooltipContent>
-              </Tooltip>
+                  {/* Rail Settings */}
+                  <Tooltip open={isOpen ? false : undefined}>
+                    <TooltipTrigger asChild>
+                      <button
+                        type="button"
+                        tabIndex={isOpen ? -1 : 0}
+                        onClick={() => onOpenLoginModal?.()}
+                        className="w-10 h-10 rounded-sm flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors cursor-pointer"
+                        aria-label="Settings"
+                      >
+                        <Settings className="w-4 h-4 shrink-0" />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent side="right" sideOffset={10} className="text-md">
+                      Settings
+                    </TooltipContent>
+                  </Tooltip>
+                </>
+              )}
             </div>
           </div>
 
           {/* Expanded Sidebar View (250px) */}
           <div
+            data-sidebar-expanded
+            suppressHydrationWarning
             className={cn(
-              "w-full sm:w-[250px] h-full flex flex-col shrink-0 absolute top-0 left-0 transition-opacity duration-200 z-10",
+              "w-full sm:w-[250px] sm:min-w-[250px] h-full flex flex-col shrink-0 absolute top-0 left-0 z-10",
+              mounted && "transition-opacity duration-200",
               isOpen
                 ? "opacity-100 pointer-events-auto"
                 : "opacity-0 pointer-events-none"
@@ -1096,36 +1339,56 @@ export function Sidebar({
             aria-hidden={!isOpen}
           >
             {/* Top Header */}
-            <div className="p-3 pb-2 pt-[max(env(safe-area-inset-top),0.75rem)] flex items-center justify-between relative z-20">
+            <div
+              className={cn(
+                "h-14 pt-[env(safe-area-inset-top,0px)] flex items-center justify-between relative z-20 shrink-0",
+                !user ? "pl-[10px] pr-2" : "px-3"
+              )}
+            >
               <Link
                 href="/"
-                className="flex items-center gap-2 px-1 hover:opacity-85 transition-opacity"
+                className={cn(
+                  "h-10 flex items-center transition-opacity",
+                  !user
+                    ? "w-10 justify-center rounded-sm hover:bg-secondary text-foreground px-0"
+                    : "gap-2 px-1 hover:opacity-85"
+                )}
+                aria-label="CloseAI"
               >
-                <span className="font-semibold text-xl tracking-tight text-foreground">
-                  CloseAI
-                </span>
+                {!user ? (
+                  <CloseAIIcon
+                    size={20}
+                    className="w-4 h-4 text-foreground shrink-0"
+                  />
+                ) : (
+                  <span className="font-semibold text-xl tracking-tight text-foreground leading-none">
+                    CloseAI
+                  </span>
+                )}
               </Link>
 
               <div className="flex items-center gap-0.5">
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="w-10 h-10 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary cursor-pointer"
-                      onClick={() => setShowSearch(!showSearch)}
+                {user && (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="w-10 h-10 rounded-sm text-muted-foreground hover:text-foreground hover:bg-secondary cursor-pointer"
+                        onClick={() => setShowSearch(!showSearch)}
+                      >
+                        <AnimatedSearchClose open={showSearch} size={18} />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent
+                      side="bottom"
+                      sideOffset={5}
+                      className="text-md"
                     >
-                      <AnimatedSearchClose open={showSearch} size={22} />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent
-                    side="bottom"
-                    sideOffset={5}
-                    className="text-md"
-                  >
-                    Search chats
-                  </TooltipContent>
-                </Tooltip>
+                      Search chats
+                    </TooltipContent>
+                  </Tooltip>
+                )}
 
                 <Tooltip>
                   <TooltipTrigger asChild>
@@ -1133,7 +1396,7 @@ export function Sidebar({
                       variant="ghost"
                       size="icon"
                       style={{ cursor: "ew-resize" }}
-                      className="w-10 h-10 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary !cursor-ew-resize [&_*]:!cursor-ew-resize"
+                      className="w-10 h-10 rounded-sm text-muted-foreground hover:text-foreground hover:bg-secondary !cursor-ew-resize [&_*]:!cursor-ew-resize"
                       onClick={(e) => {
                         (e.currentTarget as HTMLElement)?.blur();
                         setIsCloseBtnHovered(false);
@@ -1143,7 +1406,7 @@ export function Sidebar({
                       onMouseEnter={() => setIsCloseBtnHovered(true)}
                       onMouseLeave={() => setIsCloseBtnHovered(false)}
                     >
-                      <PanelLeft className="w-5 h-5 pointer-events-none" />
+                      <PanelLeft className="w-4 h-4 pointer-events-none" />
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent
@@ -1157,18 +1420,18 @@ export function Sidebar({
               </div>
             </div>
 
-            {/* New Chat Button */}
-            <div className="px-2 pt-1 pb-2 space-y-2 relative z-20">
-              {showSearch && (
-                <div className="relative group">
-                  <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-foreground transition-colors pointer-events-none" />
+            {/* New Chat & Guest Items */}
+            <div className="px-2 pt-1 pb-2 space-y-1.5 relative z-20">
+              {user && showSearch && (
+                <div className="relative group mb-1">
+                  <Search className="w-4 h-4 absolute left-[14px] top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-foreground transition-colors pointer-events-none" />
                   <input
                     ref={searchInputRef}
                     type="text"
                     placeholder="Search anything"
                     value={searchQuery}
                     onChange={(e) => onSearchChange(e.target.value)}
-                    className="w-full pl-10 pr-3 h-12 text-base bg-secondary rounded-xl text-foreground placeholder:text-muted-foreground focus:placeholder:text-foreground focus:outline-none focus-visible:outline-none focus:ring-0 focus-visible:ring-0 border-0 transition-colors"
+                    className="w-full pl-10 pr-3 h-10 text-base bg-secondary rounded-xl text-foreground placeholder:text-muted-foreground focus:placeholder:text-foreground focus:outline-none focus-visible:outline-none focus:ring-0 focus-visible:ring-0 border-0 transition-colors"
                   />
                 </div>
               )}
@@ -1178,353 +1441,428 @@ export function Sidebar({
                   onNewChat();
                   if (
                     typeof window !== "undefined" &&
-                    window.innerWidth < 1025
+                    window.innerWidth < 1280
                   ) {
                     onToggle();
                   }
                 }}
-                className="w-full flex items-center justify-between h-12 px-2 rounded-xl hover:bg-secondary text-foreground text-md group cursor-pointer transition-all duration-150"
+                className="w-full flex items-center justify-between h-10 pl-[14px] pr-2.5 rounded-xl hover:bg-secondary text-foreground text-md group cursor-pointer transition-all duration-150"
               >
                 <div className="flex items-center gap-2.5">
                   <SquarePen className="w-4 h-4 text-muted-foreground group-hover:text-foreground" />
-                  <span>New chat</span>
+                  <span className="whitespace-nowrap">New chat</span>
                 </div>
               </button>
-            </div>
 
-            {/* Chat History Stream */}
-            <div className="flex-1 px-2 overflow-y-auto border-t border-border/50 sidebar-scroll min-h-0">
-              {isLoading ? (
-                <div className="space-y-5 py-3 px-1 select-none">
-                  {/* PINNED Skeleton Group */}
-                  <div className="space-y-2">
-                    <div className="h-3 w-20 bg-muted-foreground/20 rounded animate-pulse ml-2" />
-                    <div className="space-y-1.5">
-                      <div className="h-8 w-full bg-secondary/80 dark:bg-neutral-800/60 rounded-xl animate-pulse" />
-                    </div>
-                  </div>
-
-                  {/* ARCHIVED Skeleton Group */}
-                  <div className="space-y-2 pt-1">
-                    <div className="h-3 w-24 bg-muted-foreground/20 rounded animate-pulse ml-2" />
-                    <div className="space-y-1.5">
-                      <div className="h-8 w-full bg-secondary/70 dark:bg-neutral-800/50 rounded-xl animate-pulse" />
-                    </div>
-                  </div>
-
-                  {/* TODAY Skeleton Group */}
-                  <div className="space-y-2 pt-1">
-                    <div className="h-3 w-16 bg-muted-foreground/20 rounded animate-pulse ml-2" />
-                    <div className="space-y-1.5">
-                      <div className="h-8 w-full bg-secondary/70 dark:bg-neutral-800/50 rounded-xl animate-pulse" />
-                      <div className="h-8 w-full bg-secondary/70 dark:bg-neutral-800/50 rounded-xl animate-pulse" />
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                <div className="space-y-4 py-2">
-                  {/* Pinned Section */}
-                  <div className="space-y-0.5">
-                    <button
-                      type="button"
-                      onClick={() => toggleSection("Pinned")}
-                      className="w-full flex items-center justify-between px-2 py-1 text-[15px] font-semibold tracking-wider text-foreground select-none cursor-pointer transition-colors group/section text-left"
-                    >
-                      <span>Pinned</span>
-                      <AnimatedChevron
-                        open={!collapsedSections["Pinned"]}
-                        disableHover
-                        orientation="right-down"
-                        size={18}
-                        className="text-muted-foreground group-hover/section:text-foreground shrink-0 xl:opacity-0 xl:group-hover/section:opacity-100 transition-opacity duration-150"
+              {!user && (
+                <>
+                  {/* Create Images (Coming soon) */}
+                  <button
+                    type="button"
+                    onMouseEnter={() => setIsImagesHovered(true)}
+                    onMouseLeave={() => setIsImagesHovered(false)}
+                    className="w-full flex items-center justify-between h-10 pl-[14px] pr-2.5 rounded-xl text-muted-foreground [@media(hover:hover)]:hover:bg-secondary text-md select-none cursor-not-allowed group transition-all duration-150 text-left"
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <ImageIcon className="w-4 h-4 text-muted-foreground group-hover:text-foreground" />
+                      <AnimatedComingSoonText
+                        label="Create Images"
+                        comingSoonText="Coming soon"
+                        isHovered={isImagesHovered}
                       />
-                    </button>
-                    {!collapsedSections["Pinned"] && (
-                      <>
-                        {(groupedChats["Pinned"] || []).length === 0 ? (
-                          <div className="px-2 py-1 text-[13.5px] text-muted-foreground/60 select-none font-normal">
-                            No pinned chats
-                          </div>
-                        ) : (
-                          groupedChats["Pinned"].map((chat) =>
-                            renderChatItem(chat)
-                          )
-                        )}
-                      </>
-                    )}
-                  </div>
-
-                  {/* Archived Section */}
-                  <div className="space-y-0.5">
-                    <button
-                      type="button"
-                      onClick={() => toggleSection("Archived")}
-                      className="w-full flex items-center justify-between px-2 py-1 text-[15px] font-semibold tracking-wider text-foreground select-none cursor-pointer transition-colors group/section text-left"
-                    >
-                      <span>Archived</span>
-                      <AnimatedChevron
-                        open={!collapsedSections["Archived"]}
-                        disableHover
-                        orientation="right-down"
-                        size={18}
-                        className="text-muted-foreground group-hover/section:text-foreground shrink-0 xl:opacity-0 xl:group-hover/section:opacity-100 transition-opacity duration-150"
-                      />
-                    </button>
-                    {!collapsedSections["Archived"] && (
-                      <>
-                        {(groupedChats["Archived"] || []).length === 0 ? (
-                          <div className="px-2 py-1 text-[13.5px] text-muted-foreground/60 select-none font-normal">
-                            No archived chats
-                          </div>
-                        ) : (
-                          groupedChats["Archived"].map((chat) =>
-                            renderChatItem(chat)
-                          )
-                        )}
-                      </>
-                    )}
-                  </div>
-
-                  {/* Chats Section */}
-                  <div className="space-y-0.5">
-                    <div className="px-2 py-1 text-[15px] font-semibold tracking-wider text-foreground select-none">
-                      Chats
                     </div>
+                  </button>
 
-                    {groupedChats["Chats"].length === 0 ? (
-                      <div className="px-2 py-1 text-[13.5px] text-muted-foreground/60 select-none font-normal">
-                        {searchQuery ? "No chats found" : "No chats"}
+                  {/* Web search */}
+                  <HoverCard
+                    openDelay={100}
+                    closeDelay={200}
+                    onOpenChange={(open) => {
+                      if (open) {
+                        onWebSearchHover?.();
+                      }
+                    }}
+                  >
+                    <HoverCardTrigger asChild>
+                      <button
+                        type="button"
+                        onMouseEnter={() => {
+                          onWebSearchHover?.();
+                        }}
+                        onClick={() => {
+                          onOpenLoginModal?.();
+                          if (
+                            typeof window !== "undefined" &&
+                            window.innerWidth < 1280
+                          ) {
+                            onToggle();
+                          }
+                        }}
+                        className="w-full flex items-center justify-between h-10 pl-[14px] pr-2.5 rounded-xl hover:bg-secondary data-[state=open]:bg-secondary text-foreground text-md group cursor-pointer transition-all duration-150"
+                      >
+                        <div className="flex items-center gap-2.5">
+                          <Globe className="w-4 h-4 text-muted-foreground group-hover:text-foreground" />
+                          <span className="whitespace-nowrap">Web search</span>
+                        </div>
+                      </button>
+                    </HoverCardTrigger>
+                    <HoverCardContent
+                      side="right"
+                      align="start"
+                      sideOffset={24}
+                      className="w-[310px] p-0 rounded-2xl bg-white dark:bg-[#212121] border border-border/80 dark:border-neutral-800 overflow-hidden text-left z-50 select-none"
+                    >
+                      {/* Web Search Simple Sky Blue & Soft Lilac Gradient Banner */}
+                      <div className="h-32 w-full bg-gradient-to-tr from-[#ebb8f7] via-[#5bb5f8] via-25% to-[#72ccfd]" />
+                      <div className="p-4">
+                        <h4 className="text-[15.5px] font-semibold text-foreground dark:text-white tracking-tight leading-snug">
+                          Search the web
+                        </h4>
+                        <p className="text-[13px] text-muted-foreground dark:text-neutral-300 mt-1.5 leading-relaxed">
+                          Search the web, synthesize multiple sources, and get
+                          up-to-date answers with citations.
+                        </p>
+                        <div className="flex items-center gap-2.5 mt-4">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              onOpenLoginModal?.();
+                            }}
+                            className="h-10 px-3 rounded-full bg-black hover:bg-neutral-800 active:scale-[0.99] text-white border border-transparent dark:bg-white dark:text-black dark:border-none dark:hover:opacity/90 text-sm font-medium transition-all cursor-pointer flex items-center justify-center text-center"
+                          >
+                            Log in
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              onOpenLoginModal?.();
+                            }}
+                            className="h-10 px-3 rounded-full bg-white hover:bg-secondary text-black border border-border/80 dark:border-neutral-700/60 dark:bg-[#2f2f2f] dark:hover:bg-[#383838] dark:text-white text-sm font-semibold transition-colors cursor-pointer flex items-center justify-center text-center"
+                          >
+                            Sign up for free
+                          </button>
+                        </div>
                       </div>
-                    ) : (
-                      groupedChats["Chats"].map((chat) => renderChatItem(chat))
-                    )}
-                  </div>
-                </div>
+                    </HoverCardContent>
+                  </HoverCard>
+                </>
               )}
             </div>
-          </div>
-        </div>
 
-        {/* Bottom User Profile Dock (Unified & Persistent — Zero Blinking & Stable Avatar) */}
-        <div
-          className={cn(
-            "w-full px-[5px] pb-[max(env(safe-area-inset-bottom),0.5rem)] pt-2 mt-auto relative z-20 transition-colors duration-200",
-            isOpen ? "border-t border-border/50" : "border-t border-transparent"
-          )}
-        >
-          {/* Collapsed View Download Button (Stacked above avatar in rail view) */}
-          <div
-            className={cn(
-              "w-full flex justify-center transition-all duration-200 overflow-hidden",
-              !isOpen
-                ? "h-10 opacity-100 mb-2 pointer-events-auto"
-                : "h-0 opacity-0 mb-0 pointer-events-none"
-            )}
-          >
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <button
-                  type="button"
-                  disabled={isLoading || !user}
-                  onClick={() => {
-                    if (!isLoading && user) toast.info("CloseAI app coming soon");
-                  }}
-                  className={cn(
-                    "w-10 h-10 max-w-full rounded-xl flex items-center justify-center shrink-0 transition-colors select-none text-muted-foreground",
-                    isLoading || !user
-                      ? "cursor-not-allowed bg-transparent"
-                      : "bg-transparent hover:bg-secondary hover:text-foreground cursor-pointer"
-                  )}
-                  aria-label="Download app"
-                >
-                  <Store className="w-5 h-5 shrink-0" />
-                </button>
-              </TooltipTrigger>
+            {/* Chat History Stream (Only for authenticated users) */}
+            {user ? (
+              <div className="flex-1 px-2 overflow-y-auto border-t border-border/50 sidebar-scroll min-h-0">
+                {isLoading ? (
+                  <div className="space-y-5 py-3 px-1 select-none">
+                    {/* PINNED Skeleton Group */}
+                    <div className="space-y-2">
+                      <div className="h-3 w-20 bg-muted-foreground/20 rounded animate-pulse ml-2" />
+                      <div className="space-y-1.5">
+                        <div className="h-8 w-full bg-secondary/80 dark:bg-neutral-800/60 rounded-xl animate-pulse" />
+                      </div>
+                    </div>
 
-              {!isLoading && user && (
-                <TooltipContent side="right" sideOffset={10} className="text-md">
-                  Download app
-                </TooltipContent>
-              )}
-            </Tooltip>
-          </div>
+                    {/* ARCHIVED Skeleton Group */}
+                    <div className="space-y-2 pt-1">
+                      <div className="h-3 w-24 bg-muted-foreground/20 rounded animate-pulse ml-2" />
+                      <div className="space-y-1.5">
+                        <div className="h-8 w-full bg-secondary/70 dark:bg-neutral-800/50 rounded-xl animate-pulse" />
+                      </div>
+                    </div>
 
-          {/* Profile Row */}
-          <div className="w-full h-10 flex items-center justify-between relative">
-            {isLoading || !user ? (
-              <div
-                className={cn(
-                  "w-full h-12 flex items-center justify-between rounded-xl select-none pl-0",
-                  isOpen ? "min-w-0" : "w-10 h-10 justify-center"
-                )}
-              >
-                <div
-                  className={cn(
-                    "h-10 flex items-center justify-start min-w-0",
-                    isOpen
-                      ? "flex-1 pr-1 gap-2 text-left"
-                      : "w-10 pr-0 justify-center"
-                  )}
-                >
-                  <div
-                    className={cn(
-                      "relative z-50 shrink-0",
-                      isOpen ? "ml-1" : "ml-0"
-                    )}
-                  >
-                    <div className="w-8 h-8 rounded-full bg-secondary/80 dark:bg-neutral-800/80 animate-pulse" />
+                    {/* CHATS Skeleton Group */}
+                    <div className="space-y-2 pt-1">
+                      <div className="h-3 w-16 bg-muted-foreground/20 rounded animate-pulse ml-2" />
+                      <div className="space-y-1.5">
+                        <div className="h-8 w-full bg-secondary/70 dark:bg-neutral-800/50 rounded-xl animate-pulse" />
+                        <div className="h-8 w-full bg-secondary/70 dark:bg-neutral-800/50 rounded-xl animate-pulse" />
+                      </div>
+                    </div>
                   </div>
+                ) : (
+                  <div className="space-y-4 py-2">
+                    {/* Pinned Section */}
+                    <div className="space-y-0.5">
+                      <button
+                        type="button"
+                        onClick={() => toggleSection("Pinned")}
+                        className="w-full flex items-center justify-between px-2 py-1 text-[15px] font-semibold tracking-wider text-foreground select-none cursor-pointer transition-colors group/section text-left"
+                      >
+                        <span>Pinned</span>
+                        <AnimatedChevron
+                          open={!collapsedSections["Pinned"]}
+                          disableHover
+                          orientation="right-down"
+                          size={18}
+                          className="text-muted-foreground group-hover/section:text-foreground shrink-0 xl:opacity-0 xl:group-hover/section:opacity-100 transition-opacity duration-150"
+                        />
+                      </button>
+                      {!collapsedSections["Pinned"] && (
+                        <>
+                          {(groupedChats["Pinned"] || []).length === 0 ? (
+                            <div className="px-2 py-1 text-[13.5px] text-muted-foreground/60 select-none font-normal">
+                              No pinned chats
+                            </div>
+                          ) : (
+                            groupedChats["Pinned"].map((chat) =>
+                              renderChatItem(chat)
+                            )
+                          )}
+                        </>
+                      )}
+                    </div>
 
-                  <div
-                    className={cn(
-                      "flex-1 min-w-0 space-y-1.5 transition-all duration-200 overflow-hidden whitespace-nowrap",
-                      isOpen
-                        ? "opacity-100"
-                        : "w-0 opacity-0 pointer-events-none hidden"
-                    )}
-                  >
-                    <div className="h-3.5 w-20 bg-secondary/80 dark:bg-neutral-800/80 rounded animate-pulse" />
-                    <div className="h-2.5 w-10 bg-secondary/60 dark:bg-neutral-800/60 rounded animate-pulse" />
-                  </div>
-                </div>
+                    {/* Archived Section */}
+                    <div className="space-y-0.5">
+                      <button
+                        type="button"
+                        onClick={() => toggleSection("Archived")}
+                        className="w-full flex items-center justify-between px-2 py-1 text-[15px] font-semibold tracking-wider text-foreground select-none cursor-pointer transition-colors group/section text-left"
+                      >
+                        <span>Archived</span>
+                        <AnimatedChevron
+                          open={!collapsedSections["Archived"]}
+                          disableHover
+                          orientation="right-down"
+                          size={18}
+                          className="text-muted-foreground group-hover/section:text-foreground shrink-0 xl:opacity-0 xl:group-hover/section:opacity-100 transition-opacity duration-150"
+                        />
+                      </button>
+                      {!collapsedSections["Archived"] && (
+                        <>
+                          {(groupedChats["Archived"] || []).length === 0 ? (
+                            <div className="px-2 py-1 text-[13.5px] text-muted-foreground/60 select-none font-normal">
+                              No archived chats
+                            </div>
+                          ) : (
+                            groupedChats["Archived"].map((chat) =>
+                              renderChatItem(chat)
+                            )
+                          )}
+                        </>
+                      )}
+                    </div>
 
-                {isOpen && (
-                  <div
-                    className="shrink-0 pr-1.5"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <button
-                      type="button"
-                      disabled
-                      className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0 transition-colors select-none text-muted-foreground bg-transparent cursor-not-allowed"
-                      aria-label="Download app"
-                    >
-                      <Store className="w-5 h-5 shrink-0" />
-                    </button>
+                    {/* Chats Section */}
+                    <div className="space-y-0.5">
+                      <div className="px-2 py-1 text-[15px] font-semibold tracking-wider text-foreground select-none">
+                        Chats
+                      </div>
+
+                      {groupedChats["Chats"].length === 0 ? (
+                        <div className="px-2 py-1 text-[13.5px] text-muted-foreground/60 select-none font-normal">
+                          {searchQuery ? "No chats found" : "No chats"}
+                        </div>
+                      ) : (
+                        groupedChats["Chats"].map((chat) =>
+                          renderChatItem(chat)
+                        )
+                      )}
+                    </div>
                   </div>
                 )}
               </div>
             ) : (
-              <DropdownMenu
-                onOpenChange={(open) => {
-                  if (!open) setAccountSubView("main");
-                }}
-              >
-                {/* Entire profile row = dropdown trigger */}
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <DropdownMenuTrigger asChild>
-                      <div
-                        role="button"
-                        tabIndex={0}
-                        className={cn(
-                          "w-full h-12 flex items-center justify-between rounded-xl hover:bg-secondary transition-[width,background-color] duration-200 cursor-pointer select-none outline-none focus:outline-none focus-visible:outline-none focus:ring-0 focus-visible:ring-0 ring-0 border-0 pl-0",
-                          isOpen ? "min-w-0" : "w-10 h-10"
-                        )}
-                      >
-                        {/* Profile Section */}
-                        <div
-                          className={cn(
-                            "h-10 flex items-center justify-start min-w-0",
-                            isOpen
-                              ? "flex-1 pr-1 gap-2 text-left"
-                              : "w-10 pr-0 justify-center"
-                          )}
-                        >
-                          {/* Rock-solid, non-blinking avatar — perfectly stationary at 9px from sidebar left */}
-                          <div
-                            className={cn("relative z-50 shrink-0", isOpen ? "ml-1" : "ml-0")}
-                          >
-                            {renderAvatarContent()}
-                          </div>
-
-                          {/* Expanded User Details */}
-                          <div
-                            className={cn(
-                              "flex-1 min-w-0 transition-all duration-200 overflow-hidden whitespace-nowrap",
-                              isOpen
-                                ? "opacity-100"
-                                : "w-0 opacity-0 pointer-events-none hidden"
-                            )}
-                          >
-                            <p className="text-md font-medium text-foreground truncate leading-snug">
-                              {displayName}
-                            </p>
-
-                            <p
-                              className="text-sm text-muted-foreground leading-none"
-                              suppressHydrationWarning
-                            >
-                              {planDisplay}
-                            </p>
-                          </div>
-                        </div>
-
-                        {/* Download App Button — INSIDE the same outer profile box */}
-                        {isOpen && (
-                          <div
-                            className="shrink-0 pr-1.5"
-                            onPointerDown={(e) => e.stopPropagation()}
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <button
-                                  type="button"
-                                  onPointerDown={(e) => e.stopPropagation()}
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    if (!isLoading && user) toast.info("CloseAI app coming soon");
-                                  }}
-                                  className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0 transition-colors select-none text-muted-foreground hover:text-foreground bg-transparent hover:bg-black/10 dark:hover:bg-white/10 cursor-pointer"
-                                  aria-label="Download app"
-                                >
-                                  <Store className="w-5 h-5 shrink-0" />
-                                </button>
-                              </TooltipTrigger>
-
-                              <TooltipContent
-                                side="top"
-                                sideOffset={5}
-                                className="text-md"
-                              >
-                                Download app
-                              </TooltipContent>
-                            </Tooltip>
-                          </div>
-                        )}
-                      </div>
-                    </DropdownMenuTrigger>
-                  </TooltipTrigger>
-
-                  {!isOpen && (
-                    <TooltipContent
-                      side="right"
-                      sideOffset={10}
-                      className="text-md"
-                    >
-                      {displayName}
-                    </TooltipContent>
-                  )}
-                </Tooltip>
-
-                {/* Account Dropdown */}
-                <DropdownMenuContent
-                  side="top"
-                  align="start"
-                  alignOffset={isOpen ? 0 : -4}
-                  sideOffset={5}
-                  className={cn(
-                    "rounded-2xl p-2 bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/80 dark:border-none outline-none focus:outline-none ring-0",
-                    isOpen
-                      ? "w-[var(--radix-dropdown-menu-trigger-width)] max-w-[var(--radix-dropdown-menu-trigger-width)] max-h-[calc(100dvh-5rem)] overflow-y-auto"
-                      : "w-64"
-                  )}
-                >
-                  {renderAccountMenuItems()}
-                </DropdownMenuContent>
-              </DropdownMenu>
+              <div className="flex-1 min-h-0" />
             )}
+
+            {/* Expanded Bottom Dock (mt-auto) */}
+            <div
+              className={cn(
+                "mt-auto w-full pb-[max(env(safe-area-inset-bottom),0.5rem)] pt-2 relative z-20 select-none px-2",
+                user && "border-t border-border/50"
+              )}
+            >
+              {user ? (
+                /* Authenticated User Profile Row */
+                <div className="w-full h-10 flex items-center justify-between relative">
+                  <DropdownMenu
+                    onOpenChange={(open) => {
+                      if (!open) setAccountSubView("main");
+                    }}
+                  >
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <DropdownMenuTrigger asChild>
+                          <div
+                            role="button"
+                            tabIndex={0}
+                            className="w-full h-12 flex items-center justify-between rounded-sm hover:bg-secondary transition-colors duration-200 cursor-pointer select-none outline-none focus:outline-none focus-visible:outline-none focus:ring-0 focus-visible:ring-0 ring-0 border-0 pl-[6px] pr-2 min-w-0"
+                          >
+                            {/* Profile Section */}
+                            <div className="h-10 flex items-center justify-start min-w-0 flex-1 gap-2.5 text-left">
+                              {/* Non-blinking avatar placeholder */}
+                              <div className="relative z-50 shrink-0 opacity-0">
+                                {renderAvatarContent()}
+                              </div>
+
+                              {/* Expanded User Details */}
+                              <div className="flex-1 min-w-0 transition-all duration-200 overflow-hidden whitespace-nowrap">
+                                <p className="text-md font-medium text-foreground truncate leading-snug">
+                                  {displayName}
+                                </p>
+                                <p
+                                  className="text-sm text-muted-foreground leading-none"
+                                  suppressHydrationWarning
+                                >
+                                  {planDisplay}
+                                </p>
+                              </div>
+                            </div>
+
+                            {/* Download App Button */}
+                            <div
+                              className="shrink-0"
+                              onPointerDown={(e) => e.stopPropagation()}
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <button
+                                    type="button"
+                                    onPointerDown={(e) => e.stopPropagation()}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      if (user)
+                                        toast.info("App coming soon");
+                                    }}
+                                    className="w-10 h-10 rounded-sm flex items-center justify-center shrink-0 transition-colors select-none text-muted-foreground hover:text-foreground bg-transparent hover:bg-black/10 dark:hover:bg-white/10 cursor-pointer"
+                                    aria-label="Download app"
+                                  >
+                                    <Store className="w-4 h-4 shrink-0" />
+                                  </button>
+                                </TooltipTrigger>
+
+                                <TooltipContent
+                                  side="top"
+                                  sideOffset={5}
+                                  className="text-md"
+                                >
+                                  Download app
+                                </TooltipContent>
+                              </Tooltip>
+                            </div>
+                          </div>
+                        </DropdownMenuTrigger>
+                      </TooltipTrigger>
+                    </Tooltip>
+
+                    {/* Account Dropdown */}
+                    <DropdownMenuContent
+                      side="top"
+                      align="start"
+                      sideOffset={5}
+                      className="w-[var(--radix-dropdown-menu-trigger-width)] max-w-[var(--radix-dropdown-menu-trigger-width)] max-h-[calc(100dvh-5rem)] overflow-y-auto rounded-2xl p-2 bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/80 dark:border-none outline-none focus:outline-none ring-0"
+                    >
+                      {renderAccountMenuItems()}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+              ) : (
+                /* Guest Bottom Dock */
+                <div className="w-full space-y-1.5 select-none">
+                  {/* Expanded Pricing */}
+                  <Link
+                    id="guest-sidebar-pricing-plans"
+                    href="/product/pricing"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    tabIndex={!isOpen ? -1 : 0}
+                    className="w-full h-10 pl-[14px] pr-2.5 flex items-center justify-between rounded-xl hover:bg-secondary text-foreground group cursor-pointer transition-colors duration-150 select-none overflow-hidden"
+                    aria-label="Pricing & Plans"
+                  >
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <Sparkles className="w-4 h-4 text-muted-foreground group-hover:text-foreground shrink-0 transition-colors" />
+                      <span className="text-md font-normal leading-normal whitespace-nowrap">
+                        Pricing & Plans
+                      </span>
+                    </div>
+                    <ArrowUpRight className="w-4 h-4 text-muted-foreground group-hover:text-foreground shrink-0 opacity-100 xl:opacity-0 xl:group-hover:opacity-100 transition-opacity duration-150" />
+                  </Link>
+
+                  {/* Expanded Help */}
+                  <Link
+                    href="/support/help"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    tabIndex={!isOpen ? -1 : 0}
+                    className="w-full h-10 pl-[14px] pr-2.5 flex items-center justify-between rounded-xl hover:bg-secondary text-foreground group cursor-pointer transition-colors duration-150 select-none overflow-hidden"
+                    aria-label="Help & Support"
+                  >
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <LifeBuoy className="w-4 h-4 text-muted-foreground group-hover:text-foreground shrink-0 transition-colors" />
+                      <span className="text-md font-normal leading-normal whitespace-nowrap">
+                        Help & Support
+                      </span>
+                    </div>
+                    <ArrowUpRight className="w-4 h-4 text-muted-foreground group-hover:text-foreground shrink-0 opacity-100 xl:opacity-0 xl:group-hover:opacity-100 transition-opacity duration-150" />
+                  </Link>
+
+                  {/* Expanded Settings */}
+                  <button
+                    type="button"
+                    tabIndex={!isOpen ? -1 : 0}
+                    onClick={() => onOpenLoginModal?.()}
+                    className="w-full h-10 pl-[14px] pr-2.5 flex items-center justify-between rounded-xl hover:bg-secondary text-foreground group cursor-pointer transition-colors duration-150 select-none overflow-hidden"
+                    aria-label="Settings"
+                  >
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <Settings className="w-4 h-4 text-muted-foreground group-hover:text-foreground shrink-0 transition-colors" />
+                      <span className="text-md font-normal leading-normal whitespace-nowrap">
+                        Settings
+                      </span>
+                    </div>
+                  </button>
+
+                  {/* Guest Callout Card */}
+                  <div
+                    id="guest-sidebar-callout-card"
+                    className={cn(
+                      "w-full pt-1.5 select-text",
+                      isGuestCardDismissed && "hidden"
+                    )}
+                  >
+                    <div className="w-full p-3.5 rounded-xl bg-secondary/40 border border-border/80 dark:border-none space-y-2 select-text text-left relative">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="text-base font-semibold text-foreground text-left pt-2">
+                          Get efficient responses.
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setIsGuestCardDismissed(true);
+                            if (typeof document !== "undefined") {
+                              document.body.setAttribute("data-guest-card-dismissed", "true");
+                              try {
+                                document.cookie =
+                                  "guest_card_dismissed=true; path=/; max-age=31536000; SameSite=Lax";
+                              } catch {}
+                            }
+                            fetch("/api/guest-card", {
+                              method: "POST",
+                            }).catch(() => {});
+                          }}
+                          className="w-7 h-7 -mr-1 -mt-1 rounded-sm flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors cursor-pointer shrink-0"
+                          aria-label="Close"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                      <div className="text-sm text-muted-foreground leading-snug text-left">
+                        Log in to get efficient answers, plus thinking capabilities, and upload files and more.
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => onOpenLoginModal?.()}
+                        className="w-full mt-1 h-10 px-4 rounded-full bg-black hover:bg-neutral-800 active:scale-[0.99] text-white border border-transparent dark:bg-white dark:text-black dark:border-none dark:hover:opacity/90 text-sm font-semibold transition-all cursor-pointer flex items-center justify-center text-center leading-none"
+                      >
+                        Log in
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </aside>
@@ -1535,9 +1873,9 @@ export function Sidebar({
         open={showLogoutModal}
         onOpenChange={setShowLogoutModal}
         onConfirm={signOut}
-        userName={displayName}
-        userEmail={userEmail}
-        userAvatar={avatarUrl}
+        userName={user ? displayName : undefined}
+        userEmail={user?.email || undefined}
+        userAvatar={user ? avatarUrl : undefined}
       />
 
       {/* Delete Confirmation Modal — same reasoning as above. */}

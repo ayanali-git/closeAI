@@ -8,7 +8,7 @@ import { AnimatedArrowUpRight, AnimatedComingSoonText } from "@/components/ui/an
 export function Footer() {
   return (
     <footer className="w-full bg-background text-foreground pt-10 pb-5 select-none">
-      <div className="max-w-[1500px] mx-auto px-6 sm:px-10">
+      <div className="max-w-[1500px] mx-auto px-6 sm:px-8">
         {/* Multi-Tier 5-Column Links Grid matching */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-8 lg:gap-12 pb-16 border-b border-border/80">
           {/* Column 1: Research & Latest Advancements */}

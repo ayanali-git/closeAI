@@ -163,7 +163,7 @@ export function AnimatedArrowUpRight({
   disableHover = false,
   className,
   size = 18,
-  strokeWidth = 2,
+  strokeWidth = 1.25,
   style,
   ...props
 }: AnimatedArrowUpRightProps) {

@@ -181,12 +181,17 @@ export class AIService {
       throw new Error('Google Generative AI not initialized (Missing GOOGLE_API_KEY)');
     }
 
-    // Candidate models in fast priority order (gemini-3.8-flash is tested & active)
+    // Normalize model name and prioritize active gemini-3.6-flash (recommended by Google API)
+    const rawModel = (modelName || "gemini-3.6-flash").trim().replace(/\s+/g, "-");
+    const activeModel = (rawModel === "gemini-3.8-flash" || rawModel === "gemini-3.8")
+      ? "gemini-3.6-flash"
+      : rawModel;
+
     const candidates = [
-      "gemini-3.8-flash",
-      "gemini-flash-latest",
-      "gemini-3.1-flash-lite",
-      "gemini-3.8-flash"
+      activeModel,
+      "gemini-3.6-flash",
+      "gemini-3.5-flash-lite",
+      "gemini-flash-lite-latest",
     ];
     const modelChain = Array.from(new Set(candidates.filter(Boolean)));
 

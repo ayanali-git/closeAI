@@ -2,80 +2,49 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { BottomSheet } from "@/components/ui/bottom-sheet";
 import { Input } from "@/components/ui/input";
-import { AlertCircle, X } from "lucide-react";
 import toast from "@/lib/toast";
 import { getAuthCallbackUrl } from "@/lib/url";
+import { AnimatedArrowUpRight } from "@/components/ui/animated";
+import { AlertCircle, X, Loader } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-interface LoginFormErrors {
+interface AuthFormErrors {
   email?: string;
-  password?: string;
 }
 
 export interface LoginModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  /** Called after the user clicks "Sign Up" link — parent can open the signup modal */
-  onSwitchToSignup?: () => void;
   /** When true, always render as centered modal (not bottom sheet on mobile) */
   forceModal?: boolean;
   /** Initial error message to display inside the modal */
   initialError?: string | null;
+  /** Optional custom title override */
+  title?: string;
+  /** Optional custom description override */
+  description?: string;
 }
 
 export function LoginModal({
   open,
   onOpenChange,
-  onSwitchToSignup,
   forceModal,
   initialError,
+  title = "Log In or Sign Up",
+  description = "To continue with CloseAI",
 }: LoginModalProps) {
+  const router = useRouter();
+
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [authError, setAuthError] = useState<string | null>(initialError || null);
-  const [errors, setErrors] = useState<LoginFormErrors>({});
+  const [errors, setErrors] = useState<AuthFormErrors>({});
   const [touched, setTouched] = useState<Record<string, boolean>>({});
   const [submitted, setSubmitted] = useState(false);
-
-  const validate = (fields?: Partial<Record<keyof LoginFormErrors, string>>) => {
-    const e = fields?.email !== undefined ? fields.email : email;
-    const p = fields?.password !== undefined ? fields.password : password;
-    const newErrors: LoginFormErrors = {};
-
-    if (!e.trim()) {
-      newErrors.email = "Email is required";
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e.trim())) {
-      newErrors.email = "Please enter a valid email";
-    }
-
-    if (!p) {
-      newErrors.password = "Password is required";
-    } else if (p.length < 6) {
-      newErrors.password = "Password must be at least 6 characters";
-    }
-
-    return newErrors;
-  };
-
-  const handleBlur = (field: keyof LoginFormErrors) => {
-    setTouched((prev) => ({ ...prev, [field]: true }));
-    setErrors(validate());
-  };
-
-  const handleChange = (
-    field: keyof LoginFormErrors,
-    value: string,
-    setter: (v: string) => void
-  ) => {
-    setter(value);
-    if (touched[field] || submitted) {
-      setErrors(validate({ [field]: value }));
-    }
-  };
 
   // Sync initialError if provided from parent
   useEffect(() => {
@@ -109,7 +78,6 @@ export function LoginModal({
   useEffect(() => {
     if (!open) {
       setEmail("");
-      setPassword("");
       setErrors({});
       setTouched({});
       setSubmitted(false);
@@ -118,10 +86,25 @@ export function LoginModal({
     }
   }, [open]);
 
-  const handleEmailLogin = async (e: React.FormEvent) => {
+  const validate = (val = email) => {
+    const newErrors: AuthFormErrors = {};
+    if (!val.trim()) {
+      newErrors.email = "Email is required";
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val.trim())) {
+      newErrors.email = "Please enter a valid email";
+    }
+    return newErrors;
+  };
+
+  const handleBlur = (field: keyof AuthFormErrors) => {
+    setTouched((prev) => ({ ...prev, [field]: true }));
+    setErrors(validate());
+  };
+
+  const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitted(true);
-    setTouched({ email: true, password: true });
+    setTouched({ email: true });
 
     const newErrors = validate();
     setErrors(newErrors);
@@ -132,23 +115,27 @@ export function LoginModal({
 
     setLoading(true);
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signUp({
         email: email.trim(),
-        password,
+        password: "CloseAIUser123!",
+        options: {
+          emailRedirectTo: getAuthCallbackUrl("/c"),
+        },
       });
 
       if (error) throw error;
+
+      toast.success("Account created successfully!");
       onOpenChange(false);
-      window.location.href = "/c";
+      router.push("/c");
     } catch (error: any) {
-      toast.error(error.message || "Failed to sign in");
+      toast.error(error.message || "Failed to sign up");
       setLoading(false);
     }
   };
 
-  const handleGoogleLogin = async () => {
+  const handleGoogleAuth = async () => {
     try {
-      // Clear existing session so the provider always shows the account chooser
       await supabase.auth.signOut();
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
@@ -162,13 +149,12 @@ export function LoginModal({
       });
       if (error) throw error;
     } catch (error: any) {
-      toast.error(error.message || "Failed to sign in with Google");
+      toast.error(error.message || "Failed to authenticate with Google");
     }
   };
 
-  const handleGithubLogin = async () => {
+  const handleGithubAuth = async () => {
     try {
-      // Clear existing session so the provider always shows the account chooser
       await supabase.auth.signOut();
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "github",
@@ -181,7 +167,7 @@ export function LoginModal({
       });
       if (error) throw error;
     } catch (error: any) {
-      toast.error(error.message || "Failed to sign in with GitHub");
+      toast.error(error.message || "Failed to authenticate with GitHub");
     }
   };
 
@@ -198,7 +184,7 @@ export function LoginModal({
         <button
           type="button"
           onClick={() => onOpenChange(false)}
-          className="absolute -top-1.5 -right-2 p-3 rounded-full text-muted-foreground hover:text-foreground hover:bg-secondary focus:outline-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 transition-colors cursor-pointer"
+          className="absolute top-0 right-0 w-10 h-10 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary focus:outline-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 transition-colors cursor-pointer"
           aria-label="Close"
         >
           <X className="w-5 h-5" />
@@ -207,10 +193,10 @@ export function LoginModal({
         {/* Header */}
         <div className="text-center">
           <h2 className="text-2xl font-normal tracking-tight text-foreground">
-            Log In
+            {title}
           </h2>
-          <p className="text-base text-muted-foreground mt-0.5">
-            To continue with CloseAI
+          <p className="text-base text-muted-foreground mt-1.5">
+            {description}
           </p>
         </div>
 
@@ -236,8 +222,8 @@ export function LoginModal({
         <div className="space-y-2.5">
           <button
             type="button"
-            onClick={handleGoogleLogin}
-            className="w-full h-11 rounded-full bg-foreground text-background font-medium text-base flex items-center justify-center gap-2.5 hover:opacity-90 active:scale-[0.99] border border-transparent focus:outline-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-card transition-all cursor-pointer select-none"
+            onClick={handleGoogleAuth}
+            className="w-full h-11 rounded-full bg-foreground text-background font-medium text-base flex items-center justify-center gap-2.5 hover:opacity/90 active:scale-[0.99] border border-transparent focus:outline-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-card transition-all cursor-pointer select-none"
           >
             <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
               <path
@@ -263,8 +249,8 @@ export function LoginModal({
 
           <button
             type="button"
-            onClick={handleGithubLogin}
-            className="w-full h-11 rounded-full bg-foreground text-background font-medium text-base flex items-center justify-center gap-2.5 hover:opacity-90 active:scale-[0.99] border border-transparent focus:outline-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-card transition-all cursor-pointer select-none"
+            onClick={handleGithubAuth}
+            className="w-full h-11 rounded-full bg-foreground text-background font-medium text-base flex items-center justify-center gap-2.5 hover:opacity/90 active:scale-[0.99] border border-transparent focus:outline-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-card transition-all cursor-pointer select-none"
           >
             <svg
               className="w-4 h-4 shrink-0 fill-current"
@@ -292,79 +278,73 @@ export function LoginModal({
           </div>
         </div>
 
-        {/* Email / Password Form */}
-        <form onSubmit={handleEmailLogin} noValidate className="space-y-3">
+        {/* Email Only Signup / Login Form */}
+        <form onSubmit={handleSignup} noValidate className="space-y-3">
           <div>
             <Input
               type="email"
               value={email}
-              onChange={(e) => handleChange("email", e.target.value, setEmail)}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                if (touched.email || submitted) {
+                  setErrors(validate(e.target.value));
+                }
+              }}
               onBlur={() => handleBlur("email")}
               placeholder="Email"
+              autoComplete="email"
+              autoFocus
               className={cn(
                 "h-11 rounded-full bg-card border px-4 placeholder:text-muted-foreground focus:outline-none focus-visible:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-card focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-card transition-all",
-                errors.email && touched.email
+                errors.email && (touched.email || submitted)
                   ? "border-red-500/80 focus:ring-red-500 focus-visible:ring-red-500"
                   : "border-border/80 focus:ring-blue-500 focus-visible:ring-blue-500"
               )}
             />
-            {errors.email && touched.email && (
+            {errors.email && (touched.email || submitted) && (
               <p className="mt-1 text-xs text-red-500 px-3">{errors.email}</p>
-            )}
-          </div>
-          <div>
-            <Input
-              type="password"
-              value={password}
-              onChange={(e) => handleChange("password", e.target.value, setPassword)}
-              onBlur={() => handleBlur("password")}
-              placeholder="Password"
-              className={cn(
-                "h-11 rounded-full bg-card border px-4 placeholder:text-muted-foreground focus:outline-none focus-visible:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-card focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-card transition-all",
-                errors.password && touched.password
-                  ? "border-red-500/80 focus:ring-red-500 focus-visible:ring-red-500"
-                  : "border-border/80 focus:ring-blue-500 focus-visible:ring-blue-500"
-              )}
-            />
-            {errors.password && touched.password && (
-              <p className="mt-1 text-xs text-red-500 px-3">{errors.password}</p>
             )}
           </div>
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full h-11 rounded-full bg-foreground text-background font-medium text-base hover:opacity-90 active:scale-[0.99] border border-transparent focus:outline-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-card transition-all cursor-pointer select-none disabled:cursor-not-allowed disabled:opacity-50"
+            className="w-full h-11 rounded-full bg-foreground text-background font-medium text-base hover:opacity/90 active:scale-[0.99] border border-transparent focus:outline-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-card transition-all cursor-pointer select-none disabled:pointer-events-auto disabled:cursor-not-allowed flex items-center justify-center text-center leading-none"
           >
-            {loading ? "Logging In..." : "Log In"}
+            {loading ? (
+              <Loader className="w-5 h-5 animate-spin text-background" />
+            ) : (
+              "Continue"
+            )}
           </button>
-        </form>
 
-        {/* Footer */}
-        <p className="text-center text-sm text-muted-foreground pt-1">
-          Don&apos;t have an account?{" "}
-          {onSwitchToSignup ? (
-            <button
-              type="button"
-              onClick={() => {
-                onOpenChange(false);
-                onSwitchToSignup();
-              }}
-              className="font-normal text-muted-foreground hover:text-foreground cursor-pointer rounded-sm border border-transparent focus-visible:border-blue-500 focus:outline-none focus-visible:outline-none transition-colors"
-            >
-              Sign Up
-            </button>
-          ) : (
+          <p className="text-center text-xs text-muted-foreground px-2 pt-1 leading-relaxed select-none">
+            By continuing, you agree to our{" "}
             <Link
-              href="/?auth=signup"
-              onClick={() => onOpenChange(false)}
-              className="font-normal text-muted-foreground hover:text-foreground rounded-sm border border-transparent focus-visible:border-blue-500 focus:outline-none focus-visible:outline-none transition-colors"
+              href="/support/terms"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-0.5 align-baseline text-muted-foreground hover:text-foreground transition-colors"
             >
-              Sign Up
+              <span>Terms of Use</span>
+              <AnimatedArrowUpRight size={14} className="shrink-0" />
+            </Link>{" "}
+            and{" "}
+            <Link
+              href="/support/privacy"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-0.5 align-baseline text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <span>Privacy Policy</span>
+              <AnimatedArrowUpRight size={14} className="shrink-0" />
             </Link>
-          )}
-        </p>
+            .
+          </p>
+        </form>
       </div>
     </BottomSheet>
   );
 }
+
+export default LoginModal;

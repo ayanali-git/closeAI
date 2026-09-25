@@ -24,7 +24,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { LogoutModal } from "@/components/modals/log-out-modal";
 import { LoginModal } from "@/components/modals/log-in-modal";
-import { SignupModal } from "@/components/modals/sign-up-modal";
 import { cn } from "@/lib/utils";
 
 type MegaMenuCategory =
@@ -231,7 +230,7 @@ const SITE_SEARCH_INDEX: SiteSearchItem[] = [
     category: "Page",
     title: "Download App",
     description:
-      "Get native CloseAI apps for macOS, Windows, iOS, and Android for instant keyboard shortcuts and offline access.",
+      "Get native Apps for macOS, Windows, iOS, and Android for instant keyboard shortcuts and offline access.",
     url: "/product/docs",
     date: "Jun 2026",
     keywords: [
@@ -391,10 +390,9 @@ export function MarketingHeader() {
 
   const [logoutModalOpen, setLogoutModalOpen] = useState(false);
   const [loginModalOpen, setLoginModalOpen] = useState(false);
-  const [signupModalOpen, setSignupModalOpen] = useState(false);
   const [authModalError, setAuthModalError] = useState<string | null>(null);
 
-  // Auto-open login/signup modal from URL query params or OAuth callback errors
+  // Auto-open login modal from URL query params or OAuth callback errors
   useEffect(() => {
     if (typeof window !== "undefined") {
       const params = new URLSearchParams(window.location.search);
@@ -403,9 +401,7 @@ export function MarketingHeader() {
       const errorCode = params.get("error_code");
       const errorDesc = params.get("error_description");
 
-      if (auth === "signup") {
-        setSignupModalOpen(true);
-      } else if (auth === "login" || error || errorCode || errorDesc) {
+      if (auth === "signup" || auth === "login" || error || errorCode || errorDesc) {
         setLoginModalOpen(true);
         if (error || errorCode || errorDesc) {
           let message = "Unable to complete sign in. Please try again.";
@@ -635,7 +631,7 @@ export function MarketingHeader() {
                   className={cn(
                     "w-10 h-10 sm:w-11 sm:h-11 rounded-full flex items-center justify-center transition-all shrink-0 ml-4",
                     searchQuery.trim().length > 0
-                      ? "bg-foreground text-background cursor-pointer hover:opacity-90 active:scale-95"
+                      ? "bg-foreground text-background cursor-pointer hover:opacity/90 active:scale-95"
                       : "bg-white/50 dark:bg-[#212121]/50 border border-border/80 dark:border-none text-foreground cursor-not-allowed opacity-50"
                   )}
                   aria-label="Submit search"
@@ -737,7 +733,7 @@ export function MarketingHeader() {
                       className="group rounded-full px-5 h-10 text-[15px] font-normal bg-white/50 dark:bg-[#212121]/50 hover:bg-secondary dark:hover:bg-[#2f2f2f] border border-border/80 dark:border-none text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
                     >
                       <Link
-                        href="/c"
+                        href={user ? "/c" : "/gc"}
                         onClick={() => setIsSearchOpen(false)}
                         className="flex items-center gap-1.5"
                       >
@@ -993,18 +989,18 @@ export function MarketingHeader() {
                 <button
                   type="button"
                   onClick={() => setLogoutModalOpen(true)}
-                  className="group flex rounded-full bg-white/50 dark:bg-[#212121]/50 hover:bg-secondary dark:hover:bg-[#2f2f2f] border border-border/80 dark:border-none items-center gap-1.5 text-[15px] text-foreground transition-colors px-4 py-2 cursor-pointer outline-none select-none"
+                  className="h-10 px-3 rounded-full bg-white hover:bg-secondary text-black border border-border/80 dark:border-neutral-700/60 dark:bg-[#2f2f2f] dark:hover:bg-[#383838] dark:text-white flex items-center justify-center text-[15px] font-normal transition-colors cursor-pointer outline-none select-none"
                 >
                   <span>Log Out</span>
                 </button>
 
                 <Button
                   asChild
-                  className="group rounded-full px-4 h-9 text-[15px] font-normal bg-foreground text-background hover:opacity-90 transition-opacity cursor-pointer"
+                  className="group rounded-full h-10 px-3 text-[15px] font-normal bg-foreground text-background hover:opacity/90 transition-opacity cursor-pointer"
                 >
                   <Link href="/c" className="flex items-center">
                     <span>Open Chat</span>
-                    {/* <AnimatedArrow size={18} /> */}
+                    <AnimatedArrow size={18} />
                   </Link>
                 </Button>
               </>
@@ -1013,24 +1009,24 @@ export function MarketingHeader() {
                 <button
                   type="button"
                   onClick={() => setLoginModalOpen(true)}
-                  className="group flex rounded-full bg-white/50 dark:bg-[#212121]/50 hover:bg-secondary dark:hover:bg-[#2f2f2f] border border-border/80 dark:border-none items-center gap-1.5 text-[15px] text-foreground transition-colors px-4 py-2 cursor-pointer outline-none select-none"
+                  className="h-10 px-3 rounded-full bg-black hover:bg-neutral-800 active:scale-[0.99] text-white border border-transparent dark:bg-white dark:text-black dark:border-none dark:hover:opacity/90 flex items-center justify-center text-[15px] font-normal transition-all cursor-pointer outline-none select-none"
                 >
                   <span>Log In</span>
                 </button>
 
-                <Button
-                  className="group rounded-full px-4 h-9 text-[15px] font-normal bg-foreground text-background hover:opacity-90 transition-opacity cursor-pointer hidden sm:inline-flex items-center gap-0.5"
-                  onClick={() => setSignupModalOpen(true)}
+                <Link
+                  href="/gc"
+                  className="group rounded-full h-10 px-3 text-[15px] font-normal bg-white hover:bg-secondary text-black border border-border/80 dark:border-neutral-700/60 dark:bg-[#2f2f2f] dark:hover:bg-[#383838] dark:text-white transition-colors cursor-pointer hidden sm:inline-flex items-center gap-0.5"
                 >
-                  <span>Sign Up</span>
-                  {/* <AnimatedArrowUpRight size={18} /> */}
-                </Button>
+                  <span>Try CloseAI</span>
+                  <AnimatedArrowUpRight size={18} />
+                </Link>
               </>
             )}
           </div>
 
           {/* Mobile Menu Toggle (Panel icon + Search) */}
-          <div className="flex items-center gap-2 xl:hidden">
+          <div className="flex items-center gap-1 sm:gap-2 xl:hidden -mr-2">
             <button
               onClick={() => {
                 setIsSearchOpen(!isSearchOpen);
@@ -1194,7 +1190,7 @@ export function MarketingHeader() {
                     <ul className="space-y-4 nav-dropdown-group">
                       <li>
                         <Link
-                          href="/c"
+                          href={user ? "/c" : "/gc"}
                           target="_blank"
                           rel="noopener noreferrer"
                           onClick={() => setActiveMenu(null)}
@@ -1684,7 +1680,7 @@ export function MarketingHeader() {
                         className="block text-3xl sm:text-4xl font-medium text-foreground hover:text-muted-foreground transition-colors py-1 text-left w-full cursor-pointer"
                       >
                         <span>Open Chat</span>
-                        {/* <AnimatedArrow size={26} /> */}
+                        <AnimatedArrow size={26} strokeWidth={2.5} />
                       </Link>
                     </>
                   ) : (
@@ -1698,16 +1694,14 @@ export function MarketingHeader() {
                       >
                         Log In
                       </button>
-                      <button
-                        onClick={() => {
-                          setMobileNavOpen(false);
-                          setSignupModalOpen(true);
-                        }}
+                      <Link
+                        href="/gc"
+                        onClick={() => setMobileNavOpen(false)}
                         className="block text-3xl sm:text-4xl font-medium text-foreground hover:text-muted-foreground transition-colors py-1 text-left w-full cursor-pointer"
                       >
-                        <span>Sign Up</span>
-                        {/* <AnimatedArrowUpRight size={26} /> */}
-                      </button>
+                        <span>Try CloseAI</span>
+                        <AnimatedArrowUpRight size={26} strokeWidth={2.5} />
+                      </Link>
                     </>
                   )}
                 </div>
@@ -1799,7 +1793,7 @@ export function MarketingHeader() {
                         </div>
                         <div className="space-y-3 nav-dropdown-group">
                           <Link
-                            href="/c"
+                            href={user ? "/c" : "/gc"}
                             target="_blank"
                             rel="noopener noreferrer"
                             onClick={() => setMobileNavOpen(false)}
@@ -2154,9 +2148,7 @@ export function MarketingHeader() {
         open={logoutModalOpen}
         onOpenChange={setLogoutModalOpen}
         onConfirm={async () => {
-          setLogoutModalOpen(false);
-          await signOut();
-          router.push("/");
+          await signOut("/");
         }}
         userName={
           user?.user_metadata?.name ||
@@ -2168,22 +2160,14 @@ export function MarketingHeader() {
         variant="auth"
       />
 
-      {/* Login Modal */}
+      {/* Login Modal (Unified Auth) */}
       <LoginModal
         open={loginModalOpen}
         onOpenChange={(isOpen) => {
           setLoginModalOpen(isOpen);
           if (!isOpen) setAuthModalError(null);
         }}
-        onSwitchToSignup={() => setSignupModalOpen(true)}
         initialError={authModalError}
-      />
-
-      {/* Sign Up Modal */}
-      <SignupModal
-        open={signupModalOpen}
-        onOpenChange={setSignupModalOpen}
-        onSwitchToLogin={() => setLoginModalOpen(true)}
       />
 
       {/* Spacer to preserve 56px (h-14) in document flow for fixed header */}

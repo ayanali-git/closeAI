@@ -198,7 +198,7 @@ export function BottomSheet({
               transition={DRAWER}
               {...gate}
               data-bottom-sheet-backdrop="true"
-              className="pointer-events-auto fixed inset-0 z-50 bg-background/80 cursor-default"
+              className="pointer-events-auto fixed inset-0 z-[100] bg-background/80 cursor-default"
             />
           )}
         </PresenceGate>
@@ -208,7 +208,7 @@ export function BottomSheet({
           {({ gate }) => (
             <div
               className={cn(
-                "fixed inset-0 z-50 flex pointer-events-none cursor-default",
+                "fixed inset-0 z-[100] flex pointer-events-none cursor-default",
                 isMobileScreen ? "items-end justify-center" : "items-center justify-center p-4"
               )}
             >
@@ -309,7 +309,7 @@ export function BottomSheet({
                     !showTopBar && "pt-6",
                     scrollable
                       ? "overflow-y-auto overscroll-contain [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-                      : "overflow-hidden"
+                      : "overflow-visible"
                   )}
                   style={{
                     paddingBottom: isMobileScreen

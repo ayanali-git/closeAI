@@ -469,9 +469,13 @@ export default function ActiveChatPage() {
   }, [chatId]);
 
   useEffect(() => {
-    if (!loading && !user && !isSigningOut) {
-      router.push("/?auth=login");
-    } else if (user && chatId) {
+    if (loading) return;
+    if (!user) {
+      if (isSigningOut) return;
+      router.replace("/gc");
+      return;
+    }
+    if (chatId) {
       loadChat();
       loadChats();
     }
@@ -1143,7 +1147,7 @@ export default function ActiveChatPage() {
         currentChatId={chatId}
         onChatSelect={(id) => router.push(`/c/${id}`)}
         onNewChat={() => {
-          if (typeof window !== "undefined" && window.innerWidth < 1025) {
+          if (typeof window !== "undefined" && window.innerWidth < 1280) {
             setSidebarOpen(false);
           }
           router.push("/c");

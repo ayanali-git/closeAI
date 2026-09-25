@@ -7,6 +7,10 @@ import {
   ChevronRight,
   ChevronLeft,
   Check,
+  Globe,
+  Image as ImageIcon,
+  FilePlus,
+  Sparkles,
 } from "lucide-react";
 import {
   DropdownMenuItem,
@@ -21,12 +25,17 @@ import { AnimatedComingSoonText } from "@/components/ui/animated";
 
 export interface PlusMenuContentProps {
   onAddFiles: () => void;
+  onAddPhotos?: () => void;
   selectedModel?: string;
   onModelChange?: (model: string) => void;
   selectedTier?: number;
   onTierChange?: (tier: number) => void;
   isOpen?: boolean;
   disableAttach?: boolean;
+  isGuest?: boolean;
+  onOpenLoginModal?: () => void;
+  onOpenWebSearchModal?: () => void;
+  onOpenAdvancedFeaturesModal?: () => void;
 }
 
 const TIERS = [
@@ -629,12 +638,17 @@ function ModelSliderCard({
 
 export function PlusMenuContent({
   onAddFiles,
+  onAddPhotos,
   selectedModel = "gemini-3.8 flash",
   onModelChange,
   selectedTier = 4,
   onTierChange,
   isOpen = true,
   disableAttach = false,
+  isGuest = false,
+  onOpenLoginModal,
+  onOpenWebSearchModal,
+  onOpenAdvancedFeaturesModal,
 }: PlusMenuContentProps) {
   const [model, setModel] = useState<string>(selectedModel);
   const [tierIndex, setTierIndex] = useState<number>(selectedTier);
@@ -694,6 +708,509 @@ export function PlusMenuContent({
   const isUltra = tierIndex === 4;
   const currentTier = TIERS[tierIndex] || TIERS[4];
 
+  // Unauthorized / Guest User Menu
+  if (isGuest) {
+    if (isMobileScreen && subView === "models") {
+      return (
+        <div className="space-y-0.5 p-0.5" onPointerDown={(e) => e.stopPropagation()}>
+          <button
+            type="button"
+            onClick={(e) => {
+              (e.currentTarget as HTMLElement)?.blur();
+              e.stopPropagation();
+              setSubView("main");
+            }}
+            className="flex items-center gap-2 px-2.5 py-2 text-md font-medium text-foreground [@media(hover:hover)]:hover:bg-secondary dark:[@media(hover:hover)]:hover:bg-[#2f2f2f] active:bg-secondary/80 dark:active:bg-[#2f2f2f]/80 rounded-xl cursor-pointer w-full text-left transition-colors outline-none focus:outline-none focus:bg-transparent focus-visible:outline-none"
+          >
+            <ChevronLeft className="w-4 h-4 stroke-[2.5]" />
+            <span>Select models</span>
+          </button>
+          <div className="h-[1px] bg-neutral-200 dark:bg-[#383838] my-1 -mx-0.5" />
+
+          {/* Row 1: Model */}
+          <button
+            type="button"
+            onMouseEnter={() => setIsMobileModelRowHovered(true)}
+            onMouseLeave={() => setIsMobileModelRowHovered(false)}
+            onClick={(e) => {
+              (e.currentTarget as HTMLElement)?.blur();
+              e.stopPropagation();
+              setSubView("model-picker");
+            }}
+            className="w-full flex items-center px-3 py-2 rounded-xl text-md text-foreground [@media(hover:hover)]:hover:bg-secondary dark:[@media(hover:hover)]:hover:bg-[#2f2f2f] active:bg-secondary/80 dark:active:bg-[#2f2f2f]/80 transition-colors cursor-pointer text-left outline-none focus:outline-none focus:bg-transparent focus-visible:outline-none"
+          >
+            <span className="font-medium shrink-0 mr-1.5">Model</span>
+            <ModelMarqueeText text={model} isHovered={isMobileModelRowHovered} />
+            <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0 -ml-0.5" />
+          </button>
+
+          {/* Row 2: Effort */}
+          <button
+            type="button"
+            onMouseEnter={() => setIsMobileEffortRowHovered(true)}
+            onMouseLeave={() => setIsMobileEffortRowHovered(false)}
+            onClick={(e) => {
+              (e.currentTarget as HTMLElement)?.blur();
+              e.stopPropagation();
+              setSubView("effort");
+            }}
+            className="w-full flex items-center px-3 py-2 rounded-xl text-md text-foreground [@media(hover:hover)]:hover:bg-secondary dark:[@media(hover:hover)]:hover:bg-[#2f2f2f] active:bg-secondary/80 dark:active:bg-[#2f2f2f]/80 transition-colors cursor-pointer text-left outline-none focus:outline-none focus:bg-transparent focus-visible:outline-none"
+          >
+            <span className="font-medium shrink-0 mr-1.5">Effort</span>
+            <ModelMarqueeText
+              text={currentTier.key}
+              isHovered={isMobileEffortRowHovered}
+              className={isUltra ? "text-purple-400 font-medium" : "text-muted-foreground"}
+            />
+            <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0 -ml-0.5" />
+          </button>
+
+          {/* Row 3: Speed */}
+          <button
+            type="button"
+            onMouseEnter={() => setIsMobileSpeedRowHovered(true)}
+            onMouseLeave={() => setIsMobileSpeedRowHovered(false)}
+            onClick={(e) => {
+              (e.currentTarget as HTMLElement)?.blur();
+              e.stopPropagation();
+              setSubView("speed");
+            }}
+            className="w-full flex items-center px-3 py-2 rounded-xl text-md text-foreground [@media(hover:hover)]:hover:bg-secondary dark:[@media(hover:hover)]:hover:bg-[#2f2f2f] active:bg-secondary/80 dark:active:bg-[#2f2f2f]/80 transition-colors cursor-pointer text-left outline-none focus:outline-none focus:bg-transparent focus-visible:outline-none"
+          >
+            <span className="shrink-0 font-medium mr-1.5">Speed</span>
+            <ModelMarqueeText text={speed} isHovered={isMobileSpeedRowHovered} />
+            <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0 -ml-0.5" />
+          </button>
+
+          <div className="h-[1px] bg-neutral-200 dark:bg-[#383838] my-1 -mx-0.5" />
+
+          {/* Row 4: Advanced */}
+          <button
+            type="button"
+            onClick={(e) => {
+              (e.currentTarget as HTMLElement)?.blur();
+              e.stopPropagation();
+              setSubView("advanced");
+            }}
+            className="w-full flex items-center justify-between px-3 py-1.5 rounded-xl text-[15px] text-muted-foreground [@media(hover:hover)]:hover:text-foreground [@media(hover:hover)]:hover:bg-secondary dark:[@media(hover:hover)]:hover:bg-[#2f2f2f] active:bg-secondary/80 dark:active:bg-[#2f2f2f]/80 transition-colors cursor-pointer outline-none focus:outline-none focus:bg-transparent focus-visible:outline-none"
+          >
+            <span>Advanced</span>
+            <ChevronRight className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+          </button>
+        </div>
+      );
+    }
+
+    if (isMobileScreen && subView === "model-picker") {
+      return (
+        <div className="space-y-0.5 p-0.5" onPointerDown={(e) => e.stopPropagation()}>
+          <button
+            type="button"
+            onClick={(e) => {
+              (e.currentTarget as HTMLElement)?.blur();
+              e.stopPropagation();
+              setSubView("models");
+            }}
+            className="flex items-center gap-2 px-2.5 py-2 text-md font-medium text-foreground [@media(hover:hover)]:hover:bg-secondary dark:[@media(hover:hover)]:hover:bg-[#2f2f2f] active:bg-secondary/80 dark:active:bg-[#2f2f2f]/80 rounded-xl cursor-pointer w-full text-left transition-colors outline-none focus:outline-none focus:bg-transparent focus-visible:outline-none"
+          >
+            <ChevronLeft className="w-4 h-4 stroke-[2.5]" />
+            <span>Model</span>
+          </button>
+          <div className="h-[1px] bg-neutral-200 dark:bg-[#383838] my-1 -mx-0.5" />
+
+          {MODEL_OPTIONS.map((m, globalIdx) => (
+            <button
+              key={m.key}
+              type="button"
+              onClick={(e) => {
+                (e.currentTarget as HTMLElement)?.blur();
+                e.stopPropagation();
+                (onOpenLoginModal || onOpenAdvancedFeaturesModal)?.();
+              }}
+              onMouseEnter={() => setHoveredModelIdx(globalIdx)}
+              onMouseLeave={() => setHoveredModelIdx(null)}
+              className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-[15px] text-foreground [@media(hover:hover)]:hover:bg-secondary dark:[@media(hover:hover)]:hover:bg-[#2f2f2f] active:bg-secondary/80 dark:active:bg-[#2f2f2f]/80 transition-colors cursor-pointer min-w-0 outline-none focus:outline-none focus:bg-transparent focus-visible:outline-none text-left"
+            >
+              <TierMarqueeText text={m.label} isHovered={hoveredModelIdx === globalIdx} />
+              {model === m.key && <Check className="w-4 h-4 text-foreground shrink-0 ml-2" />}
+            </button>
+          ))}
+        </div>
+      );
+    }
+
+    if (isMobileScreen && subView === "effort") {
+      return (
+        <div className="space-y-0.5 p-0.5" onPointerDown={(e) => e.stopPropagation()}>
+          <button
+            type="button"
+            onClick={(e) => {
+              (e.currentTarget as HTMLElement)?.blur();
+              e.stopPropagation();
+              setSubView("models");
+            }}
+            className="flex items-center gap-2 px-2.5 py-2 text-md font-medium text-foreground [@media(hover:hover)]:hover:bg-secondary dark:[@media(hover:hover)]:hover:bg-[#2f2f2f] active:bg-secondary/80 dark:active:bg-[#2f2f2f]/80 rounded-xl cursor-pointer w-full text-left transition-colors outline-none focus:outline-none focus:bg-transparent focus-visible:outline-none"
+          >
+            <ChevronLeft className="w-4 h-4 stroke-[2.5]" />
+            <span>Effort</span>
+          </button>
+          <div className="h-[1px] bg-neutral-200 dark:bg-[#383838] my-1 -mx-0.5" />
+
+          {TIERS.map((tier, idx) => (
+            <button
+              key={tier.key}
+              type="button"
+              onClick={(e) => {
+                (e.currentTarget as HTMLElement)?.blur();
+                e.stopPropagation();
+                (onOpenLoginModal || onOpenAdvancedFeaturesModal)?.();
+              }}
+              onMouseEnter={() => setHoveredTierIdx(idx)}
+              onMouseLeave={() => setHoveredTierIdx(null)}
+              className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-[15px] text-foreground [@media(hover:hover)]:hover:bg-secondary dark:[@media(hover:hover)]:hover:bg-[#2f2f2f] active:bg-secondary/80 dark:active:bg-[#2f2f2f]/80 transition-colors cursor-pointer min-w-0 outline-none focus:outline-none focus:bg-transparent focus-visible:outline-none text-left"
+            >
+              <TierMarqueeText text={tier.label} isHovered={hoveredTierIdx === idx} />
+              {tierIndex === idx && <Check className="w-4 h-4 text-foreground shrink-0 ml-2" />}
+            </button>
+          ))}
+        </div>
+      );
+    }
+
+    if (isMobileScreen && subView === "speed") {
+      return (
+        <div className="space-y-0.5 p-0.5" onPointerDown={(e) => e.stopPropagation()}>
+          <button
+            type="button"
+            onClick={(e) => {
+              (e.currentTarget as HTMLElement)?.blur();
+              e.stopPropagation();
+              setSubView("models");
+            }}
+            className="flex items-center gap-2 px-2.5 py-2 text-md font-medium text-foreground [@media(hover:hover)]:hover:bg-secondary dark:[@media(hover:hover)]:hover:bg-[#2f2f2f] active:bg-secondary/80 dark:active:bg-[#2f2f2f]/80 rounded-xl cursor-pointer w-full text-left transition-colors outline-none focus:outline-none focus:bg-transparent focus-visible:outline-none"
+          >
+            <ChevronLeft className="w-4 h-4 stroke-[2.5]" />
+            <span>Speed</span>
+          </button>
+          <div className="h-[1px] bg-neutral-200 dark:bg-[#383838] my-1 -mx-0.5" />
+
+          {SPEED_OPTIONS.map((s, idx) => (
+            <button
+              key={s.key}
+              type="button"
+              onClick={(e) => {
+                (e.currentTarget as HTMLElement)?.blur();
+                e.stopPropagation();
+                (onOpenLoginModal || onOpenAdvancedFeaturesModal)?.();
+              }}
+              onMouseEnter={() => setHoveredSpeedIdx(idx)}
+              onMouseLeave={() => setHoveredSpeedIdx(null)}
+              className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-[15px] text-foreground [@media(hover:hover)]:hover:bg-secondary dark:[@media(hover:hover)]:hover:bg-[#2f2f2f] active:bg-secondary/80 dark:active:bg-[#2f2f2f]/80 transition-colors cursor-pointer min-w-0 outline-none focus:outline-none focus:bg-transparent focus-visible:outline-none text-left"
+            >
+              <TierMarqueeText text={s.label} isHovered={hoveredSpeedIdx === idx} />
+              {speed === s.key && <Check className="w-4 h-4 text-foreground shrink-0 ml-2" />}
+            </button>
+          ))}
+        </div>
+      );
+    }
+
+    if (isMobileScreen && subView === "advanced") {
+      return (
+        <div className="space-y-1.5 p-0.5" onPointerDown={(e) => e.stopPropagation()}>
+          <button
+            type="button"
+            onClick={(e) => {
+              (e.currentTarget as HTMLElement)?.blur();
+              e.stopPropagation();
+              setSubView("models");
+            }}
+            className="flex items-center gap-2 px-2.5 py-2 text-md font-medium text-foreground [@media(hover:hover)]:hover:bg-secondary dark:[@media(hover:hover)]:hover:bg-[#2f2f2f] active:bg-secondary/80 dark:active:bg-[#2f2f2f]/80 rounded-xl cursor-pointer w-full text-left transition-colors outline-none focus:outline-none focus:bg-transparent focus-visible:outline-none"
+          >
+            <ChevronLeft className="w-4 h-4 stroke-[2.5]" />
+            <span>Advanced</span>
+          </button>
+          <div className="h-[1px] bg-neutral-200 dark:bg-[#383838] my-1 -mx-0.5" />
+          <div
+            className="p-2 pt-1 cursor-pointer"
+            onPointerDown={(e) => {
+              e.stopPropagation();
+              (onOpenLoginModal || onOpenAdvancedFeaturesModal)?.();
+            }}
+            onClick={() => (onOpenLoginModal || onOpenAdvancedFeaturesModal)?.()}
+          >
+            <ModelSliderCard
+              tierIndex={tierIndex}
+              onTierChange={() => (onOpenLoginModal || onOpenAdvancedFeaturesModal)?.()}
+            />
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div className="space-y-0.5 p-0.5">
+        {/* 1. Attach photos */}
+        <DropdownMenuItem
+          onClick={onAddPhotos}
+          className="flex items-center gap-2.5 px-3 py-2 text-md rounded-xl font-medium cursor-pointer text-foreground hover:bg-secondary dark:hover:bg-[#383838] focus:bg-secondary dark:focus:bg-[#383838] data-[highlighted]:bg-secondary dark:data-[highlighted]:bg-[#383838] active:bg-secondary/80 dark:active:bg-[#383838]/80 transition-colors outline-none whitespace-nowrap text-left"
+        >
+          <Paperclip className="w-4 h-4 text-muted-foreground group-hover:text-foreground shrink-0" />
+          <span>Attach photos</span>
+        </DropdownMenuItem>
+
+        {/* 2. Web search */}
+        <DropdownMenuItem
+          onClick={() => {
+            if (onOpenLoginModal) onOpenLoginModal();
+            else if (onOpenWebSearchModal) onOpenWebSearchModal();
+          }}
+          className="flex items-center gap-2.5 px-3 py-2 text-md rounded-xl font-medium cursor-pointer text-foreground hover:bg-secondary dark:hover:bg-[#383838] focus:bg-secondary dark:focus:bg-[#383838] data-[highlighted]:bg-secondary dark:data-[highlighted]:bg-[#383838] transition-colors outline-none whitespace-nowrap text-left"
+        >
+          <Globe className="w-4 h-4 text-muted-foreground group-hover:text-foreground shrink-0" />
+          <AnimatedComingSoonText label="Web search" comingSoonText="Coming soon" />
+        </DropdownMenuItem>
+
+        {/* Divider with text: Log in to use */}
+        <div className="pt-2 pb-1 px-3 text-xs font-medium text-muted-foreground select-none">
+          Log in to use
+        </div>
+
+        {/* 3. Create image */}
+        <DropdownMenuItem
+          onClick={() => {
+            if (onOpenLoginModal) onOpenLoginModal();
+          }}
+          className="flex items-center gap-2.5 px-3 py-2 text-md rounded-xl font-medium cursor-pointer text-foreground hover:bg-secondary dark:hover:bg-[#383838] focus:bg-secondary dark:focus:bg-[#383838] data-[highlighted]:bg-secondary dark:data-[highlighted]:bg-[#383838] transition-colors outline-none whitespace-nowrap text-left"
+        >
+          <ImageIcon className="w-4 h-4 text-muted-foreground group-hover:text-foreground shrink-0" />
+          <AnimatedComingSoonText label="Create image" comingSoonText="Coming soon" />
+        </DropdownMenuItem>
+
+        {/* 4. Attach files */}
+        <DropdownMenuItem
+          onClick={() => {
+            (onOpenLoginModal || onOpenAdvancedFeaturesModal)?.();
+          }}
+          className="flex items-center gap-2.5 px-3 py-2 text-md rounded-xl font-medium cursor-pointer text-foreground hover:bg-secondary dark:hover:bg-[#383838] focus:bg-secondary dark:focus:bg-[#383838] data-[highlighted]:bg-secondary dark:data-[highlighted]:bg-[#383838] transition-colors outline-none whitespace-nowrap text-left"
+        >
+          <FilePlus className="w-4 h-4 text-muted-foreground group-hover:text-foreground shrink-0" />
+          <span>Attach files</span>
+        </DropdownMenuItem>
+
+        {/* 5. Select models (Replaces Deep research) */}
+        {isMobileScreen ? (
+          <button
+            type="button"
+            onMouseEnter={() => setIsMobileSelectModelsHovered(true)}
+            onMouseLeave={() => setIsMobileSelectModelsHovered(false)}
+            onClick={(e) => {
+              (e.currentTarget as HTMLElement)?.blur();
+              e.stopPropagation();
+              setSubView("models");
+            }}
+            className="w-full flex items-center px-3 py-2 text-md rounded-xl cursor-pointer text-foreground [@media(hover:hover)]:hover:bg-secondary dark:[@media(hover:hover)]:hover:bg-[#383838] active:bg-secondary/80 dark:active:bg-[#383838]/80 transition-colors outline-none focus:outline-none focus:bg-transparent focus-visible:outline-none whitespace-nowrap text-left"
+          >
+            <Package className="w-4 h-4 text-muted-foreground group-hover:text-foreground shrink-0 mr-2" />
+            <span className="whitespace-nowrap font-medium shrink-0 mr-1.5">Select models</span>
+            <ModelMarqueeText
+              text={model}
+              isHovered={isMobileSelectModelsHovered}
+            />
+            <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0 -ml-0.5" />
+          </button>
+        ) : (
+          <DropdownMenuSub>
+            <DropdownMenuSubTrigger
+              onMouseEnter={() => setIsSelectModelsHovered(true)}
+              onMouseLeave={() => setIsSelectModelsHovered(false)}
+              chevronClassName="-ml-0.5"
+              className="flex items-center px-3 py-2 text-md rounded-xl cursor-pointer text-foreground hover:bg-secondary dark:hover:bg-[#383838] focus:bg-secondary dark:focus:bg-[#383838] data-[highlighted]:bg-secondary dark:data-[highlighted]:bg-[#383838] data-[state=open]:bg-secondary dark:data-[state=open]:bg-[#383838] transition-colors outline-none whitespace-nowrap [&>svg:last-child]:shrink-0 text-left"
+            >
+              <Package className="w-4 h-4 text-muted-foreground group-hover:text-foreground shrink-0 mr-2" />
+              <span className="whitespace-nowrap font-medium shrink-0 mr-1.5">Select models</span>
+              <ModelMarqueeText
+                text={model}
+                isHovered={isSelectModelsHovered}
+              />
+            </DropdownMenuSubTrigger>
+
+            {/* Submenu: Models Menu */}
+            <DropdownMenuSubContent
+              sideOffset={4}
+              alignOffset={-133}
+              avoidCollisions={true}
+              collisionPadding={12}
+              className="w-[241px] max-w-[calc(100vw-24px)] rounded-2xl p-1.5 bg-white dark:bg-[#2f2f2f] border border-border/80 dark:border-neutral-700/60 select-none outline-none"
+            >
+              {/* Row 1: Model */}
+              <DropdownMenuSub>
+                <DropdownMenuSubTrigger
+                  onMouseEnter={() => setIsModelSubHovered(true)}
+                  onMouseLeave={() => setIsModelSubHovered(false)}
+                  onClick={() => (onOpenLoginModal || onOpenAdvancedFeaturesModal)?.()}
+                  chevronClassName="-ml-0.5"
+                  className="flex items-center px-3 py-2 rounded-xl cursor-pointer text-md font-medium text-foreground hover:bg-secondary dark:hover:bg-[#383838] focus:bg-secondary dark:focus:bg-[#383838] data-[highlighted]:bg-secondary dark:data-[highlighted]:bg-[#383838] data-[state=open]:bg-secondary dark:data-[state=open]:bg-[#383838] transition-colors outline-none whitespace-nowrap [&>svg:last-child]:shrink-0 text-left"
+                >
+                  <span className="font-medium shrink-0 mr-1.5">Model</span>
+                  <ModelMarqueeText
+                    text={model}
+                    isHovered={isModelSubHovered}
+                  />
+                </DropdownMenuSubTrigger>
+                <DropdownMenuSubContent
+                  sideOffset={4}
+                  alignOffset={-133}
+                  avoidCollisions={true}
+                  collisionPadding={12}
+                  className="w-[241px] max-w-[calc(100vw-24px)] rounded-2xl p-1.5 bg-white dark:bg-[#2f2f2f] border border-border/80 dark:border-neutral-700/60 select-none outline-none"
+                >
+                  {MODEL_OPTIONS.filter((m) => m.key.toLowerCase().includes("gemini")).map((m) => {
+                    const globalIdx = MODEL_OPTIONS.indexOf(m);
+                    return (
+                      <DropdownMenuItem
+                        key={m.key}
+                        onClick={() => (onOpenLoginModal || onOpenAdvancedFeaturesModal)?.()}
+                        onMouseEnter={() => setHoveredModelIdx(globalIdx)}
+                        onMouseLeave={() => setHoveredModelIdx(null)}
+                        className="cursor-pointer text-[15px] rounded-xl px-3 py-2 text-foreground transition-colors hover:bg-secondary dark:hover:bg-[#383838] focus:bg-secondary dark:focus:bg-[#383838] data-[highlighted]:bg-secondary dark:data-[highlighted]:bg-[#383838] flex items-center justify-between min-w-0 text-left"
+                      >
+                        <TierMarqueeText text={m.label} isHovered={hoveredModelIdx === globalIdx} />
+                        {model === m.key && <Check className="w-4 h-4 text-foreground shrink-0 ml-2" />}
+                      </DropdownMenuItem>
+                    );
+                  })}
+
+                  <div className="h-[1px] bg-neutral-200 dark:bg-neutral-700/60 my-1 -mx-0.5" />
+
+                  {MODEL_OPTIONS.filter((m) => !m.key.toLowerCase().includes("gemini")).map((m) => {
+                    const globalIdx = MODEL_OPTIONS.indexOf(m);
+                    return (
+                      <DropdownMenuItem
+                        key={m.key}
+                        onClick={() => (onOpenLoginModal || onOpenAdvancedFeaturesModal)?.()}
+                        onMouseEnter={() => setHoveredModelIdx(globalIdx)}
+                        onMouseLeave={() => setHoveredModelIdx(null)}
+                        className="cursor-pointer text-[15px] rounded-xl px-3 py-2 text-foreground transition-colors hover:bg-secondary dark:hover:bg-[#383838] focus:bg-secondary dark:focus:bg-[#383838] data-[highlighted]:bg-secondary dark:data-[highlighted]:bg-[#383838] flex items-center justify-between min-w-0 text-left"
+                      >
+                        <TierMarqueeText text={m.label} isHovered={hoveredModelIdx === globalIdx} />
+                        {model === m.key && <Check className="w-4 h-4 text-foreground shrink-0 ml-2" />}
+                      </DropdownMenuItem>
+                    );
+                  })}
+                </DropdownMenuSubContent>
+              </DropdownMenuSub>
+
+              {/* Row 2: Effort */}
+              <DropdownMenuSub>
+                <DropdownMenuSubTrigger
+                  onMouseEnter={() => setIsEffortSubHovered(true)}
+                  onMouseLeave={() => setIsEffortSubHovered(false)}
+                  onClick={() => (onOpenLoginModal || onOpenAdvancedFeaturesModal)?.()}
+                  chevronClassName="-ml-0.5"
+                  className="flex items-center px-3 py-2 rounded-xl cursor-pointer text-md font-medium text-foreground hover:bg-secondary dark:hover:bg-[#383838] focus:bg-secondary dark:focus:bg-[#383838] data-[highlighted]:bg-secondary dark:data-[highlighted]:bg-[#383838] data-[state=open]:bg-secondary dark:data-[state=open]:bg-[#383838] transition-colors outline-none whitespace-nowrap [&>svg:last-child]:shrink-0 text-left"
+                >
+                  <span className="font-medium shrink-0 mr-1.5">Effort</span>
+                  <ModelMarqueeText
+                    text={currentTier.key}
+                    isHovered={isEffortSubHovered}
+                    className={isUltra ? "text-purple-400 font-medium" : "text-muted-foreground"}
+                  />
+                </DropdownMenuSubTrigger>
+                <DropdownMenuSubContent
+                  sideOffset={4}
+                  alignOffset={-161}
+                  avoidCollisions={true}
+                  collisionPadding={12}
+                  className="w-[241px] max-w-[calc(100vw-24px)] rounded-2xl p-1.5 bg-white dark:bg-[#2f2f2f] border border-border/80 dark:border-neutral-700/60 select-none outline-none"
+                >
+                  {TIERS.map((tier, idx) => (
+                    <DropdownMenuItem
+                      key={tier.key}
+                      onClick={() => (onOpenLoginModal || onOpenAdvancedFeaturesModal)?.()}
+                      onMouseEnter={() => setHoveredTierIdx(idx)}
+                      onMouseLeave={() => setHoveredTierIdx(null)}
+                      className="cursor-pointer text-[15px] rounded-xl px-3 py-2 text-foreground transition-colors hover:bg-secondary dark:hover:bg-[#383838] focus:bg-secondary dark:focus:bg-[#383838] data-[highlighted]:bg-secondary dark:data-[highlighted]:bg-[#383838] flex items-center justify-between min-w-0 text-left"
+                    >
+                      <TierMarqueeText text={tier.label} isHovered={hoveredTierIdx === idx} />
+                      {tierIndex === idx && <Check className="w-4 h-4 text-foreground shrink-0 ml-2" />}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuSubContent>
+              </DropdownMenuSub>
+
+              {/* Row 3: Speed */}
+              <DropdownMenuSub>
+                <DropdownMenuSubTrigger
+                  onMouseEnter={() => setIsSpeedSubHovered(true)}
+                  onMouseLeave={() => setIsSpeedSubHovered(false)}
+                  onClick={() => (onOpenLoginModal || onOpenAdvancedFeaturesModal)?.()}
+                  chevronClassName="-ml-0.5"
+                  className="flex items-center px-3 py-2 rounded-xl cursor-pointer text-md font-medium text-foreground hover:bg-secondary dark:hover:bg-[#383838] focus:bg-secondary dark:focus:bg-[#383838] data-[highlighted]:bg-secondary dark:data-[highlighted]:bg-[#383838] data-[state=open]:bg-secondary dark:data-[state=open]:bg-[#383838] transition-colors outline-none whitespace-nowrap [&>svg:last-child]:shrink-0 text-left"
+                >
+                  <span className="shrink-0 font-medium mr-1.5">Speed</span>
+                  <ModelMarqueeText
+                    text={speed}
+                    isHovered={isSpeedSubHovered}
+                  />
+                </DropdownMenuSubTrigger>
+                <DropdownMenuSubContent
+                  sideOffset={4}
+                  alignOffset={-84}
+                  avoidCollisions={true}
+                  collisionPadding={12}
+                  className="w-[241px] max-w-[calc(100vw-24px)] rounded-2xl p-1.5 bg-white dark:bg-[#2f2f2f] border border-border/80 dark:border-neutral-700/60 select-none outline-none"
+                >
+                  {SPEED_OPTIONS.map((s, idx) => (
+                    <DropdownMenuItem
+                      key={s.key}
+                      onClick={() => (onOpenLoginModal || onOpenAdvancedFeaturesModal)?.()}
+                      onMouseEnter={() => setHoveredSpeedIdx(idx)}
+                      onMouseLeave={() => setHoveredSpeedIdx(null)}
+                      className="cursor-pointer text-[15px] rounded-xl px-3 py-2 text-foreground transition-colors hover:bg-secondary dark:hover:bg-[#383838] focus:bg-secondary dark:focus:bg-[#383838] data-[highlighted]:bg-secondary dark:data-[highlighted]:bg-[#383838] flex items-center justify-between min-w-0 text-left"
+                    >
+                      <TierMarqueeText text={s.label} isHovered={hoveredSpeedIdx === idx} />
+                      {speed === s.key && <Check className="w-4 h-4 text-foreground shrink-0 ml-2" />}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuSubContent>
+              </DropdownMenuSub>
+
+              {/* Divider */}
+              <div className="h-[1px] bg-neutral-200 dark:bg-neutral-700/60 my-1 -mx-0.5" />
+
+              {/* Row 4: Advanced Submenu */}
+              <DropdownMenuSub>
+                <DropdownMenuSubTrigger className="flex items-center justify-between px-3 py-1.5 rounded-xl cursor-pointer text-[15px] text-muted-foreground hover:text-foreground hover:bg-secondary dark:hover:bg-[#383838] focus:bg-secondary dark:focus:bg-[#383838] data-[highlighted]:bg-secondary dark:data-[highlighted]:bg-[#383838] data-[state=open]:bg-secondary dark:data-[state=open]:bg-[#383838] transition-colors outline-none whitespace-nowrap [&>svg:last-child]:shrink-0 [&>svg:last-child]:ml-1 text-left">
+                  <span className="shrink-0">Advanced</span>
+                </DropdownMenuSubTrigger>
+                <DropdownMenuSubContent
+                  sideOffset={4}
+                  alignOffset={-48}
+                  avoidCollisions={true}
+                  collisionPadding={12}
+                  className="w-[241px] max-w-[calc(100vw-24px)] rounded-2xl p-3 bg-white dark:bg-[#2f2f2f] border border-border/80 dark:border-neutral-700/60 select-none outline-none cursor-pointer"
+                  onPointerDown={(e) => {
+                    e.stopPropagation();
+                    (onOpenLoginModal || onOpenAdvancedFeaturesModal)?.();
+                  }}
+                  onClick={() => (onOpenLoginModal || onOpenAdvancedFeaturesModal)?.()}
+                >
+                  <div onClick={() => (onOpenLoginModal || onOpenAdvancedFeaturesModal)?.()}>
+                    <ModelSliderCard
+                      tierIndex={tierIndex}
+                      onTierChange={() => (onOpenLoginModal || onOpenAdvancedFeaturesModal)?.()}
+                    />
+                  </div>
+                </DropdownMenuSubContent>
+              </DropdownMenuSub>
+            </DropdownMenuSubContent>
+          </DropdownMenuSub>
+        )}
+      </div>
+    );
+  }
+
   // Mobile In-Place Subviews (matching Profile Dropdown behavior)
   if (isMobileScreen && subView === "models") {
     return (
@@ -705,12 +1222,12 @@ export function PlusMenuContent({
             e.stopPropagation();
             setSubView("main");
           }}
-          className="flex items-center gap-2 px-2.5 py-2 text-md font-medium text-foreground [@media(hover:hover)]:hover:bg-secondary dark:[@media(hover:hover)]:hover:bg-[#2f2f2f] active:bg-secondary/80 dark:active:bg-[#2f2f2f]/80 rounded-xl cursor-pointer w-full text-left transition-colors outline-none focus:outline-none focus:bg-transparent focus-visible:outline-none"
+          className="flex items-center gap-2 px-2.5 py-2 text-md font-medium text-foreground [@media(hover:hover)]:hover:bg-secondary dark:[@media(hover:hover)]:hover:bg-[#383838] active:bg-secondary/80 dark:active:bg-[#383838]/80 rounded-xl cursor-pointer w-full text-left transition-colors outline-none focus:outline-none focus:bg-transparent focus-visible:outline-none"
         >
           <ChevronLeft className="w-4 h-4 stroke-[2.5]" />
           <span>Select models</span>
         </button>
-        <div className="h-[1px] bg-neutral-200 dark:bg-[#383838] my-1 -mx-0.5" />
+        <div className="h-[1px] bg-neutral-200 dark:bg-neutral-700/60 my-1 -mx-0.5" />
 
         {/* Row 1: Model */}
         <button
@@ -722,7 +1239,7 @@ export function PlusMenuContent({
             e.stopPropagation();
             setSubView("model-picker");
           }}
-          className="w-full flex items-center px-3 py-2 rounded-xl text-md text-foreground [@media(hover:hover)]:hover:bg-secondary dark:[@media(hover:hover)]:hover:bg-[#2f2f2f] active:bg-secondary/80 dark:active:bg-[#2f2f2f]/80 transition-colors cursor-pointer text-left outline-none focus:outline-none focus:bg-transparent focus-visible:outline-none"
+          className="w-full flex items-center px-3 py-2 rounded-xl text-md text-foreground [@media(hover:hover)]:hover:bg-secondary dark:[@media(hover:hover)]:hover:bg-[#383838] active:bg-secondary/80 dark:active:bg-[#383838]/80 transition-colors cursor-pointer text-left outline-none focus:outline-none focus:bg-transparent focus-visible:outline-none"
         >
           <span className="font-medium shrink-0 mr-1.5">Model</span>
           <ModelMarqueeText
@@ -742,7 +1259,7 @@ export function PlusMenuContent({
             e.stopPropagation();
             setSubView("effort");
           }}
-          className="w-full flex items-center px-3 py-2 rounded-xl text-md text-foreground [@media(hover:hover)]:hover:bg-secondary dark:[@media(hover:hover)]:hover:bg-[#2f2f2f] active:bg-secondary/80 dark:active:bg-[#2f2f2f]/80 transition-colors cursor-pointer text-left outline-none focus:outline-none focus:bg-transparent focus-visible:outline-none"
+          className="w-full flex items-center px-3 py-2 rounded-xl text-md text-foreground [@media(hover:hover)]:hover:bg-secondary dark:[@media(hover:hover)]:hover:bg-[#383838] active:bg-secondary/80 dark:active:bg-[#383838]/80 transition-colors cursor-pointer text-left outline-none focus:outline-none focus:bg-transparent focus-visible:outline-none"
         >
           <span className="font-medium shrink-0 mr-1.5">Effort</span>
           <ModelMarqueeText
@@ -763,7 +1280,7 @@ export function PlusMenuContent({
             e.stopPropagation();
             setSubView("speed");
           }}
-          className="w-full flex items-center px-3 py-2 rounded-xl text-md text-foreground [@media(hover:hover)]:hover:bg-secondary dark:[@media(hover:hover)]:hover:bg-[#2f2f2f] active:bg-secondary/80 dark:active:bg-[#2f2f2f]/80 transition-colors cursor-pointer text-left outline-none focus:outline-none focus:bg-transparent focus-visible:outline-none"
+          className="w-full flex items-center px-3 py-2 rounded-xl text-md text-foreground [@media(hover:hover)]:hover:bg-secondary dark:[@media(hover:hover)]:hover:bg-[#383838] active:bg-secondary/80 dark:active:bg-[#383838]/80 transition-colors cursor-pointer text-left outline-none focus:outline-none focus:bg-transparent focus-visible:outline-none"
         >
           <span className="shrink-0 font-medium mr-1.5">Speed</span>
           <ModelMarqueeText
@@ -773,7 +1290,7 @@ export function PlusMenuContent({
           <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0 -ml-0.5" />
         </button>
 
-        <div className="h-[1px] bg-neutral-200 dark:bg-[#383838] my-1 -mx-0.5" />
+        <div className="h-[1px] bg-neutral-200 dark:bg-neutral-700/60 my-1 -mx-0.5" />
 
         {/* Row 4: Advanced */}
         <button
@@ -783,7 +1300,7 @@ export function PlusMenuContent({
             e.stopPropagation();
             setSubView("advanced");
           }}
-          className="w-full flex items-center justify-between px-3 py-1.5 rounded-xl text-[15px] text-muted-foreground [@media(hover:hover)]:hover:text-foreground [@media(hover:hover)]:hover:bg-secondary dark:[@media(hover:hover)]:hover:bg-[#2f2f2f] active:bg-secondary/80 dark:active:bg-[#2f2f2f]/80 transition-colors cursor-pointer outline-none focus:outline-none focus:bg-transparent focus-visible:outline-none"
+          className="w-full flex items-center justify-between px-3 py-1.5 rounded-xl text-[15px] text-muted-foreground [@media(hover:hover)]:hover:text-foreground [@media(hover:hover)]:hover:bg-secondary dark:[@media(hover:hover)]:hover:bg-[#383838] active:bg-secondary/80 dark:active:bg-[#383838]/80 transition-colors cursor-pointer outline-none focus:outline-none focus:bg-transparent focus-visible:outline-none"
         >
           <span>Advanced</span>
           <ChevronRight className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
@@ -1018,7 +1535,7 @@ export function PlusMenuContent({
             onMouseEnter={() => setIsSelectModelsHovered(true)}
             onMouseLeave={() => setIsSelectModelsHovered(false)}
             chevronClassName="-ml-0.5"
-            className="flex items-center px-3 py-2 text-md rounded-xl cursor-pointer text-foreground hover:bg-secondary dark:hover:bg-[#2f2f2f] data-[state=open]:bg-secondary dark:data-[state=open]:bg-[#2f2f2f] transition-colors outline-none whitespace-nowrap [&>svg:last-child]:shrink-0 text-left"
+            className="flex items-center px-3 py-2 text-md rounded-xl cursor-pointer text-foreground hover:bg-secondary dark:hover:bg-[#383838] data-[state=open]:bg-secondary dark:data-[state=open]:bg-[#383838] transition-colors outline-none whitespace-nowrap [&>svg:last-child]:shrink-0 text-left"
           >
             <Package className="w-4 h-4 text-muted-foreground group-hover:text-foreground shrink-0 mr-2" />
             <span className="whitespace-nowrap font-medium shrink-0 mr-1.5">Select models</span>
@@ -1042,7 +1559,7 @@ export function PlusMenuContent({
                 onMouseEnter={() => setIsModelSubHovered(true)}
                 onMouseLeave={() => setIsModelSubHovered(false)}
                 chevronClassName="-ml-0.5"
-                className="flex items-center px-3 py-2 rounded-xl cursor-pointer text-md font-medium text-foreground hover:bg-secondary dark:hover:bg-[#2f2f2f] data-[state=open]:bg-secondary dark:data-[state=open]:bg-[#2f2f2f] transition-colors outline-none whitespace-nowrap [&>svg:last-child]:shrink-0 text-left"
+                className="flex items-center px-3 py-2 rounded-xl cursor-pointer text-md font-medium text-foreground hover:bg-secondary dark:hover:bg-[#383838] data-[state=open]:bg-secondary dark:data-[state=open]:bg-[#383838] transition-colors outline-none whitespace-nowrap [&>svg:last-child]:shrink-0 text-left"
               >
                 <span className="font-medium shrink-0 mr-1.5">Model</span>
                 <ModelMarqueeText
@@ -1071,14 +1588,14 @@ export function PlusMenuContent({
                         onMouseLeave={() => setHoveredModelIdx(null)}
                         onFocus={() => setHoveredModelIdx(globalIdx)}
                         onBlur={() => setHoveredModelIdx(null)}
-                        className="cursor-pointer text-[15px] rounded-xl px-3 py-2 text-foreground transition-colors hover:bg-secondary dark:hover:bg-[#2f2f2f] flex items-center justify-between min-w-0 text-left"
+                        className="cursor-pointer text-[15px] rounded-xl px-3 py-2 text-foreground transition-colors hover:bg-secondary dark:hover:bg-[#383838] flex items-center justify-between min-w-0 text-left"
                       >
                         <TierMarqueeText text={m.label} isHovered={hoveredModelIdx === globalIdx} />
                       </DropdownMenuRadioItem>
                     );
                   })}
 
-                  <div className="h-[1px] bg-neutral-200 dark:bg-[#383838] my-1 -mx-0.5" />
+                  <div className="h-[1px] bg-neutral-200 dark:bg-neutral-700/60 my-1 -mx-0.5" />
 
                   {MODEL_OPTIONS.filter((m) => !m.key.toLowerCase().includes("gemini")).map((m) => {
                     const globalIdx = MODEL_OPTIONS.indexOf(m);
@@ -1090,7 +1607,7 @@ export function PlusMenuContent({
                         onMouseLeave={() => setHoveredModelIdx(null)}
                         onFocus={() => setHoveredModelIdx(globalIdx)}
                         onBlur={() => setHoveredModelIdx(null)}
-                        className="cursor-pointer text-[15px] rounded-xl px-3 py-2 text-foreground transition-colors hover:bg-secondary dark:hover:bg-[#2f2f2f] flex items-center justify-between min-w-0 text-left"
+                        className="cursor-pointer text-[15px] rounded-xl px-3 py-2 text-foreground transition-colors hover:bg-secondary dark:hover:bg-[#383838] flex items-center justify-between min-w-0 text-left"
                       >
                         <TierMarqueeText text={m.label} isHovered={hoveredModelIdx === globalIdx} />
                       </DropdownMenuRadioItem>
@@ -1106,7 +1623,7 @@ export function PlusMenuContent({
                 onMouseEnter={() => setIsEffortSubHovered(true)}
                 onMouseLeave={() => setIsEffortSubHovered(false)}
                 chevronClassName="-ml-0.5"
-                className="flex items-center px-3 py-2 rounded-xl cursor-pointer text-md font-medium text-foreground hover:bg-secondary dark:hover:bg-[#2f2f2f] data-[state=open]:bg-secondary dark:data-[state=open]:bg-[#2f2f2f] transition-colors outline-none whitespace-nowrap [&>svg:last-child]:shrink-0 text-left"
+                className="flex items-center px-3 py-2 rounded-xl cursor-pointer text-md font-medium text-foreground hover:bg-secondary dark:hover:bg-[#383838] data-[state=open]:bg-secondary dark:data-[state=open]:bg-[#383838] transition-colors outline-none whitespace-nowrap [&>svg:last-child]:shrink-0 text-left"
               >
                 <span className="font-medium shrink-0 mr-1.5">Effort</span>
                 <ModelMarqueeText
@@ -1135,7 +1652,7 @@ export function PlusMenuContent({
                       onMouseLeave={() => setHoveredTierIdx(null)}
                       onFocus={() => setHoveredTierIdx(idx)}
                       onBlur={() => setHoveredTierIdx(null)}
-                      className="cursor-pointer text-[15px] rounded-xl px-3 py-2 text-foreground transition-colors hover:bg-secondary dark:hover:bg-[#2f2f2f] flex items-center justify-between min-w-0 text-left"
+                      className="cursor-pointer text-[15px] rounded-xl px-3 py-2 text-foreground transition-colors hover:bg-secondary dark:hover:bg-[#383838] flex items-center justify-between min-w-0 text-left"
                     >
                       <TierMarqueeText text={tier.label} isHovered={hoveredTierIdx === idx} />
                     </DropdownMenuRadioItem>
@@ -1150,7 +1667,7 @@ export function PlusMenuContent({
                 onMouseEnter={() => setIsSpeedSubHovered(true)}
                 onMouseLeave={() => setIsSpeedSubHovered(false)}
                 chevronClassName="-ml-0.5"
-                className="flex items-center px-3 py-2 rounded-xl cursor-pointer text-md font-medium text-foreground hover:bg-secondary dark:hover:bg-[#2f2f2f] data-[state=open]:bg-secondary dark:data-[state=open]:bg-[#2f2f2f] transition-colors outline-none whitespace-nowrap [&>svg:last-child]:shrink-0 text-left"
+                className="flex items-center px-3 py-2 rounded-xl cursor-pointer text-md font-medium text-foreground hover:bg-secondary dark:hover:bg-[#383838] data-[state=open]:bg-secondary dark:data-[state=open]:bg-[#383838] transition-colors outline-none whitespace-nowrap [&>svg:last-child]:shrink-0 text-left"
               >
                 <span className="shrink-0 font-medium mr-1.5">Speed</span>
                 <ModelMarqueeText
@@ -1177,7 +1694,7 @@ export function PlusMenuContent({
                       onMouseLeave={() => setHoveredSpeedIdx(null)}
                       onFocus={() => setHoveredSpeedIdx(idx)}
                       onBlur={() => setHoveredSpeedIdx(null)}
-                      className="cursor-pointer text-[15px] rounded-xl px-3 py-2 text-foreground transition-colors hover:bg-secondary dark:hover:bg-[#2f2f2f] flex items-center justify-between min-w-0 text-left"
+                      className="cursor-pointer text-[15px] rounded-xl px-3 py-2 text-foreground transition-colors hover:bg-secondary dark:hover:bg-[#383838] flex items-center justify-between min-w-0 text-left"
                     >
                       <TierMarqueeText text={s.label} isHovered={hoveredSpeedIdx === idx} />
                     </DropdownMenuRadioItem>
@@ -1187,11 +1704,11 @@ export function PlusMenuContent({
             </DropdownMenuSub>
 
             {/* Divider */}
-            <div className="h-[1px] bg-neutral-200 dark:bg-[#383838] my-1 -mx-0.5" />
+            <div className="h-[1px] bg-neutral-200 dark:bg-neutral-700/60 my-1 -mx-0.5" />
 
             {/* Row 4: Advanced Submenu */}
             <DropdownMenuSub>
-              <DropdownMenuSubTrigger className="flex items-center justify-between px-3 py-1.5 rounded-xl cursor-pointer text-[15px] text-muted-foreground hover:text-foreground hover:bg-secondary dark:hover:bg-[#2f2f2f] data-[state=open]:bg-secondary dark:data-[state=open]:bg-[#2f2f2f] transition-colors outline-none whitespace-nowrap [&>svg:last-child]:shrink-0 [&>svg:last-child]:ml-1 text-left">
+              <DropdownMenuSubTrigger className="flex items-center justify-between px-3 py-1.5 rounded-xl cursor-pointer text-[15px] text-muted-foreground hover:text-foreground hover:bg-secondary dark:hover:bg-[#383838] data-[state=open]:bg-secondary dark:data-[state=open]:bg-[#383838] transition-colors outline-none whitespace-nowrap [&>svg:last-child]:shrink-0 [&>svg:last-child]:ml-1 text-left">
                 <span className="shrink-0">Advanced</span>
               </DropdownMenuSubTrigger>
               <DropdownMenuSubContent

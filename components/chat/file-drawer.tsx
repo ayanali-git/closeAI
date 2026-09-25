@@ -226,8 +226,8 @@ function DrawerBackdrop({
   if (!mounted) return null;
 
   const backdropVariants: Record<DrawerBackdropVariant, string> = {
-    opaque: "bg-sidebar/0",
-    blur: "bg-sidebar/0",
+    opaque: "bg-sidebar/50",
+    blur: "bg-sidebar/50",
     transparent: "bg-transparent pointer-events-none [&>*]:pointer-events-auto",
   };
 
@@ -289,14 +289,14 @@ function DrawerContent({
   > = {
     right: {
       containerClasses:
-        "fixed inset-y-0 right-0 h-full w-[75%] max-w-[75%] sm:w-[400px] sm:max-w-full",
+        "fixed inset-y-0 right-0 h-full w-[78%] max-w-[78%] sm:w-[400px] sm:max-w-full",
       initial: { x: "100%" },
       animate: { x: 0 },
       exit: { x: "100%" },
     },
     left: {
       containerClasses:
-        "fixed inset-y-0 left-0 h-full w-[75%] max-w-[75%] sm:w-[400px] sm:max-w-full",
+        "fixed inset-y-0 left-0 h-full w-[78%] max-w-[78%] sm:w-[400px] sm:max-w-full",
       initial: { x: "-100%" },
       animate: { x: 0 },
       exit: { x: "-100%" },
@@ -410,7 +410,7 @@ function DrawerCloseTrigger({
       }}
       aria-label="Close drawer"
       className={cn(
-        "drawer__close-trigger p-2 rounded-sm text-muted-foreground hover:text-foreground hover:bg-secondary dark:hover:bg-[#2f2f2f] transition-colors cursor-pointer outline-none focus:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+        "drawer__close-trigger p-2.5 rounded-sm text-muted-foreground hover:text-foreground hover:bg-secondary dark:hover:bg-[#2f2f2f] transition-colors cursor-pointer outline-none focus:outline-none focus-visible:ring-2 focus-visible:ring-ring",
         className
       )}
       {...props}
@@ -800,7 +800,7 @@ export function FilePreviewViewer({
                   <button
                     type="button"
                     onClick={handleDownload}
-                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-foreground text-background font-semibold text-sm hover:opacity-90 transition-opacity cursor-pointer"
+                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-foreground text-background font-semibold text-sm hover:opacity/90 transition-opacity cursor-pointer"
                   >
                     <Download className="w-4 h-4" />
                     Download File
@@ -886,7 +886,7 @@ export function FilesDrawer({
                 <button
                   type="button"
                   onClick={() => handleOpenChange(false)}
-                  className="p-2 rounded-sm flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors cursor-pointer outline-none focus:outline-none"
+                  className="p-2.5 rounded-sm flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors cursor-pointer outline-none focus:outline-none"
                   aria-label="Close"
                 >
                   <X className="w-5 h-5" />

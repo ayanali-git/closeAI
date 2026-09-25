@@ -38,9 +38,27 @@ export async function middleware(request: NextRequest) {
 
   const { data: { user } } = await supabase.auth.getUser();
 
-  // Redirect /chat to /c
+  // Redirect /chat to /c for authenticated users or /gc for guests
   if (request.nextUrl.pathname === '/chat') {
-    return NextResponse.redirect(new URL('/c', request.url));
+    return NextResponse.redirect(new URL(user ? '/c' : '/gc', request.url));
+  }
+
+  // Redirect guest accessing /c to /gc (preserving query params)
+  if (request.nextUrl.pathname.startsWith('/c') && !user) {
+    const gcUrl = new URL('/gc', request.url);
+    request.nextUrl.searchParams.forEach((value, key) => {
+      gcUrl.searchParams.set(key, value);
+    });
+    const redirectRes = NextResponse.redirect(gcUrl);
+    response.cookies.getAll().forEach(c => redirectRes.cookies.set(c.name, c.value));
+    return redirectRes;
+  }
+
+  // Redirect authenticated user accessing /gc to /c
+  if (request.nextUrl.pathname.startsWith('/gc') && user) {
+    const redirectRes = NextResponse.redirect(new URL('/c', request.url));
+    response.cookies.getAll().forEach(c => redirectRes.cookies.set(c.name, c.value));
+    return redirectRes;
   }
 
   // If root page receives an OAuth `code` param, forward to /auth/callback so
@@ -95,11 +113,14 @@ export async function middleware(request: NextRequest) {
     return redirectRes;
   }
 
-  // Protected routes
-  const protectedPaths = ['/c', '/settings', '/upgrade'];
-  const isProtected = protectedPaths.some(path => 
+  // Protected routes:
+  // /c is accessible to guest users. Only saved chats (/c/:id) and private sections require auth.
+  const isSavedChat = request.nextUrl.pathname.startsWith('/c/') && request.nextUrl.pathname !== '/c';
+  const otherProtectedPaths = ['/settings', '/upgrade'];
+  const isOtherProtected = otherProtectedPaths.some(path => 
     request.nextUrl.pathname === path || request.nextUrl.pathname.startsWith(path + '/')
   );
+  const isProtected = isSavedChat || isOtherProtected;
 
   if (isProtected && !user) {
     const redirectRes = NextResponse.redirect(new URL('/?auth=login', request.url));
@@ -110,6 +131,6 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/', '/c', '/c/:path*', '/chat', '/settings', '/settings/:path*', '/upgrade', '/upgrade/:path*', '/auth/login', '/auth/signup'],
+  matcher: ['/', '/c', '/c/:path*', '/gc', '/gc/:path*', '/chat', '/settings', '/settings/:path*', '/upgrade', '/upgrade/:path*', '/auth/login', '/auth/signup'],
 };
 

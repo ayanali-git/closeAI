@@ -77,6 +77,7 @@ export interface MessageListProps {
   messages: Message[];
   user: User | null;
   isTyping: boolean;
+  isGuest?: boolean;
   pendingMessage: {
     content: string;
     files: any[];
@@ -394,7 +395,7 @@ function MessageAttachmentItem({
     return (
       <ImagePreview src={imgSrc} alt={displayName}>
         <div
-          className="relative flex leading-[0] overflow-clip rounded-2xl sm:rounded-3xl bg-bubble dark:bg-[#2F2F2F] border border-border/80 max-w-[100px] sm:max-w-[200px] cursor-pointer select-none hover:opacity-90 transition-opacity"
+          className="relative flex leading-[0] overflow-clip rounded-2xl sm:rounded-3xl bg-bubble dark:bg-[#2F2F2F] border border-border/80 max-w-[100px] sm:max-w-[200px] cursor-pointer select-none hover:opacity/90 transition-opacity"
           title={`Preview ${displayName}`}
         >
           <img
@@ -413,7 +414,7 @@ function MessageAttachmentItem({
     <button
       type="button"
       onClick={() => onPreview?.(file)}
-      className="flex self-end items-center gap-2.5 bg-bubble dark:bg-[#2F2F2F] hover:opacity-90 text-foreground text-xs sm:text-sm px-3 py-2.5 rounded-2xl sm:rounded-3xl border border-border/80 transition-colors cursor-pointer group select-none text-left"
+      className="flex self-end items-center gap-2.5 bg-bubble dark:bg-[#2F2F2F] hover:opacity/90 text-foreground text-xs sm:text-sm px-3 py-2.5 rounded-2xl sm:rounded-3xl border border-border/80 transition-colors cursor-pointer group select-none text-left"
       title={`Preview ${displayName}`}
     >
       <Icon className="w-5 h-5 shrink-0 text-muted-foreground" weight="fill" />
@@ -541,6 +542,7 @@ export function MessageList({
   messages,
   user,
   isTyping,
+  isGuest,
   pendingMessage,
   onRegenerate,
   onSendMessage,
@@ -549,12 +551,15 @@ export function MessageList({
   onDeleteMessage,
   showMessageActions = true,
 }: MessageListProps) {
+  const isGuestMode = isGuest ?? (!user);
   const scrollBottomRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [copyingId, setCopyingId] = useState<string | null>(null);
   const [showScrollBottom, setShowScrollBottom] = useState(false);
-  const [changePrompts, setChangePrompts] = useState<Record<string, string>>({});
+  const [changePrompts, setChangePrompts] = useState<Record<string, string>>(
+    {}
+  );
   const [feedback, setFeedback] = useState<Record<string, "up" | "down">>({});
   const [loadingFeedbackId, setLoadingFeedbackId] = useState<string | null>(
     null
@@ -583,7 +588,9 @@ export function MessageList({
   } | null>(null);
   const [previewFile, setPreviewFile] = useState<any>(null);
   const [isMobileScreen, setIsMobileScreen] = useState(false);
-  const [dropdownSubView, setDropdownSubView] = useState<"main" | "try-again">("main");
+  const [dropdownSubView, setDropdownSubView] = useState<"main" | "try-again">(
+    "main"
+  );
 
   useEffect(() => {
     const checkMobile = () => {
@@ -789,8 +796,12 @@ export function MessageList({
           const msgId = msg.id || `msg-${index}`;
           const isCopied = copiedId === msgId;
           const mId = msg.id
-            ? (msg.id.startsWith("m-") ? msg.id : `m-${msg.id}`)
-            : (isUser ? `m-${userMsgIndex}` : `m-${index}`);
+            ? msg.id.startsWith("m-")
+              ? msg.id
+              : `m-${msg.id}`
+            : isUser
+            ? `m-${userMsgIndex}`
+            : `m-${index}`;
 
           if (isUser) {
             const isEditing = editingMessageId === msgId;
@@ -864,7 +875,7 @@ export function MessageList({
                         className={cn(
                           "px-4 py-1.5 rounded-full text-[15px] font-medium transition-all",
                           editDraftText.trim()
-                            ? "bg-white text-black hover:bg-white/90 active:scale-95 cursor-pointer"
+                            ? "bg-white text-black hover:opacity/90 active:scale-95 cursor-pointer"
                             : "bg-white/20 text-white/40 cursor-not-allowed"
                         )}
                       >
@@ -906,31 +917,7 @@ export function MessageList({
                         </TooltipContent>
                       </Tooltip>
 
-                      {/* 2. Edit prompt */}
-                      {(onEditAndResend || onEditMessage) &&
-                        !isThisMsgThinking && (
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <button
-                                type="button"
-                                onClick={() => startEditing(msgId, msg.content)}
-                                className="p-1.5 rounded-sm hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
-                                aria-label="Edit prompt"
-                              >
-                                <Pencil className="w-4 h-4" />
-                              </button>
-                            </TooltipTrigger>
-                            <TooltipContent
-                              side="bottom"
-                              sideOffset={4}
-                              className="text-md"
-                            >
-                              Edit prompt
-                            </TooltipContent>
-                          </Tooltip>
-                        )}
-
-                      {/* 3. Share prompt */}
+                      {/* 2. Share prompt */}
                       {!isThisMsgThinking && (
                         <Tooltip>
                           <TooltipTrigger asChild>
@@ -967,34 +954,65 @@ export function MessageList({
                         </Tooltip>
                       )}
 
-                      {/* 4. Delete message */}
-                      {onDeleteMessage && !isThisMsgThinking && (
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <button
-                              type="button"
-                              onClick={() =>
-                                setDeleteMessageTarget({
-                                  id: msgId,
-                                  index,
-                                  content: msg.content,
-                                  files: msg.files,
-                                })
-                              }
-                              className="p-1.5 rounded-sm hover:bg-secondary text-muted-foreground hover:text-destructive transition-colors cursor-pointer"
-                              aria-label="Delete message"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
-                          </TooltipTrigger>
-                          <TooltipContent
-                            side="bottom"
-                            sideOffset={4}
-                            className="text-md"
-                          >
-                            Delete message
-                          </TooltipContent>
-                        </Tooltip>
+                      {/* For authorized users only: Copy, Edit, Share, Delete */}
+                      {user && (
+                        <>
+                          {/* 3. Edit prompt */}
+                          {(onEditAndResend || onEditMessage) &&
+                            !isThisMsgThinking && (
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      startEditing(msgId, msg.content)
+                                    }
+                                    className="p-1.5 rounded-sm hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                                    aria-label="Edit prompt"
+                                  >
+                                    <Pencil className="w-4 h-4" />
+                                  </button>
+                                </TooltipTrigger>
+                                <TooltipContent
+                                  side="bottom"
+                                  sideOffset={4}
+                                  className="text-md"
+                                >
+                                  Edit prompt
+                                </TooltipContent>
+                              </Tooltip>
+                            )}
+
+                          {/* 4. Delete message */}
+                          {onDeleteMessage && !isThisMsgThinking && (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    setDeleteMessageTarget({
+                                      id: msgId,
+                                      index,
+                                      content: msg.content,
+                                      files: msg.files,
+                                    })
+                                  }
+                                  className="p-1.5 rounded-sm hover:bg-secondary text-muted-foreground hover:text-destructive transition-colors cursor-pointer"
+                                  aria-label="Delete message"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </button>
+                              </TooltipTrigger>
+                              <TooltipContent
+                                side="bottom"
+                                sideOffset={4}
+                                className="text-md"
+                              >
+                                Delete message
+                              </TooltipContent>
+                            </Tooltip>
+                          )}
+                        </>
                       )}
                     </div>
                   </>
@@ -1005,11 +1023,7 @@ export function MessageList({
 
           // Assistant Message View
           return (
-            <div
-              key={msgId}
-              id={mId}
-              className="w-full group space-y-2"
-            >
+            <div key={msgId} id={mId} className="w-full group space-y-2">
               <div className="w-full space-y-3">
                 {/* Collapsed Thought for Xs if this message was generated in think mode */}
                 {msg.metadata?.think && (
@@ -1178,7 +1192,7 @@ export function MessageList({
                             <ImagePreview
                               src={src}
                               alt={alt || "Image preview"}
-                              className="block rounded-xl border border-border/60 max-h-[420px] object-contain cursor-pointer hover:opacity-90 transition-opacity"
+                              className="block rounded-xl border border-border/60 max-h-[420px] object-contain cursor-pointer hover:opacity/90 transition-opacity"
                             />
                           </div>
                         );
@@ -1190,7 +1204,9 @@ export function MessageList({
                 </div>
 
                 {/* Assistant Action Toolbar — revealed when typing completes */}
-                {(!isTyping || Boolean(pendingMessage) || index !== messages.length - 1) && (
+                {(!isTyping ||
+                  Boolean(pendingMessage) ||
+                  index !== messages.length - 1) && (
                   <div className="flex items-center gap-1.5 pt-1 text-muted-foreground">
                     <Tooltip>
                       <TooltipTrigger asChild>
@@ -1216,77 +1232,7 @@ export function MessageList({
                       </TooltipContent>
                     </Tooltip>
 
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <button
-                          type="button"
-                          onClick={() => handleFeedback(msgId, "up")}
-                          disabled={loadingFeedbackId === `${msgId}-up`}
-                          className={cn(
-                            "p-1.5 rounded-sm transition-colors cursor-pointer disabled:opacity-70 disabled:pointer-events-auto disabled:cursor-not-allowed",
-                            feedback[msgId] === "up"
-                              ? "text-foreground"
-                              : "text-muted-foreground hover:bg-secondary hover:text-foreground"
-                          )}
-                          aria-label="Good response"
-                        >
-                          {loadingFeedbackId === `${msgId}-up` ? (
-                            <Loader className="w-4 h-4 animate-spin text-foreground shrink-0" />
-                          ) : (
-                            <ThumbsUp
-                              className={cn(
-                                "w-4 h-4 transition-all",
-                                feedback[msgId] === "up" && "fill-current"
-                              )}
-                            />
-                          )}
-                        </button>
-                      </TooltipTrigger>
-                      <TooltipContent
-                        side="bottom"
-                        sideOffset={4}
-                        className="text-md"
-                      >
-                        Good response
-                      </TooltipContent>
-                    </Tooltip>
-
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <button
-                          type="button"
-                          onClick={() => handleFeedback(msgId, "down")}
-                          disabled={loadingFeedbackId === `${msgId}-down`}
-                          className={cn(
-                            "p-1.5 rounded-sm transition-colors cursor-pointer disabled:opacity-70 disabled:pointer-events-auto disabled:cursor-not-allowed",
-                            feedback[msgId] === "down"
-                              ? "text-foreground"
-                              : "text-muted-foreground hover:bg-secondary hover:text-foreground"
-                          )}
-                          aria-label="Bad response"
-                        >
-                          {loadingFeedbackId === `${msgId}-down` ? (
-                            <Loader className="w-4 h-4 animate-spin text-foreground shrink-0" />
-                          ) : (
-                            <ThumbsDown
-                              className={cn(
-                                "w-4 h-4 transition-all",
-                                feedback[msgId] === "down" && "fill-current"
-                              )}
-                            />
-                          )}
-                        </button>
-                      </TooltipTrigger>
-                      <TooltipContent
-                        side="bottom"
-                        sideOffset={4}
-                        className="text-md"
-                      >
-                        Bad response
-                      </TooltipContent>
-                    </Tooltip>
-
-                    {/* Share response */}
+                    {/* Share response (Available for guest and authenticated) */}
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <button
@@ -1298,7 +1244,8 @@ export function MessageList({
                               setLoadingShareId(null);
                               setShareResponseMsg({
                                 text: msg.content,
-                                model: (msg.metadata as any)?.model || "CloseAI",
+                                model:
+                                  (msg.metadata as any)?.model || "CloseAI",
                               });
                             }, 300);
                           }}
@@ -1321,287 +1268,384 @@ export function MessageList({
                       </TooltipContent>
                     </Tooltip>
 
-                    {/* More options Dropdown (Read aloud, Try again, Models, Sources) */}
-                    <DropdownMenu
-                      onOpenChange={(open) => {
-                        if (!open) {
-                          setDropdownSubView("main");
-                        }
-                      }}
-                    >
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <DropdownMenuTrigger asChild>
+                    {/* Authorized user actions: ThumbsUp, ThumbsDown, More Options */}
+                    {user && (
+                      <>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
                             <button
                               type="button"
+                              onClick={() => handleFeedback(msgId, "up")}
+                              disabled={loadingFeedbackId === `${msgId}-up`}
                               className={cn(
-                                "p-1.5 rounded-sm transition-colors cursor-pointer",
-                                speakingMessageId === msgId
-                                  ? "text-foreground bg-secondary"
+                                "p-1.5 rounded-sm transition-colors cursor-pointer disabled:opacity-70 disabled:pointer-events-auto disabled:cursor-not-allowed",
+                                feedback[msgId] === "up"
+                                  ? "text-foreground"
                                   : "text-muted-foreground hover:bg-secondary hover:text-foreground"
                               )}
-                              aria-label="More options"
+                              aria-label="Good response"
                             >
-                              <MoreHorizontal className="w-4 h-4" />
+                              {loadingFeedbackId === `${msgId}-up` ? (
+                                <Loader className="w-4 h-4 animate-spin text-foreground shrink-0" />
+                              ) : (
+                                <ThumbsUp
+                                  className={cn(
+                                    "w-4 h-4 transition-all",
+                                    feedback[msgId] === "up" && "fill-current"
+                                  )}
+                                />
+                              )}
                             </button>
-                          </DropdownMenuTrigger>
-                        </TooltipTrigger>
-                        <TooltipContent
-                          side="bottom"
-                          sideOffset={4}
-                          className="text-md"
-                        >
-                          More options
-                        </TooltipContent>
-                      </Tooltip>
-                      <DropdownMenuContent
-                        side="top"
-                        align="start"
-                        sideOffset={4}
-                        avoidCollisions={true}
-                        collisionPadding={12}
-                        className="w-56 rounded-2xl p-1.5 bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/80 dark:border-none outline-none select-none z-50"
-                      >
-                        {isMobileScreen && dropdownSubView === "try-again" ? (
-                          <div className="space-y-0.5 p-0.5">
-                            {/* Back to main menu header */}
+                          </TooltipTrigger>
+                          <TooltipContent
+                            side="bottom"
+                            sideOffset={4}
+                            className="text-md"
+                          >
+                            Good response
+                          </TooltipContent>
+                        </Tooltip>
+
+                        <Tooltip>
+                          <TooltipTrigger asChild>
                             <button
                               type="button"
-                              onClick={(e) => {
-                                (e.currentTarget as HTMLElement)?.blur();
-                                e.stopPropagation();
-                                setDropdownSubView("main");
-                              }}
-                              className="flex items-center gap-2 px-2.5 py-1.5 text-md font-medium text-foreground [@media(hover:hover)]:hover:bg-secondary dark:[@media(hover:hover)]:hover:bg-[#2f2f2f] active:bg-secondary/80 dark:active:bg-[#2f2f2f]/80 rounded-xl cursor-pointer w-full text-left transition-colors outline-none focus:outline-none focus:bg-transparent focus-visible:outline-none"
+                              onClick={() => handleFeedback(msgId, "down")}
+                              disabled={loadingFeedbackId === `${msgId}-down`}
+                              className={cn(
+                                "p-1.5 rounded-sm transition-colors cursor-pointer disabled:opacity-70 disabled:pointer-events-auto disabled:cursor-not-allowed",
+                                feedback[msgId] === "down"
+                                  ? "text-foreground"
+                                  : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+                              )}
+                              aria-label="Bad response"
                             >
-                              <ChevronLeft className="w-4 h-4 stroke-[2.5]" />
-                              <span>Try again</span>
-                            </button>
-
-                            <div className="h-[1px] bg-neutral-200/80 dark:bg-[#383838] my-1 -mx-0.5" />
-
-                            {/* Top Input Bar: Ask anything to change */}
-                            <div
-                              className="px-2 py-1"
-                              onClick={(e) => e.stopPropagation()}
-                              onKeyDown={(e) => e.stopPropagation()}
-                            >
-                              <div className="relative flex items-center justify-between gap-1.5 bg-transparent">
-                                <input
-                                  type="text"
-                                  placeholder="Ask anything to change"
-                                  value={changePrompts[msgId] || ""}
-                                  onChange={(e) =>
-                                    setChangePrompts((prev) => ({
-                                      ...prev,
-                                      [msgId]: e.target.value,
-                                    }))
-                                  }
-                                  onKeyDown={(e) => {
-                                    e.stopPropagation();
-                                    if (
-                                      e.key === "Enter" &&
-                                      (changePrompts[msgId] || "").trim()
-                                    ) {
-                                      e.preventDefault();
-                                      handleSendChangePrompt(msgId);
-                                    }
-                                  }}
-                                  className="w-full bg-transparent text-foreground placeholder:text-muted-foreground/60 text-sm outline-none py-1 font-normal min-w-0"
-                                  autoFocus
+                              {loadingFeedbackId === `${msgId}-down` ? (
+                                <Loader className="w-4 h-4 animate-spin text-foreground shrink-0" />
+                              ) : (
+                                <ThumbsDown
+                                  className={cn(
+                                    "w-4 h-4 transition-all",
+                                    feedback[msgId] === "down" && "fill-current"
+                                  )}
                                 />
+                              )}
+                            </button>
+                          </TooltipTrigger>
+                          <TooltipContent
+                            side="bottom"
+                            sideOffset={4}
+                            className="text-md"
+                          >
+                            Bad response
+                          </TooltipContent>
+                        </Tooltip>
+
+                        {/* More options Dropdown (Read aloud, Try again, Models, Sources) */}
+                        <DropdownMenu
+                          onOpenChange={(open) => {
+                            if (!open) {
+                              setDropdownSubView("main");
+                            }
+                          }}
+                        >
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <DropdownMenuTrigger asChild>
                                 <button
                                   type="button"
-                                  onClick={() => handleSendChangePrompt(msgId)}
-                                  disabled={!(changePrompts[msgId] || "").trim()}
                                   className={cn(
-                                    "w-6 h-6 rounded-full flex items-center justify-center shrink-0 transition-all",
-                                    (changePrompts[msgId] || "").trim()
-                                      ? "bg-foreground text-background cursor-pointer hover:opacity-90 active:scale-95"
-                                      : "bg-neutral-300 dark:bg-[#383838] text-muted-foreground/50 cursor-not-allowed opacity-50"
+                                    "p-1.5 rounded-sm transition-colors cursor-pointer",
+                                    speakingMessageId === msgId
+                                      ? "text-foreground bg-secondary"
+                                      : "text-muted-foreground hover:bg-secondary hover:text-foreground"
                                   )}
-                                  aria-label="Send change request"
+                                  aria-label="More options"
                                 >
-                                  <ArrowUp className="w-3.5 h-3.5 stroke-[2.5]" />
+                                  <MoreHorizontal className="w-4 h-4" />
                                 </button>
-                              </div>
-                            </div>
-
-                            <div className="h-[1px] bg-neutral-200/80 dark:bg-[#383838] my-1 -mx-0.5" />
-
-                            {/* Option 1: Try again */}
-                            <DropdownMenuItem
-                              onClick={() => {
-                                onRegenerate?.(msg, index);
-                                setDropdownSubView("main");
-                              }}
-                              className="flex items-center gap-2.5 px-3 py-2 text-md rounded-xl cursor-pointer text-foreground hover:bg-secondary dark:hover:bg-[#2f2f2f] transition-colors outline-none"
+                              </DropdownMenuTrigger>
+                            </TooltipTrigger>
+                            <TooltipContent
+                              side="bottom"
+                              sideOffset={4}
+                              className="text-md"
                             >
-                              <RefreshCw className="w-4 h-4 text-muted-foreground group-hover:text-foreground shrink-0" />
-                              <span>Try again</span>
-                            </DropdownMenuItem>
-
-                            {/* Option 2: Web search (Disabled) */}
-                            <DropdownMenuItem
-                              onSelect={(e) => e.preventDefault()}
-                              onClick={(e) => e.preventDefault()}
-                              className="flex items-center gap-2.5 px-3 py-2 text-md rounded-xl transition-colors outline-none focus:outline-none focus:bg-transparent focus-visible:outline-none whitespace-nowrap text-left cursor-not-allowed select-none text-muted-foreground [@media(hover:hover)]:hover:bg-secondary dark:[@media(hover:hover)]:hover:bg-[#2f2f2f]"
-                            >
-                              <Globe className="w-4 h-4 text-muted-foreground group-hover:text-foreground shrink-0" />
-                              <AnimatedComingSoonText
-                                label="Web search"
-                                comingSoonText="Coming soon"
-                              />
-                            </DropdownMenuItem>
-                          </div>
-                        ) : (
-                          <>
-                            <div className="px-3 py-1.5 text-xs text-muted-foreground select-none">
-                              {formatMessageTime(msg.createdAt || (msg as any).created_at)}
-                            </div>
-
-                            {/* Read aloud / Stop reading */}
-                            <DropdownMenuItem
-                              onClick={() => handleReadAloud(msgId, msg.content)}
-                              className="flex items-center gap-2.5 px-3 py-2 text-md rounded-xl cursor-pointer text-foreground hover:bg-secondary dark:hover:bg-[#2f2f2f] transition-colors outline-none"
-                            >
-                              {speakingMessageId === msgId ? (
-                                <>
-                                  <VolumeX className="w-4 h-4 text-muted-foreground group-hover:text-foreground shrink-0" />
-                                  <span>Stop reading</span>
-                                </>
-                              ) : (
-                                <>
-                                  <Volume2 className="w-4 h-4 text-muted-foreground group-hover:text-foreground shrink-0" />
-                                  <span>Read aloud</span>
-                                </>
-                              )}
-                            </DropdownMenuItem>
-
-                            {/* Try again: Mobile In-Place Row vs Desktop Flyout */}
-                            {onRegenerate && (
-                              isMobileScreen ? (
+                              More options
+                            </TooltipContent>
+                          </Tooltip>
+                          <DropdownMenuContent
+                            side="top"
+                            align="start"
+                            sideOffset={4}
+                            avoidCollisions={true}
+                            collisionPadding={12}
+                            className="w-56 rounded-2xl p-1.5 bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/80 dark:border-none outline-none select-none z-50"
+                          >
+                            {isMobileScreen &&
+                            dropdownSubView === "try-again" ? (
+                              <div className="space-y-0.5 p-0.5">
+                                {/* Back to main menu header */}
                                 <button
                                   type="button"
                                   onClick={(e) => {
                                     (e.currentTarget as HTMLElement)?.blur();
                                     e.stopPropagation();
-                                    setDropdownSubView("try-again");
+                                    setDropdownSubView("main");
                                   }}
-                                  className="w-full flex items-center justify-between px-3 py-2 text-md rounded-xl cursor-pointer text-foreground hover:bg-secondary dark:hover:bg-[#2f2f2f] transition-colors outline-none focus:outline-none focus:bg-transparent focus-visible:outline-none text-left"
+                                  className="flex items-center gap-2 px-2.5 py-1.5 text-md font-medium text-foreground [@media(hover:hover)]:hover:bg-secondary dark:[@media(hover:hover)]:hover:bg-[#2f2f2f] active:bg-secondary/80 dark:active:bg-[#2f2f2f]/80 rounded-xl cursor-pointer w-full text-left transition-colors outline-none focus:outline-none focus:bg-transparent focus-visible:outline-none"
                                 >
-                                  <div className="flex items-center gap-2.5">
-                                    <RefreshCw className="w-4 h-4 text-muted-foreground group-hover:text-foreground shrink-0" />
-                                    <span>Try again</span>
-                                  </div>
-                                  <ChevronRight className="w-4 h-4 text-muted-foreground ml-auto shrink-0" />
+                                  <ChevronLeft className="w-4 h-4 stroke-[2.5]" />
+                                  <span>Try again</span>
                                 </button>
-                              ) : (
-                                <DropdownMenuSub>
-                                  <DropdownMenuSubTrigger className="flex items-center justify-between w-full px-3 py-2 text-md rounded-xl cursor-pointer text-foreground hover:bg-secondary dark:hover:bg-[#2f2f2f] data-[state=open]:bg-secondary dark:data-[state=open]:bg-[#2f2f2f] transition-colors outline-none">
-                                    <div className="flex items-center gap-2.5">
-                                      <RefreshCw className="w-4 h-4 text-muted-foreground group-hover:text-foreground shrink-0" />
-                                      <span>Try again</span>
-                                    </div>
-                                  </DropdownMenuSubTrigger>
-                                  <DropdownMenuSubContent
-                                    sideOffset={4}
-                                    alignOffset={-93}
-                                    avoidCollisions={true}
-                                    collisionPadding={12}
-                                    className="w-56 rounded-2xl p-1.5 bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/80 dark:border-none outline-none select-none z-50"
-                                  >
-                                    {/* Top Input Bar: Ask anything to change */}
-                                    <div
-                                      className="px-2 py-1"
-                                      onClick={(e) => e.stopPropagation()}
-                                      onKeyDown={(e) => e.stopPropagation()}
+
+                                <div className="h-[1px] bg-neutral-200/80 dark:bg-[#383838] my-1 -mx-0.5" />
+
+                                {/* Top Input Bar: Ask anything to change */}
+                                <div
+                                  className="px-2 py-1"
+                                  onClick={(e) => e.stopPropagation()}
+                                  onKeyDown={(e) => e.stopPropagation()}
+                                >
+                                  <div className="relative flex items-center justify-between gap-1.5 bg-transparent">
+                                    <input
+                                      type="text"
+                                      placeholder="Ask anything to change"
+                                      value={changePrompts[msgId] || ""}
+                                      onChange={(e) =>
+                                        setChangePrompts((prev) => ({
+                                          ...prev,
+                                          [msgId]: e.target.value,
+                                        }))
+                                      }
+                                      onKeyDown={(e) => {
+                                        e.stopPropagation();
+                                        if (
+                                          e.key === "Enter" &&
+                                          (changePrompts[msgId] || "").trim()
+                                        ) {
+                                          e.preventDefault();
+                                          handleSendChangePrompt(msgId);
+                                        }
+                                      }}
+                                      className="w-full bg-transparent text-foreground placeholder:text-muted-foreground/60 text-sm outline-none py-1 font-normal min-w-0"
+                                      autoFocus
+                                    />
+                                    <button
+                                      type="button"
+                                      onClick={() =>
+                                        handleSendChangePrompt(msgId)
+                                      }
+                                      disabled={
+                                        !(changePrompts[msgId] || "").trim()
+                                      }
+                                      className={cn(
+                                        "w-6 h-6 rounded-full flex items-center justify-center shrink-0 transition-all",
+                                        (changePrompts[msgId] || "").trim()
+                                          ? "bg-foreground text-background cursor-pointer hover:opacity/90 active:scale-95"
+                                          : "bg-neutral-300 dark:bg-[#383838] text-muted-foreground/50 cursor-not-allowed opacity-50"
+                                      )}
+                                      aria-label="Send change request"
                                     >
-                                      <div className="relative flex items-center justify-between gap-1.5 bg-transparent">
-                                        <input
-                                          type="text"
-                                          placeholder="Ask anything to change"
-                                          value={changePrompts[msgId] || ""}
-                                          onChange={(e) =>
-                                            setChangePrompts((prev) => ({
-                                              ...prev,
-                                              [msgId]: e.target.value,
-                                            }))
-                                          }
-                                          onKeyDown={(e) => {
-                                            e.stopPropagation();
-                                            if (
-                                              e.key === "Enter" &&
-                                              (changePrompts[msgId] || "").trim()
-                                            ) {
-                                              e.preventDefault();
-                                              handleSendChangePrompt(msgId);
-                                            }
-                                          }}
-                                          className="w-full bg-transparent text-foreground placeholder:text-muted-foreground/60 text-sm outline-none py-1 font-normal min-w-0"
-                                          autoFocus
-                                        />
-                                        <button
-                                          type="button"
-                                          onClick={() => handleSendChangePrompt(msgId)}
-                                          disabled={!(changePrompts[msgId] || "").trim()}
-                                          className={cn(
-                                            "w-6 h-6 rounded-full flex items-center justify-center shrink-0 transition-all",
-                                            (changePrompts[msgId] || "").trim()
-                                              ? "bg-foreground text-background cursor-pointer hover:opacity-90 active:scale-95"
-                                              : "bg-neutral-300 dark:bg-[#383838] text-muted-foreground/50 cursor-not-allowed opacity-50"
-                                          )}
-                                          aria-label="Send change request"
-                                        >
-                                          <ArrowUp className="w-3.5 h-3.5 stroke-[2.5]" />
-                                        </button>
+                                      <ArrowUp className="w-3.5 h-3.5 stroke-[2.5]" />
+                                    </button>
+                                  </div>
+                                </div>
+
+                                <div className="h-[1px] bg-neutral-200/80 dark:bg-[#383838] my-1 -mx-0.5" />
+
+                                {/* Option 1: Try again */}
+                                <DropdownMenuItem
+                                  onClick={() => {
+                                    onRegenerate?.(msg, index);
+                                    setDropdownSubView("main");
+                                  }}
+                                  className="flex items-center gap-2.5 px-3 py-2 text-md rounded-xl cursor-pointer text-foreground hover:bg-secondary dark:hover:bg-[#2f2f2f] transition-colors outline-none"
+                                >
+                                  <RefreshCw className="w-4 h-4 text-muted-foreground group-hover:text-foreground shrink-0" />
+                                  <span>Try again</span>
+                                </DropdownMenuItem>
+
+                                {/* Option 2: Web search (Disabled) */}
+                                <DropdownMenuItem
+                                  onSelect={(e) => e.preventDefault()}
+                                  onClick={(e) => e.preventDefault()}
+                                  className="flex items-center gap-2.5 px-3 py-2 text-md rounded-xl transition-colors outline-none focus:outline-none focus:bg-transparent focus-visible:outline-none whitespace-nowrap text-left cursor-not-allowed select-none text-muted-foreground [@media(hover:hover)]:hover:bg-secondary dark:[@media(hover:hover)]:hover:bg-[#2f2f2f]"
+                                >
+                                  <Globe className="w-4 h-4 text-muted-foreground group-hover:text-foreground shrink-0" />
+                                  <AnimatedComingSoonText
+                                    label="Web search"
+                                    comingSoonText="Coming soon"
+                                  />
+                                </DropdownMenuItem>
+                              </div>
+                            ) : (
+                              <>
+                                <div className="px-3 py-1.5 text-xs text-muted-foreground select-none">
+                                  {formatMessageTime(
+                                    msg.createdAt || (msg as any).created_at
+                                  )}
+                                </div>
+
+                                {/* Read aloud / Stop reading */}
+                                <DropdownMenuItem
+                                  onClick={() =>
+                                    handleReadAloud(msgId, msg.content)
+                                  }
+                                  className="flex items-center gap-2.5 px-3 py-2 text-md rounded-xl cursor-pointer text-foreground hover:bg-secondary dark:hover:bg-[#2f2f2f] transition-colors outline-none"
+                                >
+                                  {speakingMessageId === msgId ? (
+                                    <>
+                                      <VolumeX className="w-4 h-4 text-muted-foreground group-hover:text-foreground shrink-0" />
+                                      <span>Stop reading</span>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Volume2 className="w-4 h-4 text-muted-foreground group-hover:text-foreground shrink-0" />
+                                      <span>Read aloud</span>
+                                    </>
+                                  )}
+                                </DropdownMenuItem>
+
+                                {/* Try again: Mobile In-Place Row vs Desktop Flyout */}
+                                {onRegenerate &&
+                                  (isMobileScreen ? (
+                                    <button
+                                      type="button"
+                                      onClick={(e) => {
+                                        (
+                                          e.currentTarget as HTMLElement
+                                        )?.blur();
+                                        e.stopPropagation();
+                                        setDropdownSubView("try-again");
+                                      }}
+                                      className="w-full flex items-center justify-between px-3 py-2 text-md rounded-xl cursor-pointer text-foreground hover:bg-secondary dark:hover:bg-[#2f2f2f] transition-colors outline-none focus:outline-none focus:bg-transparent focus-visible:outline-none text-left"
+                                    >
+                                      <div className="flex items-center gap-2.5">
+                                        <RefreshCw className="w-4 h-4 text-muted-foreground group-hover:text-foreground shrink-0" />
+                                        <span>Try again</span>
                                       </div>
-                                    </div>
+                                      <ChevronRight className="w-4 h-4 text-muted-foreground ml-auto shrink-0" />
+                                    </button>
+                                  ) : (
+                                    <DropdownMenuSub>
+                                      <DropdownMenuSubTrigger className="flex items-center justify-between w-full px-3 py-2 text-md rounded-xl cursor-pointer text-foreground hover:bg-secondary dark:hover:bg-[#2f2f2f] data-[state=open]:bg-secondary dark:data-[state=open]:bg-[#2f2f2f] transition-colors outline-none">
+                                        <div className="flex items-center gap-2.5">
+                                          <RefreshCw className="w-4 h-4 text-muted-foreground group-hover:text-foreground shrink-0" />
+                                          <span>Try again</span>
+                                        </div>
+                                      </DropdownMenuSubTrigger>
+                                      <DropdownMenuSubContent
+                                        sideOffset={4}
+                                        alignOffset={-93}
+                                        avoidCollisions={true}
+                                        collisionPadding={12}
+                                        className="w-56 rounded-2xl p-1.5 bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/80 dark:border-none outline-none select-none z-50"
+                                      >
+                                        {/* Top Input Bar: Ask anything to change */}
+                                        <div
+                                          className="px-2 py-1"
+                                          onClick={(e) => e.stopPropagation()}
+                                          onKeyDown={(e) => e.stopPropagation()}
+                                        >
+                                          <div className="relative flex items-center justify-between gap-1.5 bg-transparent">
+                                            <input
+                                              type="text"
+                                              placeholder="Ask anything to change"
+                                              value={changePrompts[msgId] || ""}
+                                              onChange={(e) =>
+                                                setChangePrompts((prev) => ({
+                                                  ...prev,
+                                                  [msgId]: e.target.value,
+                                                }))
+                                              }
+                                              onKeyDown={(e) => {
+                                                e.stopPropagation();
+                                                if (
+                                                  e.key === "Enter" &&
+                                                  (
+                                                    changePrompts[msgId] || ""
+                                                  ).trim()
+                                                ) {
+                                                  e.preventDefault();
+                                                  handleSendChangePrompt(msgId);
+                                                }
+                                              }}
+                                              className="w-full bg-transparent text-foreground placeholder:text-muted-foreground/60 text-sm outline-none py-1 font-normal min-w-0"
+                                              autoFocus
+                                            />
+                                            <button
+                                              type="button"
+                                              onClick={() =>
+                                                handleSendChangePrompt(msgId)
+                                              }
+                                              disabled={
+                                                !(
+                                                  changePrompts[msgId] || ""
+                                                ).trim()
+                                              }
+                                              className={cn(
+                                                "w-6 h-6 rounded-full flex items-center justify-center shrink-0 transition-all",
+                                                (
+                                                  changePrompts[msgId] || ""
+                                                ).trim()
+                                                  ? "bg-foreground text-background cursor-pointer hover:opacity/90 active:scale-95"
+                                                  : "bg-neutral-300 dark:bg-[#383838] text-muted-foreground/50 cursor-not-allowed opacity-50"
+                                              )}
+                                              aria-label="Send change request"
+                                            >
+                                              <ArrowUp className="w-3.5 h-3.5 stroke-[2.5]" />
+                                            </button>
+                                          </div>
+                                        </div>
 
-                                    <div className="h-[1px] bg-neutral-200/80 dark:bg-[#383838] my-1 -mx-0.5" />
+                                        <div className="h-[1px] bg-neutral-200/80 dark:bg-[#383838] my-1 -mx-0.5" />
 
-                                    {/* Option 1: Try again */}
-                                    <DropdownMenuItem
-                                      onClick={() => onRegenerate(msg, index)}
-                                      className="flex items-center gap-2.5 px-3 py-2 text-md rounded-xl cursor-pointer text-foreground hover:bg-secondary dark:hover:bg-[#2f2f2f] transition-colors outline-none"
-                                    >
-                                      <RefreshCw className="w-4 h-4 text-muted-foreground group-hover:text-foreground shrink-0" />
-                                      <span>Try again</span>
-                                    </DropdownMenuItem>
+                                        {/* Option 1: Try again */}
+                                        <DropdownMenuItem
+                                          onClick={() =>
+                                            onRegenerate(msg, index)
+                                          }
+                                          className="flex items-center gap-2.5 px-3 py-2 text-md rounded-xl cursor-pointer text-foreground hover:bg-secondary dark:hover:bg-[#2f2f2f] transition-colors outline-none"
+                                        >
+                                          <RefreshCw className="w-4 h-4 text-muted-foreground group-hover:text-foreground shrink-0" />
+                                          <span>Try again</span>
+                                        </DropdownMenuItem>
 
-                                    {/* Option 2: Web search (Disabled) */}
-                                    <DropdownMenuItem
-                                      onSelect={(e) => e.preventDefault()}
-                                      onClick={(e) => e.preventDefault()}
-                                      className="flex items-center gap-2.5 px-3 py-2 text-md rounded-xl transition-colors outline-none focus:outline-none focus:bg-transparent focus-visible:outline-none whitespace-nowrap text-left cursor-not-allowed select-none text-muted-foreground [@media(hover:hover)]:hover:bg-secondary dark:[@media(hover:hover)]:hover:bg-[#2f2f2f]"
-                                    >
-                                      <Globe className="w-4 h-4 text-muted-foreground group-hover:text-foreground shrink-0" />
-                                      <AnimatedComingSoonText
-                                        label="Web search"
-                                        comingSoonText="Coming soon"
-                                      />
-                                    </DropdownMenuItem>
-                                  </DropdownMenuSubContent>
-                                </DropdownMenuSub>
-                              )
+                                        {/* Option 2: Web search (Disabled) */}
+                                        <DropdownMenuItem
+                                          onSelect={(e) => e.preventDefault()}
+                                          onClick={(e) => e.preventDefault()}
+                                          className="flex items-center gap-2.5 px-3 py-2 text-md rounded-xl transition-colors outline-none focus:outline-none focus:bg-transparent focus-visible:outline-none whitespace-nowrap text-left cursor-not-allowed select-none text-muted-foreground [@media(hover:hover)]:hover:bg-secondary dark:[@media(hover:hover)]:hover:bg-[#2f2f2f]"
+                                        >
+                                          <Globe className="w-4 h-4 text-muted-foreground group-hover:text-foreground shrink-0" />
+                                          <AnimatedComingSoonText
+                                            label="Web search"
+                                            comingSoonText="Coming soon"
+                                          />
+                                        </DropdownMenuItem>
+                                      </DropdownMenuSubContent>
+                                    </DropdownMenuSub>
+                                  ))}
+
+                                {/* View sources (Coming soon) */}
+                                <DropdownMenuItem
+                                  onSelect={(e) => e.preventDefault()}
+                                  onClick={(e) => e.preventDefault()}
+                                  className="flex items-center gap-2.5 px-3 py-2 text-md rounded-xl transition-colors outline-none focus:outline-none focus:bg-transparent focus-visible:outline-none whitespace-nowrap text-left cursor-not-allowed select-none text-muted-foreground [@media(hover:hover)]:hover:bg-secondary dark:[@media(hover:hover)]:hover:bg-[#2f2f2f]"
+                                >
+                                  <BookOpen className="w-4 h-4 text-muted-foreground group-hover:text-foreground shrink-0" />
+                                  <AnimatedComingSoonText
+                                    label="View sources"
+                                    comingSoonText="Coming soon"
+                                  />
+                                </DropdownMenuItem>
+                              </>
                             )}
-
-                            {/* View sources (Coming soon) */}
-                            <DropdownMenuItem
-                              onSelect={(e) => e.preventDefault()}
-                              onClick={(e) => e.preventDefault()}
-                              className="flex items-center gap-2.5 px-3 py-2 text-md rounded-xl transition-colors outline-none focus:outline-none focus:bg-transparent focus-visible:outline-none whitespace-nowrap text-left cursor-not-allowed select-none text-muted-foreground [@media(hover:hover)]:hover:bg-secondary dark:[@media(hover:hover)]:hover:bg-[#2f2f2f]"
-                            >
-                              <BookOpen className="w-4 h-4 text-muted-foreground group-hover:text-foreground shrink-0" />
-                              <AnimatedComingSoonText
-                                label="View sources"
-                                comingSoonText="Coming soon"
-                              />
-                            </DropdownMenuItem>
-                          </>
-                        )}
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </>
+                    )}
                   </div>
                 )}
               </div>
